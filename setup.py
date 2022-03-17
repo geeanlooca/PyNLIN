@@ -11,7 +11,24 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 # List library dependencies. These are the packages required by the library
 # to function correctly. Packages needed for development are listed in
 # the "requirements.txt" in the root directory of the project.
-requirements = ["numpy", "scipy"]
+requirements = ["numpy", "scipy", "matplotlib", "h5py"]
+dev_requirements = [
+    "pylint",
+    "autopep8",
+    "flake8",
+    "flake8-docstrings",
+    "black",
+    "docformatter",
+    "isort",
+    "pytest",
+    "pytest-cov",
+    "flaky"
+]
+
+testing_requirements = []
+extra_requires = {
+    "dev": dev_requirements
+}
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
