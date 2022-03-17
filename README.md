@@ -1,12 +1,13 @@
  # PyNLIN
  A Python package and scripts for the evaluation of nonlinear interference noise in single mode fiber transmissions 
 
-## Installation
+# Installation
 
 ## End users
 Just clone the repository and `pip install` it.
 ```bash
 git clone https://github.com/geeanlooca/PyNLIN.git
+cd PyNLIN
 pip install .
 ```
 
@@ -14,11 +15,6 @@ pip install .
 ## Development
 
 ### Set up the environment
-
-Clone the repository
-```
-https://github.com/geeanlooca/PyNLIN.git
-```
 
 #### Conda
 I usually like to install the core numerical packages from conda directly, and let `pip` manage the rest of the dependencies.
@@ -35,6 +31,7 @@ python -m <env>
 source <env>/bin/activate
 ```
 
+### Install the package
 For development purposes, the package should be installed in the editable mode. Changes you make to the package are immediatly reflected on the installed version and consequently on the scripts using the package.
 
 From the root of the repository:
