@@ -1,0 +1,7 @@
+[MASTER]
+
+# http://pylint.pycqa.org/en/latest/technical_reference/extensions.html
+
+load-plugins=pylint.extensions.docparams
+disable=all
+enable=W9005,W9006,W9008,W9010,W9011,W9012,W9013,W9014,W0915,W9016,W9017,W9018,
