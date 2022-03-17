@@ -22,13 +22,6 @@ version:
 	@echo ${PYTHON}
 	@echo ${PIP}
 
-docs:
-	$(MAKE) -C docs api
-	$(MAKE) -C docs html
-
-pages: docs
-	mkdir -p public
-	cp -r docs/build/html/* public/
 
 format-all:
 	isort pynlin tests scripts
