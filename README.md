@@ -1,5 +1,5 @@
  # PyNLIN
- A Python package and scripts for the evaluation of nonlinear interference noise in single mode fiber transmissions 
+ A Python package and scripts for the evaluation of nonlinear interference noise in single mode fiber transmissions
 
 # Installation
 
@@ -26,9 +26,10 @@ conda install numpy scipy matplotlib h5py
 ```
 
 #### `venv`
+
 ```bash
 python -m <env>
-source <env>/bin/activate
+source <env>/bin/activate # <env>\Scripts\activate.bat under Windows
 ```
 
 ### Install the package
@@ -38,7 +39,7 @@ From the root of the repository:
 ```bash
 make install
 ```
-or 
+or
 ```bash
 pip install -e .[dev]
 ```
