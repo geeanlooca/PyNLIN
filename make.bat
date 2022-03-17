@@ -10,20 +10,19 @@ goto %1
 
 
 :format
-isort pynlin
-black -t py36 pynlin
-docformatter --in-place --recursive pynlin
+isort pynlin tests scripts
+black -t py36 pynlin tests scripts
+docformatter --in-place --recursive pynlin tests scripts
 goto end
 
 :lint
-flake8 pynlin
-pylint pynlin
+flake8 pynlin tests scripts
+pylint pynlin tests scripts
 goto end
 
 
 :install
-pip install -r requirements.txt
-pip install -e .
+pip install -e .[dev]
 goto end
 
 
