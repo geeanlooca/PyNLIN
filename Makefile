@@ -14,8 +14,7 @@ PIP := ${pip_cmd.python.${python_version_major}}
 # https://stackoverflow.com/questions/8327144/setting-make-options-in-a-makefile
 
 install:
-	$(PIP) install -r requirements.txt
-	$(PIP) install -e .
+	$(PIP) install -e .[dev]
 
 version:
 	@echo ${python_version_full}
