@@ -67,10 +67,10 @@ setup(
     # url='https://geeanlooca.gitlab.io/peg',  # Optional
     # This should be your name or the name of the organization which owns the
     # project.
-    author="Gianluca Marcon",  # Optional
+    author="Gianluca Marcon, Francesco Lorenzi",  
     # This should be a valid email address corresponding to the author listed
     # above.
-    author_email="marcon.gluca@gmail.com",  # Optional
+    author_email="marcon.gluca@gmail.com, francesco.lorenzi.2@studenti.unipd.it",
     # Classifiers help users find your project by categorizing it.
     #
     # For a list of valid classifiers, see https://pypi.org/classifiers/
