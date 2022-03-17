@@ -30,23 +30,10 @@ pages: docs
 	mkdir -p public
 	cp -r docs/build/html/* public/
 
-env:
-	$(PYTHON) -m venv venv/
-	source venv/bin/activate
-
-clean-pages:
-	rm -rf public/
-
-clean: clean-docs clean-pages
-
-clean-docs:
-	rm -rf docs/source/api
-	$(MAKE) -C docs clean
-
 format-all:
-	isort pynlin tests 
-	black -t py36 pynlin tests
-	docformatter --in-place --recursive pynlin tests
+	isort pynlin tests scripts
+	black -t py36 pynlin tests scripts
+	docformatter --in-place --recursive pynlin tests scripts
 
 format:
 	@git diff --name-only master... --diff-filter=ACM | grep .py$$ | xargs -r -t isort
@@ -54,7 +41,7 @@ format:
 	@git diff --name-only master... --diff-filter=ACM | grep .py$$ | xargs -r -t docformatter --in-place
 
 lint-all:
-	flake8 pynlin examples tests
+	flake8 pynlin tests scripts
 	pylint pynlin
 
 lint:
@@ -65,8 +52,6 @@ test:
 	mkdir -p tests/reports/
 	$(PYTHON) -m pytest
 
-doc: clean-docs docs
-	xdg-open ./docs/build/html/index.html
 
 
-.PHONY: clean clean-docs docs lint pages clean-pages doc install version
+.PHONY: clean lint install version
