@@ -43,3 +43,35 @@ or
 ```bash
 pip install -e .[dev]
 ```
+
+
+# Singularity images
+
+Packaging the code in a Singularity image allows us to run code using PyNLIN on the Department's SLURM cluster.
+
+There are two main ways in which you can run build and run a Singularity image:
+
+1. Install Singularity on your local machine, build the image, copy it to the cluster, and submit a job using the image.
+2. Build the image using the remote builder and pull the image directly on the cluster to avoid wasting too much time on uploading the image.
+
+> :warning: **The image pulls the latest commit on the `main` branch directly from GitHub. Local edits or commits not pushed to GitHub will not be reflected in the resulting image file
+
+## Local build
+
+Once you have Singularity installed, just run
+
+```bash
+sudo singularity build --force singularity.sif singularity.def
+```
+The resulting `.sif` image file can be used to run python scripts locally using
+
+```bash
+singularity exec singularity.sif python <script>.py
+```
+or uploaded to the cluster.
+An example `.slurm` file to run a job on the cluster is provided in the `slurm/` directory of this repository.
+
+## Remote build
+
+
+## Building 
