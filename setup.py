@@ -22,13 +22,11 @@ dev_requirements = [
     "isort",
     "pytest",
     "pytest-cov",
-    "flaky"
+    "flaky",
 ]
 
 testing_requirements = []
-extra_requires = {
-    "dev": dev_requirements
-}
+extra_requires = {"dev": dev_requirements}
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -84,7 +82,7 @@ setup(
     # url='https://geeanlooca.gitlab.io/peg',  # Optional
     # This should be your name or the name of the organization which owns the
     # project.
-    author="Gianluca Marcon, Francesco Lorenzi",  
+    author="Gianluca Marcon, Francesco Lorenzi",
     # This should be a valid email address corresponding to the author listed
     # above.
     author_email="marcon.gluca@gmail.com, francesco.lorenzi.2@studenti.unipd.it",
