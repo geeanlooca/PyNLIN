@@ -300,8 +300,7 @@ def Xhkm_time_integral(
         g3 = apply_chromatic_dispersion(pulse, fiber, L, delay=k * T + beta2 * O * L)
         g4 = apply_chromatic_dispersion(pulse, fiber, L, delay=m * T + beta2 * O * L)
 
-        integrand = np.conj(g1) * np.conj(g2) * np.conj(g3) * np.conj(g4)
-
+        integrand = np.conj(g1) * g2 * np.conj(g3) * g4
         time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
 
     return time_integrals
