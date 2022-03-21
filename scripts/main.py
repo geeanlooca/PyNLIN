@@ -81,7 +81,7 @@ wdm.plot(ax, xaxis="frequency")
 
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[50]
+interfering_frequency = wdm.frequency_grid()[2]
 channel_spacing = interfering_frequency - frequency_of_interest
 
 # pynlin.nlin.X0mm_time_integral_WDM_grid(
