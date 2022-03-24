@@ -21,7 +21,7 @@ class RamanAmplifier(torch.nn.Module):
         fiber: Fiber,
         fs=80e12,
         dF=50e9,
-        counterpumping=None,
+        pump_direction=1,
     ):
         """A PyTorch model of a Multi-Mode Fiber Raman Amplifier.
 
@@ -123,7 +123,13 @@ class RamanAmplifier(torch.nn.Module):
         # pump_power = torch.zeros((num_pumps * modes))
         # x = torch.cat((pump_lambda, pump_power)).float().view(1, -1)
 
-        self.direction = torch.ones(((self.num_pumps + self.num_channels),)).float()
+        if np.isscalar(pump_direction):
+            pump_direction = np.ones((self.num_pumps,)) * pump_direction
+        else:
+            pump_direction = np.atleast_1d(pump_direction)
+        signal_direction = np.ones((self.num_channels,))
+        direction = np.concatenate((pump_direction, signal_direction))
+        self.direction = torch.from_numpy(direction).float()
 
         # if counterpumping:
         #     self.counterpumping = True

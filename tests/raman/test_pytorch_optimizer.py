@@ -12,18 +12,18 @@ from scipy.constants import lambda2nu, nu2lambda
 
 
 def test_pytorch_optimizer():
-    wdm = WDM(num_channels=50, spacing=200)
+    wdm = WDM(num_channels=90, spacing=100)
 
     fiber = Fiber()
     fiber_length = 50e3
     integration_steps = 100
-    num_pumps = 12
+    num_pumps = 8
     pump_band_b = lambda2nu(1500e-9)
     pump_band_a = lambda2nu(1390e-9)
     initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
     power_per_channel = dBm2watt(-5)
-    power_per_pump = dBm2watt(0)
+    power_per_pump = dBm2watt(-10)
     signal_wavelengths = wdm.wavelength_grid()
     pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
     num_pumps = len(pump_wavelengths)
@@ -46,9 +46,9 @@ def test_pytorch_optimizer():
         torch.from_numpy(pump_powers),
     )
 
-    target_spectrum = watt2dBm(2 * signal_powers)
+    target_spectrum = watt2dBm(0.5 * signal_powers)
     pump_wavelengths, pump_powers = optimizer.optimize(
-        target_spectrum=target_spectrum, epochs=200
+        target_spectrum=target_spectrum, epochs=500
     )
     amplifier = NumpyRamanAmplifier(fiber)
 
