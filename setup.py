@@ -11,7 +11,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 # List library dependencies. These are the packages required by the library
 # to function correctly. Packages needed for development are listed in
 # the "requirements.txt" in the root directory of the project.
-requirements = ["numpy", "scipy", "matplotlib", "h5py", "tqdm"]
+requirements = ["numpy", "scipy", "matplotlib", "h5py", "tqdm", "torch"]
 dev_requirements = [
     "pylint",
     "autopep8",
