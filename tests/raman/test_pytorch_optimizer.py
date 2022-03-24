@@ -46,8 +46,9 @@ def test_pytorch_optimizer():
         torch.from_numpy(pump_powers),
     )
 
-    input_power, output_spectrum, pump_wavelengths, pump_powers = optimizer.optimize(
-        epochs=1000
+    target_spectrum = watt2dBm(2 * signal_powers)
+    pump_wavelengths, pump_powers = optimizer.optimize(
+        target_spectrum=target_spectrum, epochs=200
     )
     amplifier = NumpyRamanAmplifier(fiber)
 
@@ -72,7 +73,6 @@ def test_pytorch_optimizer():
     )
 
     plt.figure()
-    plt.plot(signal_wavelengths * 1e9, (input_power))
-    plt.plot(signal_wavelengths * 1e9, (output_spectrum))
     plt.plot(signal_wavelengths * 1e9, watt2dBm(signal_solution[-1]))
+    plt.plot(signal_wavelengths * 1e9, target_spectrum)
     plt.show()

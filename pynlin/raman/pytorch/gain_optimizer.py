@@ -25,11 +25,14 @@ class CopropagatingOptimizer(nn.Module):
     def forward(self, x):
         return self.raman_solver(x).float()
 
-    def optimize(self, epochs=100, learning_rate=1e-1):
-        self.input_power = dBm(
-            self.raman_solver.signal_power
-            * torch.ones_like(self.raman_solver.signal_wavelengths).view(1, -1)
-        ).float()
+    def optimize(self, target_spectrum=None, epochs=100, learning_rate=1e-1):
+        if target_spectrum is None:
+            _target_spectrum = dBm(
+                self.raman_solver.signal_power
+                * torch.ones_like(self.raman_solver.signal_wavelengths).view(1, -1)
+            ).float()
+        else:
+            _target_spectrum = torch.from_numpy(target_spectrum).view(1, -1).float()
 
         torch_optimizer = Adam(self.parameters(), lr=0.1)
         best_loss = torch.inf
@@ -45,7 +48,7 @@ class CopropagatingOptimizer(nn.Module):
                 .float()
             )
             signal_spectrum = dBm(self.forward(x))
-            loss = loss_function(signal_spectrum, self.input_power)
+            loss = loss_function(signal_spectrum, _target_spectrum)
             loss.backward()
             torch_optimizer.step()
             torch_optimizer.zero_grad()
@@ -61,8 +64,6 @@ class CopropagatingOptimizer(nn.Module):
             print(self.pump_powers)
 
         return (
-            self.input_power.detach().numpy().squeeze(),
-            signal_spectrum.detach().numpy().squeeze(),
             best_wavelengths.detach().numpy().squeeze() * 1e-9,
             torch.abs(best_powers).detach().numpy().squeeze(),
         )
