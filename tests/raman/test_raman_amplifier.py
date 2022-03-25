@@ -1,11 +1,11 @@
-import pytest
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+
 import pynlin.fiber
 import pynlin.raman.solvers
-import pynlin.wdm
 import pynlin.utils
-
+import pynlin.wdm
 from pynlin.utils import dBm2watt, watt2dBm
 
 
@@ -63,13 +63,13 @@ def test_raman_amplifier_counterpumping_with_power_at_z0():
         use_power_at_fiber_start=True,
     )
 
-    plt.figure()
-    plt.plot(z, watt2dBm(signal_solution), color="k")
-    plt.plot(z, watt2dBm(pump_solution), color="r")
+    # plt.figure()
+    # plt.plot(z, watt2dBm(signal_solution), color="k")
+    # plt.plot(z, watt2dBm(pump_solution), color="r")
 
-    plt.figure()
-    plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
-    plt.show()
+    # plt.figure()
+    # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
+    # plt.show()
 
 
 def test_raman_amplifier_counterpumping_with_power_at_z0_exception():

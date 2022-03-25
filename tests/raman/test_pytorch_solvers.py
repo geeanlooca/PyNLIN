@@ -1,11 +1,12 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 import torch
+
 from pynlin.fiber import Fiber
 from pynlin.raman.pytorch.solvers import RamanAmplifier
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
-from pynlin.wdm import WDM
 from pynlin.utils import dBm2watt, watt2dBm
+from pynlin.wdm import WDM
 
 
 def test_pytorch_copropagating_solver_no_raman():

@@ -1,13 +1,13 @@
 import math
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import torch
 from scipy.constants import speed_of_light
 
-import torch
 from pynlin.fiber import Fiber
-from pynlin.raman.response import impulse_response
 from pynlin.raman.pytorch._torch_ode import torch_rk4
+from pynlin.raman.response import impulse_response
 
 
 class RamanAmplifier(torch.nn.Module):
