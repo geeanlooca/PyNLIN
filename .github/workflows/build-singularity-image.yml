@@ -8,12 +8,10 @@ on:
       - master
 
   # Do the builds on all pull requests (to test them)
-  pull_request: []
+  # pull_request: []
 
 jobs:
   build-test-containers:
-    needs:
-      - changes
     runs-on: ubuntu-latest
     strategy:
       # Keep going on other deployments if anything bloops
