@@ -1,8 +1,7 @@
-name: Singularity Build (manual)
+name: Singularity Build (docker)
 on: 
   push:
 
-    # This recipe shows how to manually define a matrix of singularity recipes (paths) to build
     # Edit the branches here if you want to change deploy behavior
     branches:
       - main
@@ -13,23 +12,32 @@ on:
 
 jobs:
   build-test-containers:
+    needs:
+      - changes
     runs-on: ubuntu-latest
-    container:
-      image: quay.io/singularity/singularity:v3.9.5
     strategy:
+      # Keep going on other deployments if anything bloops
       fail-fast: false
       matrix:
+        singularity_version:
+        - '3.8.1'
         recipe: ["Singularity"]
+
+
+    container:
+      image: quay.io/singularity/singularity:v${{ matrix.singularity_version }}
+      options: --privileged
 
     name: Check ${{ matrix.recipe }}
     steps:
 
-      - name: Check out code for the container build
+      - name: Check out code for the container builds
         uses: actions/checkout@v2
 
-      - name: Continue if Singularity Recipe Exists
+      - name: Continue if Singularity Recipe
         run: |
-          if [[ -f "${{ matrix.recipe }}" ]]; then
+          # Continue if we have a changed Singularity recipe
+          if [[ "${{ matrix.changed_file }}" = *Singularity* ]]; then
             echo "keepgoing=true" >> $GITHUB_ENV
           fi          
       - name: Build Container
