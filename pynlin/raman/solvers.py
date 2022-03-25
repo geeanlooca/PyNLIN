@@ -9,6 +9,7 @@ from scipy import polyval
 from scipy.constants import nu2lambda, lambda2nu
 
 import pynlin.utils
+from pynlin.fiber import Fiber
 from pynlin.pulses import Pulse
 from pynlin.raman.response import gain_spectrum, impulse_response
 from pynlin.utils import (
@@ -20,7 +21,9 @@ from pynlin.utils import (
 
 
 class RamanAmplifier:
-    def __init__(self, fiber, response_bandwidth=40e12, viz=False):
+    def __init__(
+        self, fiber: Fiber, response_bandwidth: float = 40e12, viz: bool = False
+    ):
 
         self.response_bandwidth = response_bandwidth
 
@@ -98,10 +101,9 @@ class RamanAmplifier:
         pump_wavelength,
         z,
         pump_direction=1,
+        use_power_at_fiber_start=False,
         check_photon_count=False,
-        shooting_solver="scipy",
     ):
-        bvp_solvers = ["scipy", "jiang"]
 
         raman_coefficient = self.fiber.raman_coefficient
         effective_core_area = self.fiber.effective_area
@@ -135,17 +137,21 @@ class RamanAmplifier:
         gain_matrix = self.compute_gain_matrix(frequencies)
 
         if shooting:
-            selected_solver = shooting_solver.lower()
-            if not selected_solver in bvp_solvers:
-                raise ValueError(
-                    "Invalid shooting solver. Accepted values: ", bvp_solvers
+            if not use_power_at_fiber_start:
+                raise NotImplementedError(
+                    "Cannot yet use counter-propagating pumps without using the power at the fiber start, i.e. no shooting implemented"
                 )
 
-            sol = self.solve_shooting(
-                pump_power, signal_power, z, solver=selected_solver
+            sol = scipy.integrate.odeint(
+                RamanAmplifier.raman_ode,
+                input_power,
+                z,
+                args=(losses_linear, gain_matrix, self.direction),
             )
+
             pump_solution = sol[:, :num_pumps]
             signal_solution = sol[:, num_pumps:]
+
         else:
             sol = scipy.integrate.odeint(
                 RamanAmplifier.raman_ode,

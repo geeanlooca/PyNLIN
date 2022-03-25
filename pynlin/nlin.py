@@ -1,14 +1,13 @@
 import functools
 import math
-from typing import Tuple, Generator, List
+from typing import Generator, List, Tuple
 
 import h5py
-
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate
-from scipy.constants import nu2lambda
 import tqdm
+from scipy.constants import nu2lambda
 from tqdm.contrib.concurrent import process_map
 
 from pynlin.constellations import Constellation
@@ -51,7 +50,8 @@ def get_interfering_frequencies(
     channel_of_interest: float,
     frequency_grid: np.ndarray,
 ) -> List[float]:
-    """Given a channel frequency and an  iterable of frequencies, generate a list of interfering channel frequencies."""
+    """Given a channel frequency and an  iterable of frequencies, generate a
+    list of interfering channel frequencies."""
     combinations = []
     for x in frequency_grid:
         if x != channel_of_interest:
@@ -67,9 +67,9 @@ def X0mm_time_integral_WDM_grid(
     filename: str,
     **compute_collisions_kwargs,
 ) -> None:
-    """Compute the inner time integral of the expression for the XPM coefficients Xhkm
-    for each combination of frequencies in the supplied WDM grid.
-    """
+    """Compute the inner time integral of the expression for the XPM
+    coefficients Xhkm for each combination of frequencies in the supplied WDM
+    grid."""
     T = 1 / baud_rate
     beta2 = fiber.beta2
 
@@ -131,7 +131,7 @@ def X0mm_time_integral_WDM_grid(
         # in each COI group, create a group for each interfering channel
         # and store the z-array (positions inside the fiber)
         # and the time integrals for each collision.
-        for interf_number, (z, I_list, m, interf_freq) in enumerate(
+        for interf_number, (z, integral, m, interf_freq) in enumerate(
             zip(z_list, integrals_list, m_list, interfering_frequencies)
         ):
 
@@ -166,7 +166,8 @@ def compute_all_collisions_X0mm_time_integrals(
     partial_collisions_start: int = 10,
     partial_collisions_end: int = 10,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Compute the integrals for all the collisions for the specified pair of channels.
+    """Compute the integrals for all the collisions for the specified pair of
+    channels.
 
     Returns
     -------
@@ -238,8 +239,8 @@ def compute_all_collisions_X0mm_time_integrals(
 def Xhkm_time_integral_multiprocessing_wrapper(
     pulse: Pulse, fiber: Fiber, z: np.ndarray, channel_spacing: float, m: int
 ):
-    """A wrapper for the `Xhkm_time_integral` function to easily `functool.partial` and
-    enable multiprocessing."""
+    """A wrapper for the `Xhkm_time_integral` function to easily
+    `functool.partial` and enable multiprocessing."""
     return Xhkm_time_integral(pulse, fiber, z, channel_spacing, 0, m, m)
 
 
@@ -253,11 +254,10 @@ def get_m_values(
 ) -> np.ndarray:
     """Get values of the m indeces to compute the X0mm XPM coefficients for.
 
-    Computes those indeces for which the collisions fall inside the fiber.
-    By default, 10 extra partial collisions at each end of the fiber are computed.
-    This parameter can be controlled by the `partial_collisions_start` and
-    `partial_collisions_end` kwargs.
-
+    Computes those indeces for which the collisions fall inside the
+    fiber. By default, 10 extra partial collisions at each end of the
+    fiber are computed. This parameter can be controlled by the
+    `partial_collisions_start` and `partial_collisions_end` kwargs.
     """
     m_max = -fiber_length * fiber.beta2 * 2 * math.pi * channel_spacing / T
 
@@ -270,7 +270,8 @@ def get_m_values(
 
 
 def get_collision_location(m, fiber, channel_spacing, T) -> float:
-    """For the specified index m, compute the position of the corresponding complete collision."""
+    """For the specified index m, compute the position of the corresponding
+    complete collision."""
     return -m * T / (fiber.beta2 * 2 * math.pi * channel_spacing)
 
 
@@ -283,9 +284,8 @@ def Xhkm_time_integral(
     k: int,
     m: int,
 ) -> np.ndarray:
-    """Compute the inner time integral of the expression for the XPM coefficients Xhkm
-    for the specified channel spacing.
-    """
+    """Compute the inner time integral of the expression for the XPM
+    coefficients Xhkm for the specified channel spacing."""
     npoints_z = len(z)
     g, t = pulse.data()
     O = 2 * np.pi * channel_spacing
@@ -309,9 +309,11 @@ def Xhkm_time_integral(
 def Xhkm_precomputed(
     z: np.ndarray, time_integrals, amplification_function: np.ndarray = None, axis=-1
 ) -> np.ndarray:
-    """Compute the Xhkm XPM coefficients specifying the inner time integral as input.
+    """Compute the Xhkm XPM coefficients specifying the inner time integral as
+    input.
 
-    Useful to compare different amplification schemes without re-computing the time integral.
+    Useful to compare different amplification schemes without re-
+    computing the time integral.
     """
 
     if not amplification_function:

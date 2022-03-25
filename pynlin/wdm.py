@@ -19,7 +19,7 @@ class WDM:
         Params
         ------
         spacing: float
-            The spacing between the center frequencies of the WDM channels (Hz).
+            The spacing between the center frequencies of the WDM channels (GHz).
         """
         self.spacing = spacing
         self.num_channels = num_channels
