@@ -1,7 +1,9 @@
 import math
+from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.typing import NDArray
 import torch
 from scipy.constants import speed_of_light
 
@@ -16,12 +18,12 @@ class RamanAmplifier(torch.nn.Module):
         fiber_length: float,
         integration_steps: int,
         num_pumps: int,
-        signal_wavelengths: float,
+        signal_wavelengths: Union[list, NDArray],
         power_per_channel: float,
         fiber: Fiber,
-        fs=80e12,
-        dF=50e9,
-        pump_direction=1,
+        fs: float = 80e12,
+        dF: float = 50e9,
+        pump_direction=Union[int, NDArray],
     ):
         """A PyTorch model of a Multi-Mode Fiber Raman Amplifier.
 
@@ -147,15 +149,15 @@ class RamanAmplifier(torch.nn.Module):
         # Save it in a buffer
         # self.register_buffer("off_gain", off_gain)
 
-    def _alpha_to_linear(self, alpha):
+    def _alpha_to_linear(self, alpha: NDArray) -> NDArray:
         """Convert attenuation constant from dB to linear units."""
         return alpha * 1e-3 * np.log(10) / 10
 
-    def _lambda2frequency(self, wavelength):
+    def _lambda2frequency(self, wavelength: NDArray) -> NDArray:
         """Convert wavelength in frequency."""
         return self.c0 / wavelength
 
-    def _batch_diff(self, x):
+    def _batch_diff(self, x: torch.Tensor) -> torch.Tensor:
         """Takes a Tensor of shape (B, N) and returns a Tensor of shape (B, N,
         N) where in position (i, :, :) is the matrix of differences of the
         input vector (i, :) with each one of its elements."""
@@ -163,7 +165,7 @@ class RamanAmplifier(torch.nn.Module):
         D = x.view(batch_size, 1, -1) - x.view(batch_size, -1, 1)
         return D
 
-    def _interpolate_response(self, freqs):
+    def _interpolate_response(self, freqs: torch.Tensor) -> torch.Tensor:
         """Compute the Raman gain coefficient for the input frequencies."""
         batch_size = freqs.shape[0]
 
@@ -178,7 +180,13 @@ class RamanAmplifier(torch.nn.Module):
         )
 
     @staticmethod
-    def ode(P, z, losses, gain_matrix, direction):
+    def ode(
+        P: torch.Tensor,
+        z: torch.Tensor,
+        losses: torch.Tensor,
+        gain_matrix: torch.Tensor,
+        direction: torch.Tensor,
+    ) -> torch.Tensor:
         """Batched version of the singlemode Raman amplifier equations.
 
         Params
@@ -209,7 +217,7 @@ class RamanAmplifier(torch.nn.Module):
 
         return dPdz * direction
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Solves the propagation equation using a RK4 scheme.
 
         Parameters
