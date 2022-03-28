@@ -28,9 +28,9 @@ class CopropagatingOptimizer(nn.Module):
         super(CopropagatingOptimizer, self).__init__()
         self.raman_solver = raman_torch_solver
         scaled_wavelengths, self.wavelength_scaling = self.scale(
-            initial_pump_wavelengths
+            torch.from_numpy(initial_pump_wavelengths).float()
         )
-        self.pump_powers = nn.Parameter(initial_pump_powers)
+        self.pump_powers = nn.Parameter(torch.from_numpy(initial_pump_powers).float())
         self.pump_wavelengths = nn.Parameter(scaled_wavelengths)
 
     def forward(self, wavelengths: torch.Tensor, powers: torch.Tensor) -> torch.Tensor:
@@ -39,7 +39,9 @@ class CopropagatingOptimizer(nn.Module):
         x = torch.cat((wavelengths, powers)).view(1, -1).float()
         return dBm(self.raman_solver(x).float())
 
-    def scale(self, x: torch.Tensor) -> Tuple[torch.Tensor, Tuple[float, float]]:
+    def scale(
+        self, x: torch.Tensor
+    ) -> Tuple[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
         """Scale the input tensor to the range [0, 1]."""
         m = torch.min(x)
         d = torch.max(x) - m
