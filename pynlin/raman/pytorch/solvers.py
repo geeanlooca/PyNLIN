@@ -23,7 +23,7 @@ class RamanAmplifier(torch.nn.Module):
         fiber: Fiber,
         fs: float = 80e12,
         dF: float = 50e9,
-        pump_direction=Union[int, NDArray],
+        pump_direction: Union[int, NDArray] = 1,
     ):
         """A PyTorch model of a Multi-Mode Fiber Raman Amplifier.
 

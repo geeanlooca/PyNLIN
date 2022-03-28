@@ -22,15 +22,15 @@ class CopropagatingOptimizer(nn.Module):
     def __init__(
         self,
         raman_torch_solver: RamanAmplifier,
-        initial_pump_wavelengths: np.ndarray,
-        initial_pump_powers: np.ndarray,
+        initial_pump_wavelengths: torch.Tensor,
+        initial_pump_powers: torch.Tensor,
     ):
         super(CopropagatingOptimizer, self).__init__()
         self.raman_solver = raman_torch_solver
         scaled_wavelengths, self.wavelength_scaling = self.scale(
-            torch.from_numpy(initial_pump_wavelengths).float()
+            initial_pump_wavelengths.float()
         )
-        self.pump_powers = nn.Parameter(torch.from_numpy(initial_pump_powers).float())
+        self.pump_powers = nn.Parameter(initial_pump_powers.float())
         self.pump_wavelengths = nn.Parameter(scaled_wavelengths)
 
     def forward(self, wavelengths: torch.Tensor, powers: torch.Tensor) -> torch.Tensor:
