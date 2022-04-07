@@ -105,6 +105,7 @@ z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
     baud_rate,
     fiber,
     fiber_length,
+    pulse_shape = "RaisedCosine",
     rolloff_factor=0.1,
     samples_per_symbol=10,
     points_per_collision=10,
