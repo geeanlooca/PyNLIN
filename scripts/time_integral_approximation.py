@@ -72,23 +72,37 @@ wdm = pynlin.wdm.WDM(
     spacing=args.channel_spacing, num_channels=num_channels, center_frequency=190
 )
 
+# use the approximation given in the paper ~= 1/beta2 * Omega and compare it to the numerical results
+# assume m
+O = channel_spacing * 2 * np.pi * 2
+mm = 10
+T = 1/baud_rate
+T0 = 1/baud_rate
+Dm = -mm*T/(channel_spacing * T0**2)
+zero_order_approximation = - 1 / (beta2 * O)
+second_order_correction = - (mm*T)**2*(11+3/4)/(beta2 * O**3 * T0**2)/(O**2 * T**4 + mm**2 * T**2) /2
+
+print(zero_order_approximation)
+print(second_order_correction)
+approx_constant = zero_order_approximation + second_order_correction
+
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[1]
+interfering_frequency = wdm.frequency_grid()[2]
 channel_spacing = interfering_frequency - frequency_of_interest
 
-
 least_steps = 5
-most_steps = 50
+most_steps = 20
 increment = 5
 integration_steps = range(least_steps, most_steps, increment)
+
 integrals = []
 pbar_description = (
         f"Test integration with steps from {least_steps} to {most_steps}, total tests {np.ceil((most_steps-least_steps)/increment) }"
     )
 collisions_pbar = tqdm.tqdm(integration_steps, leave=False)
 collisions_pbar.set_description(pbar_description)
-
+##########################
 for steps in collisions_pbar:
     z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
         frequency_of_interest,
@@ -99,16 +113,24 @@ for steps in collisions_pbar:
         pulse_shape = "Gaussian",
         rolloff_factor=0.1,
         samples_per_symbol=steps,
-        points_per_collision=100,
+        points_per_collision=10,
         use_multiprocessing=True,
         partial_collisions_start=1,
         partial_collisions_end=1,
     )
     integrals.append(I)
+# np.save("./integrals.npy", integrals)
+# np.save("./m.npy", m)
+# np.save("./z.npy", z)
 
-# use the approximation given in the paper ~= 1/beta2 * Omega and compare it to the numerical results
+
+# #############################
+
+# integrals = np.load("./integrals.npy")
+# m = np.load("./m.npy")
+# z = np.load("./z.npy")
 stacked_ints = np.stack(integrals)
-approx_constant =- 1 / (beta2 * 2 * np.pi * channel_spacing)
+
 approximation = np.ones_like(m, dtype=float)
 approximation *= approx_constant
 
@@ -119,17 +141,17 @@ locs = pynlin.nlin.get_collision_location(m, fiber, channel_spacing, 1 / baud_ra
 
 # plot the integral convergence with various time integration steps
 colormap = plt.cm.gist_ncar 
-colors = [colormap(i) for i in np.linspace(0, 1,len(locs))]
+colors = [colormap(i) for i in np.linspace(0, 1, len(locs))]
 
 plt.figure(figsize=(10, 5))
 labels = []
 for l, loc in enumerate(locs):
-    error = np.subtract(np.abs(pynlin.nlin.Xhkm_precomputed(z, stacked_ints[:, l, :], amplification_function=None)), approx_constant)/approx_constant
+    error = np.subtract(np.abs(pynlin.nlin.Xhkm_precomputed(z, stacked_ints[:, l, :], amplification_function=None)), approx_constant)
     plt.plot(integration_steps, error, marker="+", color=colors[l])
     labels.append(r'collision %i' % (l))
 plt.title("difference between computation and approximation, for all collision indexes vs step number")
 plt.xlabel("Number of samples per integral")
-plt.ylabel("relative approximation error")
+plt.ylabel("absolute approximation error")
 plt.legend(labels, ncol=5, loc='upper right', 
            bbox_to_anchor=[0.5, 1.1], 
            columnspacing=1.0, labelspacing=0.0,
@@ -137,23 +159,24 @@ plt.legend(labels, ncol=5, loc='upper right',
            fancybox=True, shadow=True)
 plt.show()
 
-# plot X0mm with least accurate step and most accurate step
 X0mm_first = pynlin.nlin.Xhkm_precomputed(z, integrals[0], amplification_function=None)
 X0mm_last = pynlin.nlin.Xhkm_precomputed(z, integrals[len(integrals)-1], amplification_function=None)
-plt.figure()
-plt.semilogy(m, np.abs(X0mm_first), marker="o", label="Lowest sampling")
-plt.semilogy(m, np.abs(X0mm_last), marker="o", label="Highest sampling")
-plt.semilogy(m, np.abs(approximation), marker="x", label=r"$1/(\beta_2 \Omega)$")
-plt.minorticks_on()
-plt.grid(which="both")
-plt.xlabel(r"Collision index $m$")
-plt.ylabel(r"$X_{0,m,m}$")
-plt.title(
-    rf"$f_B(z)=1$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
-)
-plt.legend()
 
-# plot absolute value of X0mm in linear scale
+# # plot X0mm with least accurate step and most accurate step
+# plt.figure()
+# plt.semilogy(m, np.abs(X0mm_first), marker="o", label="Lowest sampling")
+# plt.semilogy(m, np.abs(X0mm_last), marker="o", label="Highest sampling")
+# plt.semilogy(m, np.abs(approximation), marker="x", label=r"$1/(\beta_2 \Omega)$")
+# plt.minorticks_on()
+# plt.grid(which="both")
+# plt.xlabel(r"Collision index $m$")
+# plt.ylabel(r"$X_{0,m,m}$")
+# plt.title(
+#     rf"$f_B(z)=1$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
+# )
+# plt.legend()
+
+# plot absolute value of X0mm with least accurate step and most accurate step in linear scale
 plt.figure()
 plt.plot(m, np.abs(X0mm_first), marker="o", label="Lowest sampling")
 plt.plot(m, np.abs(X0mm_last), marker="o", label="Highest sampling")
