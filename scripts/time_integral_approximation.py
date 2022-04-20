@@ -86,7 +86,7 @@ approx_constant = zero_order_approximation  # + second_order_correction
 
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[1]
+interfering_frequency = wdm.frequency_grid()[2]
 channel_spacing = interfering_frequency - frequency_of_interest
 
 least_steps = 2
@@ -111,7 +111,7 @@ for steps in collisions_pbar:
         pulse_shape="Nyquist",
         rolloff_factor=0.1,
         samples_per_symbol=steps,
-        points_per_collision=30,
+        points_per_collision=10,
         use_multiprocessing=True,
         partial_collisions_start=1,
         partial_collisions_end=1,
