@@ -74,32 +74,30 @@ wdm = pynlin.wdm.WDM(
 
 # use the approximation given in the paper ~= 1/beta2 * Omega and compare it to the numerical results
 # assume m
-O = channel_spacing * 2 * np.pi * 2
+O = channel_spacing * 2 * np.pi
 mm = 10
-T = 1/baud_rate
-T0 = 1/baud_rate
-Dm = -mm*T/(channel_spacing * T0**2)
+T = 1 / baud_rate
+T0 = 1 / baud_rate
+Dm = -mm * T / (channel_spacing * T0**2)
 zero_order_approximation = - 1 / (beta2 * O)
-second_order_correction = - (mm*T)**2*(11+3/4)/(beta2 * O**3 * T0**2)/(O**2 * T**4 + mm**2 * T**2) /2
+second_order_correction = - 1 / (beta2 * O**3 * T0**2)
 
-print(zero_order_approximation)
-print(second_order_correction)
-approx_constant = zero_order_approximation + second_order_correction
+approx_constant = zero_order_approximation  # + second_order_correction
 
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[2]
+interfering_frequency = wdm.frequency_grid()[1]
 channel_spacing = interfering_frequency - frequency_of_interest
 
-least_steps = 5
-most_steps = 20
-increment = 5
+least_steps = 2
+most_steps = 10
+increment = 1
 integration_steps = range(least_steps, most_steps, increment)
 
 integrals = []
 pbar_description = (
-        f"Test integration with steps from {least_steps} to {most_steps}, total tests {np.ceil((most_steps-least_steps)/increment) }"
-    )
+    f"Test integration with steps from {least_steps} to {most_steps}, total tests {np.ceil((most_steps-least_steps)/increment) }"
+)
 collisions_pbar = tqdm.tqdm(integration_steps, leave=False)
 collisions_pbar.set_description(pbar_description)
 ##########################
@@ -110,10 +108,10 @@ for steps in collisions_pbar:
         baud_rate,
         fiber,
         fiber_length,
-        pulse_shape = "Gaussian",
+        pulse_shape="Nyquist",
         rolloff_factor=0.1,
         samples_per_symbol=steps,
-        points_per_collision=10,
+        points_per_collision=30,
         use_multiprocessing=True,
         partial_collisions_start=1,
         partial_collisions_end=1,
@@ -140,27 +138,30 @@ approximation *= approx_constant
 locs = pynlin.nlin.get_collision_location(m, fiber, channel_spacing, 1 / baud_rate)
 
 # plot the integral convergence with various time integration steps
-colormap = plt.cm.gist_ncar 
+colormap = plt.cm.gist_ncar
 colors = [colormap(i) for i in np.linspace(0, 1, len(locs))]
 
 plt.figure(figsize=(10, 5))
 labels = []
 for l, loc in enumerate(locs):
-    error = np.subtract(np.abs(pynlin.nlin.Xhkm_precomputed(z, stacked_ints[:, l, :], amplification_function=None)), approx_constant)
-    plt.plot(integration_steps, error, marker="+", color=colors[l])
+    error = np.subtract(np.abs(pynlin.nlin.Xhkm_precomputed(
+        z, stacked_ints[:, l, :], amplification_function=None)), approx_constant)
+    plt.plot(integration_steps, error, marker="x", color=colors[l])
     labels.append(r'collision %i' % (l))
-plt.title("difference between computation and approximation, for all collision indexes vs step number")
+plt.title(r"Computed $X_{0, m, m}$ - $1/(\beta_2 \Omega)$")
 plt.xlabel("Number of samples per integral")
-plt.ylabel("absolute approximation error")
-plt.legend(labels, ncol=5, loc='upper right', 
-           bbox_to_anchor=[0.5, 1.1], 
+plt.ylabel("Absolute approximation error")
+plt.legend(labels, ncol=5, loc='lower right',
            columnspacing=1.0, labelspacing=0.0,
            handletextpad=0.0, handlelength=1.5,
            fancybox=True, shadow=True)
+plt.minorticks_on()
+plt.grid(which="both")
 plt.show()
 
 X0mm_first = pynlin.nlin.Xhkm_precomputed(z, integrals[0], amplification_function=None)
-X0mm_last = pynlin.nlin.Xhkm_precomputed(z, integrals[len(integrals)-1], amplification_function=None)
+X0mm_last = pynlin.nlin.Xhkm_precomputed(
+    z, integrals[len(integrals) - 1], amplification_function=None)
 
 # # plot X0mm with least accurate step and most accurate step
 # plt.figure()
