@@ -72,6 +72,11 @@ wdm = pynlin.wdm.WDM(
     spacing=args.channel_spacing, num_channels=num_channels, center_frequency=190
 )
 
+# compute the collisions between the two furthest WDM channels
+frequency_of_interest = wdm.frequency_grid()[0]
+interfering_frequency = wdm.frequency_grid()[2]
+channel_spacing = interfering_frequency - frequency_of_interest
+
 # use the approximation given in the paper ~= 1/beta2 * Omega and compare it to the numerical results
 # assume m
 O = channel_spacing * 2 * np.pi
@@ -83,11 +88,6 @@ zero_order_approximation = - 1 / (beta2 * O)
 second_order_correction = - 1 / (beta2 * O**3 * T0**2)
 
 approx_constant = zero_order_approximation  # + second_order_correction
-
-# compute the collisions between the two furthest WDM channels
-frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[2]
-channel_spacing = interfering_frequency - frequency_of_interest
 
 least_steps = 2
 most_steps = 10
