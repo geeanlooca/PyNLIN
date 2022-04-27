@@ -316,7 +316,7 @@ def Xhkm_precomputed(
     computing the time integral.
     """
 
-    if not amplification_function:
+    if type(amplification_function) is not np.ndarray:
         # if the amplification function is not supplied, assume perfect distributed
         # amplification
         amplification_function = np.ones_like(z)

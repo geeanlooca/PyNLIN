@@ -126,3 +126,6 @@ dmypy.json
 .vscode/
 
 tests/reports/
+
+# Numpy caching
+*.npy
