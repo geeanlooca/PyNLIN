@@ -190,8 +190,8 @@ plt.show()
 np.save("pump_solution_co.npy", pump_solution_co)
 np.save("signal_solution_co.npy", signal_solution_co)
 
-pump_solution_co = np.load("./pump_solution_co.npy")
-signal_solution_co = np.load("./signal_solution_co.npy")
+# pump_solution_co = np.load("./pump_solution_co.npy")
+# signal_solution_co = np.load("./signal_solution_co.npy")
 
 
 # COMPUTATION OF TIME INTEGRALS =================================
