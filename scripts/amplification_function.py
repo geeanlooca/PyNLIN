@@ -68,6 +68,7 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+print(args)
 
 beta2 = pynlin.utils.dispersion_to_beta2(
     args.dispersion * 1e-12 / (1e-9 * 1e3), args.wavelength * 1e-9
@@ -82,108 +83,27 @@ wdm = pynlin.wdm.WDM(
     spacing=args.channel_spacing, num_channels=num_channels, center_frequency=190
 )
 
-
-integration_steps = 100
-z = np.linspace(0, fiber_length, integration_steps)
-# OPTIMIZER
-# num_pumps = 8
-# pump_band_b = lambda2nu(1510e-9)
-# pump_band_a = lambda2nu(1410e-9)
-# initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
-
-# power_per_channel = dBm2watt(-5)
-# power_per_pump = dBm2watt(-10)
-# signal_wavelengths = wdm.wavelength_grid()
-# pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
-# num_pumps = len(pump_wavelengths)
-
-# signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
-# pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-
-# torch_amplifier = RamanAmplifier(
-#     fiber_length,
-#     integration_steps,
-#     num_pumps,
-#     signal_wavelengths,
-#     power_per_channel,
-#     fiber,
-# )
-
-# torch_amplifier_cnt = RamanAmplifier(
-#     fiber_length,
-#     integration_steps,
-#     num_pumps,
-#     signal_wavelengths,
-#     power_per_channel,
-#     fiber,
-#     pump_direction=-1,
-# )
-
-# optimizer = CopropagatingOptimizer(
-#     torch_amplifier,
-#     torch.from_numpy(pump_wavelengths),
-#     torch.from_numpy(pump_powers),
-# )
-
-# target_spectrum = watt2dBm(0.5 * signal_powers)
-
-# pump_wavelengths_co, pump_powers_co = optimizer.optimize(
-#     target_spectrum=target_spectrum, epochs=500
-# )
-
-# amplifier = NumpyRamanAmplifier(fiber)
-
-# pump_solution_co, signal_solution_co = amplifier.solve(
-#     signal_powers,
-#     signal_wavelengths,
-#     pump_powers_co,
-#     pump_wavelengths_co,
-#     z
-# )
-
-# plt.figure()
-# plt.plot(z, watt2dBm(pump_solution_co), color="red", label="pump solution")
-# plt.plot(z, watt2dBm(signal_solution_co), color="black", label="signal solution")
-# plt.xlabel("Position [m]")
-# plt.ylabel("Power [dBm]")
-
-# plt.figure()
-# plt.stem(lambda2nu(pump_wavelengths_co) * 1e-12,
-#          watt2dBm(pump_powers_co), markerfmt=".")
-# plt.stem(
-#     lambda2nu(signal_wavelengths) * 1e-12,
-#     watt2dBm(signal_solution_co[-1]),
-#     markerfmt=".",
-# )
-
-# plt.figure()
-# plt.plot(signal_wavelengths * 1e9, watt2dBm(signal_solution_co[-1]))
-# plt.plot(signal_wavelengths * 1e9, target_spectrum)
-# plt.show()
-
-# np.save("pump_solution_co.npy", pump_solution_co)
-# np.save("signal_solution_co.npy", signal_solution_co)
-
-pump_solution_co = np.load("pump_solution_co.npy")
-signal_solution_co = np.load("signal_solution_co.npy")
-
-########################################################
-########################################################
-########################################################
-########################################################
-########################################################
-
-
-print(args)
-
-fig, ax = plt.subplots()
-wdm.plot(ax, xaxis="frequency")
-
-
+# COMPUTATION OF TIME INTEGRALS =================================
+interfering_grid_index = 2
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[1]
+interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
 channel_spacing = interfering_frequency - frequency_of_interest
+partial_collision_margin = 5
+
+z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
+    frequency_of_interest,
+    interfering_frequency,
+    baud_rate,
+    fiber,
+    fiber_length,
+    rolloff_factor=0.1,
+    samples_per_symbol=10,
+    points_per_collision=10,
+    use_multiprocessing=True,
+    partial_collisions_start=partial_collision_margin,
+    partial_collisions_end=partial_collision_margin,
+)
 
 # pynlin.nlin.X0mm_time_integral_WDM_grid(
 #     baud_rate,
@@ -199,33 +119,100 @@ channel_spacing = interfering_frequency - frequency_of_interest
 #     partial_collisions_end=5,
 # )
 
-partial_collision_margin = 5
 
-actual_collisions = pynlin.nlin.get_m_values(
-    fiber,
+integration_steps = len(z)
+
+print("z axis")
+print(z)
+print(np.shape(z))
+
+# OPTIMIZER =================================
+
+num_pumps = 8
+pump_band_b = lambda2nu(1510e-9)
+pump_band_a = lambda2nu(1410e-9)
+initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
+
+power_per_channel = dBm2watt(-5)
+power_per_pump = dBm2watt(-10)
+signal_wavelengths = wdm.wavelength_grid()
+pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+num_pumps = len(pump_wavelengths)
+
+signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
+pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
+
+torch_amplifier = RamanAmplifier(
     fiber_length,
-    channel_spacing,
-    1 / baud_rate,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
+    integration_steps,
+    num_pumps,
+    signal_wavelengths,
+    power_per_channel,
+    fiber,
 )
 
-num_collisions = len(actual_collisions)
-points_per_collision = int(np.floor(integration_steps / num_collisions))
-
-z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
-    frequency_of_interest,
-    interfering_frequency,
-    baud_rate,
-    fiber,
+torch_amplifier_cnt = RamanAmplifier(
     fiber_length,
-    rolloff_factor=0.1,
-    samples_per_symbol=10,
-    points_per_collision=points_per_collision,
-    use_multiprocessing=True,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
+    integration_steps,
+    num_pumps,
+    signal_wavelengths,
+    power_per_channel,
+    fiber,
+    pump_direction=-1,
 )
+
+optimizer = CopropagatingOptimizer(
+    torch_amplifier,
+    torch.from_numpy(pump_wavelengths),
+    torch.from_numpy(pump_powers),
+)
+
+target_spectrum = watt2dBm(0.5 * signal_powers)
+
+pump_wavelengths_co, pump_powers_co = optimizer.optimize(
+    target_spectrum=target_spectrum, epochs=500
+)
+
+amplifier = NumpyRamanAmplifier(fiber)
+
+pump_solution_co, signal_solution_co = amplifier.solve(
+    signal_powers,
+    signal_wavelengths,
+    pump_powers_co,
+    pump_wavelengths_co,
+    z
+)
+
+plt.figure()
+plt.plot(z, watt2dBm(pump_solution_co), color="red", label="pump solution")
+plt.plot(z, watt2dBm(signal_solution_co), color="black", label="signal solution")
+plt.xlabel("Position [m]")
+plt.ylabel("Power [dBm]")
+
+plt.figure()
+plt.stem(lambda2nu(pump_wavelengths_co) * 1e-12,
+         watt2dBm(pump_powers_co), markerfmt=".")
+plt.stem(
+    lambda2nu(signal_wavelengths) * 1e-12,
+    watt2dBm(signal_solution_co[-1]),
+    markerfmt=".",
+)
+
+plt.figure()
+plt.plot(signal_wavelengths * 1e9, watt2dBm(signal_solution_co[-1]))
+plt.plot(signal_wavelengths * 1e9, target_spectrum)
+plt.show()
+
+np.save("pump_solution_co.npy", pump_solution_co)
+np.save("signal_solution_co.npy", signal_solution_co)
+
+pump_solution_co = np.load("./pump_solution_co.npy")
+signal_solution_co = np.load("./signal_solution_co.npy")
+
+# XPM COEFFICIENT EVALUATION =================================
+
+fig, ax = plt.subplots()
+wdm.plot(ax, xaxis="frequency")
 
 # use the approximation given in the paper ~= 1/beta2 * Omega and compare it to the numerical results
 approximation = np.ones_like(m, dtype=float)
@@ -234,7 +221,10 @@ approximation *= 1 / (beta2 * 2 * np.pi * channel_spacing)
 # compute the X0mm coefficients given the precompute time integrals:
 # bonus of this approach -> no need to recompute the time integrals if
 # we want to compare different amplification schemes or constellations
-X0mm = pynlin.nlin.Xhkm_precomputed(z, I, amplification_function=signal_solution_co[0])
+print("signal_solution_co")
+print(np.shape(signal_solution_co))
+X0mm = pynlin.nlin.Xhkm_precomputed(
+    z, I, amplification_function=signal_solution_co[:, interfering_grid_index])
 locs = pynlin.nlin.get_collision_location(m, fiber, channel_spacing, 1 / baud_rate)
 
 
