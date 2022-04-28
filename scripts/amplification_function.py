@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from scipy.constants import lambda2nu, nu2lambda
+from scipy.interpolate import interp1d
 
 from pynlin.fiber import Fiber
 from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
@@ -83,13 +84,27 @@ wdm = pynlin.wdm.WDM(
     spacing=args.channel_spacing, num_channels=num_channels, center_frequency=190
 )
 
-# COMPUTATION OF TIME INTEGRALS =================================
-interfering_grid_index = 2
+
+interfering_grid_index = 10
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
 interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
 channel_spacing = interfering_frequency - frequency_of_interest
 partial_collision_margin = 5
+points_per_collision = 10
+# PRECISION REQUIREMENTS ESTIMATION =================================
+max_num_collisions = len(pynlin.nlin.get_m_values(
+    fiber,
+    fiber_length,
+    channel_spacing,
+    1 / baud_rate,
+    partial_collisions_start=partial_collision_margin,
+    partial_collisions_end=partial_collision_margin)
+)
+integration_steps = max_num_collisions * points_per_collision
+
+z_max = np.linspace(0, fiber_length, integration_steps)
+# COMPUTATION OF TIME INTEGRALS =================================
 
 z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
     frequency_of_interest,
@@ -99,7 +114,7 @@ z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
     fiber_length,
     rolloff_factor=0.1,
     samples_per_symbol=10,
-    points_per_collision=10,
+    points_per_collision=points_per_collision,
     use_multiprocessing=True,
     partial_collisions_start=partial_collision_margin,
     partial_collisions_end=partial_collision_margin,
@@ -120,14 +135,12 @@ z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
 # )
 
 
-integration_steps = len(z)
-
 print("z axis")
 print(z)
 print(np.shape(z))
 
 # OPTIMIZER =================================
-
+'''
 num_pumps = 8
 pump_band_b = lambda2nu(1510e-9)
 pump_band_a = lambda2nu(1410e-9)
@@ -180,12 +193,12 @@ pump_solution_co, signal_solution_co = amplifier.solve(
     signal_wavelengths,
     pump_powers_co,
     pump_wavelengths_co,
-    z
+    z_max
 )
 
 plt.figure()
-plt.plot(z, watt2dBm(pump_solution_co), color="red", label="pump solution")
-plt.plot(z, watt2dBm(signal_solution_co), color="black", label="signal solution")
+plt.plot(z_max, watt2dBm(pump_solution_co), color="red", label="pump solution")
+plt.plot(z_max, watt2dBm(signal_solution_co), color="black", label="signal solution")
 plt.xlabel("Position [m]")
 plt.ylabel("Power [dBm]")
 
@@ -205,7 +218,7 @@ plt.show()
 
 np.save("pump_solution_co.npy", pump_solution_co)
 np.save("signal_solution_co.npy", signal_solution_co)
-
+'''
 pump_solution_co = np.load("./pump_solution_co.npy")
 signal_solution_co = np.load("./signal_solution_co.npy")
 
@@ -218,13 +231,14 @@ wdm.plot(ax, xaxis="frequency")
 approximation = np.ones_like(m, dtype=float)
 approximation *= 1 / (beta2 * 2 * np.pi * channel_spacing)
 
+# interpolate the amplification function using optimization results
+fA = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
+
 # compute the X0mm coefficients given the precompute time integrals:
 # bonus of this approach -> no need to recompute the time integrals if
 # we want to compare different amplification schemes or constellations
-print("signal_solution_co")
-print(np.shape(signal_solution_co))
 X0mm = pynlin.nlin.Xhkm_precomputed(
-    z, I, amplification_function=signal_solution_co[:, interfering_grid_index])
+    z, I, amplification_function=fA(z))
 locs = pynlin.nlin.get_collision_location(m, fiber, channel_spacing, 1 / baud_rate)
 
 
