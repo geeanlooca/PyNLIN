@@ -92,55 +92,26 @@ interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
 channel_spacing = interfering_frequency - frequency_of_interest
 partial_collision_margin = 5
 points_per_collision = 10
+
 # PRECISION REQUIREMENTS ESTIMATION =================================
+max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
+print(max_channel_spacing)
+
 max_num_collisions = len(pynlin.nlin.get_m_values(
     fiber,
     fiber_length,
-    channel_spacing,
+    max_channel_spacing,
     1 / baud_rate,
     partial_collisions_start=partial_collision_margin,
     partial_collisions_end=partial_collision_margin)
 )
 integration_steps = max_num_collisions * points_per_collision
 
+# building high precision
 z_max = np.linspace(0, fiber_length, integration_steps)
-# COMPUTATION OF TIME INTEGRALS =================================
-
-z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
-    frequency_of_interest,
-    interfering_frequency,
-    baud_rate,
-    fiber,
-    fiber_length,
-    rolloff_factor=0.1,
-    samples_per_symbol=10,
-    points_per_collision=points_per_collision,
-    use_multiprocessing=True,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
-)
-
-# pynlin.nlin.X0mm_time_integral_WDM_grid(
-#     baud_rate,
-#     wdm,
-#     fiber,
-#     fiber_length,
-#     "results.h5",
-#     rolloff_factor=0.1,
-#     samples_per_symbol=10,
-#     points_per_collision=10,
-#     use_multiprocessing=True,
-#     partial_collisions_start=5,
-#     partial_collisions_end=5,
-# )
-
-
-print("z axis")
-print(z)
-print(np.shape(z))
 
 # OPTIMIZER =================================
-'''
+
 num_pumps = 8
 pump_band_b = lambda2nu(1510e-9)
 pump_band_a = lambda2nu(1410e-9)
@@ -218,12 +189,45 @@ plt.show()
 
 np.save("pump_solution_co.npy", pump_solution_co)
 np.save("signal_solution_co.npy", signal_solution_co)
-'''
+
 pump_solution_co = np.load("./pump_solution_co.npy")
 signal_solution_co = np.load("./signal_solution_co.npy")
 
-# XPM COEFFICIENT EVALUATION =================================
 
+# COMPUTATION OF TIME INTEGRALS =================================
+# to be computed once for all, for all channels, and saved to file
+# using X0mm_time_integral_WDM_grid
+
+z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
+    frequency_of_interest,
+    interfering_frequency,
+    baud_rate,
+    fiber,
+    fiber_length,
+    rolloff_factor=0.1,
+    samples_per_symbol=10,
+    points_per_collision=points_per_collision,
+    use_multiprocessing=True,
+    partial_collisions_start=partial_collision_margin,
+    partial_collisions_end=partial_collision_margin,
+)
+
+pynlin.nlin.X0mm_time_integral_WDM_grid(
+    baud_rate,
+    wdm,
+    fiber,
+    fiber_length,
+    "results.h5",
+    rolloff_factor=0.1,
+    samples_per_symbol=10,
+    points_per_collision=points_per_collision,
+    use_multiprocessing=True,
+    partial_collisions_start=partial_collision_margin,
+    partial_collisions_end=partial_collision_margin,
+)
+
+# XPM COEFFICIENT EVALUATION =================================
+'''
 fig, ax = plt.subplots()
 wdm.plot(ax, xaxis="frequency")
 
@@ -261,3 +265,4 @@ plt.title(
 plt.legend()
 
 plt.show()
+'''
