@@ -217,7 +217,7 @@ def compute_all_collisions_X0mm_time_integrals(
         # build a partial function otherwise multiprocessing complains about
         # not being able to pickle stuff
         partial_function = functools.partial(
-            Xhkm_time_integral_multiprocessing_wrapper, pulse, fiber, z, channel_spacing
+            X0mm_time_integral_multiprocessing_wrapper, pulse, fiber, z, channel_spacing
         )
         time_integrals = process_map(
             partial_function, M, leave=False, desc=pbar_description, chunksize=1
@@ -228,12 +228,20 @@ def compute_all_collisions_X0mm_time_integrals(
         collisions_pbar.set_description(pbar_description)
         time_integrals = []
         for m in collisions_pbar:
-            I = Xhkm_time_integral(pulse, fiber, z, channel_spacing, 0, m, m)
+            I = X0mm_time_integral(pulse, fiber, z, channel_spacing, m)
             time_integrals.append(I)
 
     # convert the list of arrays in a 2d array, since the shape is the same
     I = np.stack(time_integrals)
     return z, time_integrals, M
+
+
+def X0mm_time_integral_multiprocessing_wrapper(
+    pulse: Pulse, fiber: Fiber, z: np.ndarray, channel_spacing: float, m: int
+):
+    """A wrapper for the `X0mm_time_integral` function to easily
+    `functool.partial` and enable multiprocessing."""
+    return X0mm_time_integral(pulse, fiber, z, channel_spacing, m)
 
 
 def Xhkm_time_integral_multiprocessing_wrapper(
@@ -273,6 +281,44 @@ def get_collision_location(m, fiber, channel_spacing, T) -> float:
     """For the specified index m, compute the position of the corresponding
     complete collision."""
     return -m * T / (fiber.beta2 * 2 * math.pi * channel_spacing)
+
+
+def X0mm_time_integral(
+    pulse: Pulse,
+    fiber: Fiber,
+    z: np.ndarray,
+    channel_spacing: float,
+    m: int,
+) -> np.ndarray:
+    """Compute the inner time integral of the expression for the XPM
+    coefficients Xhkm for the specified channel spacing."""
+    npoints_z = len(z)
+    g, t = pulse.data()
+    dt = t[1] - t[0]
+    nsamples = len(g)
+    freq = np.fft.fftfreq(nsamples, d=dt)
+    omega = 2 * np.pi * freq
+    omega = np.fft.fftshift(omega)
+    O = 2 * np.pi * channel_spacing
+    T = pulse.T0
+    beta2 = fiber.beta2
+    time_integrals = np.zeros((npoints_z,), dtype=np.complex)
+    gf = np.fft.fftshift(np.fft.fft(g))
+    max_prop = 0
+    for i, L in enumerate(z):
+        # for each point in space, calculate the corresponding time integral
+        propagator = -1j * beta2 / 2 * omega**2 * L
+        delay = np.exp(-1j * (m * T + beta2 * O * L * omega))
+
+        gf_propagated_1 = gf * np.exp(propagator)
+        gf_propagated_3 = gf_propagated_1 * delay
+
+        g1 = np.fft.ifft(np.fft.fftshift(gf_propagated_1))
+        g3 = np.fft.ifft(np.fft.fftshift(gf_propagated_3))
+
+        integrand = np.conj(g1) * g1 * np.conj(g3) * g3
+        time_integrals[i] = scipy.integrate.trapezoid(integrand, t)+
+    return time_integrals
 
 
 def Xhkm_time_integral(
