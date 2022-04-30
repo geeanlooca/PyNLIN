@@ -5,8 +5,9 @@ From: python:3.10.3-bullseye
     apt update
     apt install git
     git clone https://github.com/geeanlooca/PyNLIN
+    cd PyNLIN
     git checkout dei-not-peg-time
-    python -m pip install PyNLIN/
+    python -m pip install .
 
 %runscript
     python -c "import pynlin"
