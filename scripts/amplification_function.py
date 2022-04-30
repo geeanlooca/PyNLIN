@@ -11,14 +11,14 @@ import pynlin.utils
 
 import matplotlib.pyplot as plt
 import numpy as np
-import torch
+# import torch
 from scipy.constants import lambda2nu, nu2lambda
 from scipy.interpolate import interp1d
 
 from pynlin.fiber import Fiber
-from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
-from pynlin.raman.pytorch.solvers import RamanAmplifier
-from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
+# from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
+# from pynlin.raman.pytorch.solvers import RamanAmplifier
+# from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
@@ -91,7 +91,7 @@ wdm = pynlin.wdm.WDM(
 )
 
 
-interfering_grid_index = 10 - 1
+interfering_grid_index = 50 - 1
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
 interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
@@ -199,34 +199,36 @@ z_max = np.linspace(0, fiber_length, integration_steps)
 # using X0mm_time_integral_WDM_grid
 m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate)
 
-print(m)
-z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
-    frequency_of_interest,
-    interfering_frequency,
-    baud_rate,
-    fiber,
-    fiber_length,
-    rolloff_factor=0.1,
-    samples_per_symbol=10,
-    points_per_collision=points_per_collision,
-    use_multiprocessing=False,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
-)
-
-# pynlin.nlin.X0mm_time_integral_WDM_grid(
+# print(m)
+# z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
+#     frequency_of_interest,
+#     interfering_frequency,
 #     baud_rate,
-#     wdm,
 #     fiber,
 #     fiber_length,
-#     "results.h5",
+#     pulse_shape="Nyquist",
 #     rolloff_factor=0.1,
 #     samples_per_symbol=10,
 #     points_per_collision=points_per_collision,
-#     use_multiprocessing=True,
+#     use_multiprocessing=False,
 #     partial_collisions_start=partial_collision_margin,
 #     partial_collisions_end=partial_collision_margin,
 # )
+
+pynlin.nlin.X0mm_time_integral_WDM_grid(
+    baud_rate,
+    wdm,
+    fiber,
+    fiber_length,
+    "results.h5",
+    pulse_shape="Nyquist",
+    rolloff_factor=0.1,
+    samples_per_symbol=10,
+    points_per_collision=points_per_collision,
+    use_multiprocessing=True,
+    partial_collisions_start=partial_collision_margin,
+    partial_collisions_end=partial_collision_margin,
+)
 
 # XPM COEFFICIENT EVALUATION =================================
 
