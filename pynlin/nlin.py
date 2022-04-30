@@ -317,7 +317,8 @@ def X0mm_time_integral(
         g3 = np.fft.ifft(np.fft.fftshift(gf_propagated_3))
 
         integrand = np.conj(g1) * g1 * np.conj(g3) * g3
-        time_integrals[i] = scipy.integrate.trapezoid(integrand, t)+
+        time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
+        
     return time_integrals
 
 
