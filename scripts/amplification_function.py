@@ -79,6 +79,7 @@ fiber_length = args.fiber_length * 1e3
 channel_spacing = args.channel_spacing * 1e9
 num_channels = args.channel_count
 baud_rate = args.baud_rate * 1e9
+num_channels = 2
 
 fiber = pynlin.fiber.Fiber(
     effective_area=80e-12,
@@ -118,15 +119,15 @@ integration_steps = max_num_collisions * points_per_collision
 z_max = np.linspace(0, fiber_length, integration_steps)
 
 # OPTIMIZER CO =================================
+####### POWER FIXED TO -5dBm
 
-num_pumps = 10
-pump_band_b = lambda2nu(1480e-9)
-pump_band_a = lambda2nu(1400e-9)
+num_pumps = 8
+pump_band_b = lambda2nu(1510e-9)
+pump_band_a = lambda2nu(1410e-9)
 initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
 power_per_channel = dBm2watt(-5)
-power_per_pump = dBm2watt(-45)
-
+power_per_pump = dBm2watt(-10)
 signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
 num_pumps = len(pump_wavelengths)
@@ -172,17 +173,17 @@ np.save("signal_solution_co.npy", signal_solution_co)
 
 # OPTIMIZER COUNTER =================================
 
-num_pumps = 8
+num_pumps = 10
 pump_band_b = lambda2nu(1480e-9)
 pump_band_a = lambda2nu(1400e-9)
 initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
 power_per_channel = dBm2watt(-5)
 power_per_pump = dBm2watt(-45)
-
 signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
 num_pumps = len(pump_wavelengths)
+
 
 signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
 pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
@@ -226,7 +227,7 @@ pump_solution_cnt, signal_solution_cnt = amplifier.solve(
 np.save("pump_solution_cnt.npy", pump_solution_cnt)
 np.save("signal_solution_cnt.npy", signal_solution_cnt)
 
-'''
+
 # COMPUTATION OF TIME INTEGRALS =================================
 # to be computed once for all, for all channels, and saved to file
 # using X0mm_time_integral_WDM_grid
@@ -248,18 +249,17 @@ m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate
 #     partial_collisions_end=partial_collision_margin,
 # )
 
-pynlin.nlin.X0mm_time_integral_WDM_grid(
-    baud_rate,
-    wdm,
-    fiber,
-    fiber_length,
-    "light_results.h5",
-    pulse_shape="Nyquist",
-    rolloff_factor=0.1,
-    samples_per_symbol=10,
-    points_per_collision=points_per_collision,
-    use_multiprocessing=True,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
-)
-'''
+# pynlin.nlin.X0mm_time_integral_WDM_grid(
+#     baud_rate,
+#     wdm,
+#     fiber,
+#     fiber_length,
+#     "light_results_2.h5",
+#     pulse_shape="Nyquist",
+#     rolloff_factor=0.1,
+#     samples_per_symbol=10,
+#     points_per_collision=points_per_collision,
+#     use_multiprocessing=True,
+#     partial_collisions_start=partial_collision_margin,
+#     partial_collisions_end=partial_collision_margin,
+# )

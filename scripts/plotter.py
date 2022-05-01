@@ -115,7 +115,7 @@ signal_solution_co = np.load('scripts/light_signal_solution_co.npy')
 pump_solution_co = np.load('scripts/light_pump_solution_co.npy')
 
 
-f = h5py.File('scripts/light_results.h5', 'r')
+f = h5py.File('scripts/light_results_2.h5', 'r')
 print(f)
 z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
@@ -128,7 +128,7 @@ wdm.plot(ax, xaxis="frequency")
 
 
 # interpolate the amplification function using optimization results
-fA = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
+fB = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
 
 # compute the X0mm coefficients given the precompute time integrals:
 # bonus of this approach -> no need to recompute the time integrals if
@@ -140,7 +140,7 @@ print(m)
 print(z)
 print(I)
 X0mm = pynlin.nlin.Xhkm_precomputed(
-    z, I, amplification_function=fA(z))
+    z, I, amplification_function=fB(z))
 locs = pynlin.nlin.get_collision_location(
     m, fiber, single_interference_channel_spacing, 1 / baud_rate)
 print(locs)
@@ -168,30 +168,45 @@ plt.show()
 X_co = []
 X_cnt = []
 for interfering_grid_index in range(np.shape(signal_solution_co)[1]):
-    fA_co = interp1d(
+    print("summing all m for interfering channel ", interfering_grid_index)
+    fB_co = interp1d(
         z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
     X0mm_co = pynlin.nlin.Xhkm_precomputed(
-        z, I, amplification_function=fA_co(z))
+        z, I, amplification_function=fB_co(z))
     X_co.append(np.sum(X0mm_co**2))
 
-    fA_cnt = interp1d(
+    fB_cnt = interp1d(
         z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
     X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-        z, I, amplification_function=fA_cnt(z))
+        z, I, amplification_function=fB_cnt(z))
     X_cnt.append(np.sum(X0mm_cnt**2))
 
 # PHASE NOISE COMPUTATION =======================
 # copropagating
 qam = pynlin.constellations.QAM(32)
+
 qam_symbols = qam.symbols()
 cardinality = len(qam_symbols)
 
+# assign specific average optical power
+power_dBm = -5
+average_power =  dBm2watt(power_dBm)
+qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power)
+print(qam_symbols)
 Delta_theta_2 = 0
-for i in range(0, interfering_grid_index-1):
-   Delta_theta_ch_2 = 4 * fiber.gamma**2 * (np.sum(np.abs(qam_symbols)**4) / cardinality - (np.sum(np.abs(qam_symbols)**2) / cardinality)**2) * np.abs(X_co[i])
+print("variance: ", (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2) 
+)
+print(np.abs(X_co[1]))
+
+for i in range(0, num_channels):
+   Delta_theta_ch_2 = 4 * fiber.gamma**2 * (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2) * np.abs(X_co[i])
    print("Interference with channel ", i+1)
-   print("\tPhase noise: ", (np.sqrt(Delta_theta_ch_2)))
+   print("\tPhase std deviation: ", (np.sqrt(Delta_theta_ch_2)))
    Delta_theta_2 += Delta_theta_ch_2
 
-print("Total phase noise: ", np.sqrt(Delta_theta_2))
-print("Symbol magnitude: ", np.abs(qam_symbols))
+print("Total phase std deviation: ", np.sqrt(Delta_theta_2))
+print("Symbol average optical power: ", (np.abs(qam_symbols)**2).mean())
+
+# SIGNAL POWER MAY BE TOO HIGH = express b0 and g in phyisical terms
+
+# equations are expressed in W
