@@ -78,11 +78,12 @@ def X0mm_time_integral_WDM_grid(
 
     # get the WDM comb frequencies and set up the progress bar
     frequency_grid = wdm.frequency_grid()
-    frequency_grid_pbar = tqdm.tqdm(frequency_grid)
-    frequency_grid_pbar.set_description("WDM Channels")
+    print(frequency_grid)
+    coi_frequency_grid_pbar = tqdm.tqdm([frequency_grid[0]])
+    coi_frequency_grid_pbar.set_description("WDM Channels")
 
     # iterate over all channels of the WDM grid
-    for coi_number, coi_frequency in enumerate(frequency_grid_pbar):
+    for coi_number, coi_frequency in enumerate(coi_frequency_grid_pbar):
         interfering_frequencies = get_interfering_frequencies(
             coi_frequency, frequency_grid
         )
@@ -324,7 +325,7 @@ def X0mm_time_integral(
     for i, L in enumerate(z):
         # for each point in space, calculate the corresponding time integral
         propagator = -1j * beta2 / 2 * omega**2 * L
-        delay = np.exp(-1j * (m * T + beta2 * O * L * omega))
+        delay = np.exp(-1j * (m * T + beta2 * O * L) * omega)
 
         gf_propagated_1 = gf * np.exp(propagator)
         gf_propagated_3 = gf_propagated_1 * delay
@@ -334,7 +335,7 @@ def X0mm_time_integral(
 
         integrand = np.conj(g1) * g1 * np.conj(g3) * g3
         time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
-        
+
     return time_integrals
 
 
