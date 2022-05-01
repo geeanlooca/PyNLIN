@@ -8,6 +8,7 @@ From: python:3.10.3-bullseye
     cd PyNLIN
     git checkout dei-not-peg-time
     python -m pip install .
-
+    make install
+    
 %runscript
     python -c "import pynlin"
