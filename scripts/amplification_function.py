@@ -101,7 +101,11 @@ partial_collision_margin = 5
 points_per_collision = 10
 
 
-power_per_channel_dBm = -20
+power_per_channel_dBm = 3
+print("Power per channel: ", power_per_channel_dBm, "dBm")
+
+
+'''
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -227,12 +231,12 @@ pump_solution_cnt, signal_solution_cnt = amplifier.solve(
 )
 
 
-np.save("pump_solution_co_-20.npy", pump_solution_co)
-np.save("signal_solution_co_-20.npy", signal_solution_co)
+np.save("pump_solution_co_"+power_per_channel_dBm+".npy", pump_solution_co)
+np.save("signal_solution_co_"+power_per_channel_dBm+".npy", signal_solution_co)
 
-np.save("pump_solution_cnt_-20.npy", pump_solution_cnt)
-np.save("signal_solution_cnt_-20.npy", signal_solution_cnt)
-
+np.save("pump_solution_cnt_"+power_per_channel_dBm+".npy", pump_solution_cnt)
+np.save("signal_solution_cnt_"+power_per_channel_dBm+".npy", signal_solution_cnt)
+'''
 
 # COMPUTATION OF TIME INTEGRALS =================================
 # to be computed once for all, for all channels, and saved to file
@@ -255,17 +259,39 @@ m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate
 #     partial_collisions_end=partial_collision_margin,
 # )
 
-# pynlin.nlin.X0mm_time_integral_WDM_grid(
-#     baud_rate,
-#     wdm,
-#     fiber,
-#     fiber_length,
-#     "light_results_2.h5",
-#     pulse_shape="Nyquist",
-#     rolloff_factor=0.1,
-#     samples_per_symbol=10,
-#     points_per_collision=points_per_collision,
-#     use_multiprocessing=True,
-#     partial_collisions_start=partial_collision_margin,
-#     partial_collisions_end=partial_collision_margin,
-# )
+fiber = pynlin.fiber.Fiber(
+    effective_area=80e-12,
+    beta2=beta2
+)
+fiber_length = 500e3
+channel_spacing =102
+num_channels = 2
+baud_rate = 100e9
+print(channel_spacing)
+fiber = pynlin.fiber.Fiber(
+    effective_area=80e-12,
+    beta2=beta2
+)
+wdm = pynlin.wdm.WDM(
+    spacing=channel_spacing,
+    num_channels=num_channels,
+    center_frequency=190
+) 
+
+partial_collision_margin = 5
+points_per_collision = 10
+
+pynlin.nlin.X0mm_time_integral_WDM_grid(
+    baud_rate,
+    wdm,
+    fiber,
+    fiber_length,
+    "mecozzi.h5",
+    pulse_shape="Nyquist",
+    rolloff_factor=0.1,
+    samples_per_symbol=10,
+    points_per_collision=points_per_collision,
+    use_multiprocessing=True,
+    partial_collisions_start=partial_collision_margin,
+    partial_collisions_end=partial_collision_margin,
+)
