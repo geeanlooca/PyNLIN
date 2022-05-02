@@ -49,7 +49,7 @@ parser.add_argument(
 parser.add_argument(
     "-C",
     "--channel-count",
-    default=2,
+    default=50,
     type=int,
     help="The number of WDM channels in the grid.",
 )
@@ -87,7 +87,7 @@ wdm = pynlin.wdm.WDM(
     num_channels=num_channels,
     center_frequency=190
 )
-interfering_grid_index = 1
+interfering_grid_index = 49
 # compute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
 interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
@@ -96,31 +96,36 @@ partial_collision_margin = 5
 points_per_collision = 10
 
 
-max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
+# max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
-print(max_channel_spacing)
+# print(max_channel_spacing)
 
-max_num_collisions = len(pynlin.nlin.get_m_values(
-    fiber,
-    fiber_length,
-    max_channel_spacing,
-    1 / baud_rate,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin)
-)
-integration_steps = max_num_collisions * points_per_collision
+# max_num_collisions = len(pynlin.nlin.get_m_values(
+#     fiber,
+#     fiber_length,
+#     max_channel_spacing,
+#     1 / baud_rate,
+#     partial_collisions_start=partial_collision_margin,
+#     partial_collisions_end=partial_collision_margin)
+# )
+# integration_steps = max_num_collisions * points_per_collision
 
-# building high precision
-z_max = np.linspace(0, fiber_length, integration_steps)
+# # building high precision
+# z_max = np.linspace(0, fiber_length, integration_steps)
 
+power_dBm = -5
+average_power =  dBm2watt(power_dBm)
+
+results_path = '../results/'
+print(results_path + 'light_pump_solution_cnt_' + str(power_dBm) + '.npy')
 # SIMULATION DATA LOAD =================================
-pump_solution_cnt = np.load('scripts/light_pump_solution_cnt.npy')
-signal_solution_cnt = np.load('scripts/light_signal_solution_cnt.npy')
-signal_solution_co = np.load('scripts/light_signal_solution_co.npy')
-pump_solution_co = np.load('scripts/light_pump_solution_co.npy')
+pump_solution_cnt =    np.load(results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
+signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
+signal_solution_co =   np.load(results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
+pump_solution_co =     np.load(results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
 
-z_max = np.load('scripts/z_max.npy')
-f = h5py.File('scripts/light_results_2.h5', 'r')
+z_max = np.load(results_path + 'z_max.npy')
+f = h5py.File(results_path + 'results_multi.h5', 'r')
 print(f)
 z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
@@ -138,9 +143,9 @@ fB = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear
 # compute the X0mm coefficients given the precompute time integrals:
 # bonus of this approach -> no need to recompute the time integrals if
 # we want to compare different amplification schemes or constellations
-m = np.array(f['/time_integrals/channel_0/interfering_channel_0/m'])
-z = np.array(f['/time_integrals/channel_0/interfering_channel_0/z'])
-I = np.array(f['/time_integrals/channel_0/interfering_channel_0/integrals'])
+m = np.array(f['/time_integrals/channel_0/interfering_channel_48/m'])
+z = np.array(f['/time_integrals/channel_0/interfering_channel_48/z'])
+I = np.array(f['/time_integrals/channel_0/interfering_channel_48/integrals'])
 print(m)
 print(z)
 print(I)
@@ -201,8 +206,7 @@ qam_symbols = qam.symbols()
 cardinality = len(qam_symbols)
 
 # assign specific average optical power
-power_dBm = -5
-average_power =  dBm2watt(power_dBm)
+
 qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power /baud_rate)
 print(qam_symbols)
 Delta_theta_2 = 0
