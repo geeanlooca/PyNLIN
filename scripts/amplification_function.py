@@ -101,7 +101,7 @@ partial_collision_margin = 5
 points_per_collision = 10
 
 
-power_per_channel_dBm = -10
+power_per_channel_dBm = -20
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -121,7 +121,7 @@ integration_steps = max_num_collisions * points_per_collision
 z_max = np.linspace(0, fiber_length, integration_steps)
 
 # np.save("z_max.npy", z_max)
-'''
+
 # OPTIMIZER CO =================================
 ####### POWER FIXED TO -5dBm
 
@@ -227,33 +227,33 @@ pump_solution_cnt, signal_solution_cnt = amplifier.solve(
 )
 
 
-np.save("pump_solution_co_-10.npy", pump_solution_co)
-np.save("signal_solution_co_-10.npy", signal_solution_co)
+np.save("pump_solution_co_-20.npy", pump_solution_co)
+np.save("signal_solution_co_-20.npy", signal_solution_co)
 
-np.save("pump_solution_cnt_-10.npy", pump_solution_cnt)
-np.save("signal_solution_cnt_-10.npy", signal_solution_cnt)
-'''
+np.save("pump_solution_cnt_-20.npy", pump_solution_cnt)
+np.save("signal_solution_cnt_-20.npy", signal_solution_cnt)
+
 
 # COMPUTATION OF TIME INTEGRALS =================================
 # to be computed once for all, for all channels, and saved to file
 # using X0mm_time_integral_WDM_grid
 m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate)
 
-print(m)
-z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
-    frequency_of_interest,
-    interfering_frequency,
-    baud_rate,
-    fiber,
-    fiber_length,
-    pulse_shape="Nyquist",
-    rolloff_factor=0.1,
-    samples_per_symbol=10,
-    points_per_collision=points_per_collision,
-    use_multiprocessing=True,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
-)
+# print(m)
+# z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
+#     frequency_of_interest,
+#     interfering_frequency,
+#     baud_rate,
+#     fiber,
+#     fiber_length,
+#     pulse_shape="Nyquist",
+#     rolloff_factor=0.1,
+#     samples_per_symbol=10,
+#     points_per_collision=points_per_collision,
+#     use_multiprocessing=True,
+#     partial_collisions_start=partial_collision_margin,
+#     partial_collisions_end=partial_collision_margin,
+# )
 
 # pynlin.nlin.X0mm_time_integral_WDM_grid(
 #     baud_rate,
