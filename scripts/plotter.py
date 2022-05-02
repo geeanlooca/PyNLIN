@@ -16,6 +16,11 @@ from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
 
+plt.rcParams.update({
+    "text.usetex": True,
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Helvetica"]})
+    
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-R", "--baud-rate", default=10, help="The baud rate of each WDM channel in GHz."
@@ -114,7 +119,7 @@ signal_solution_cnt = np.load('scripts/light_signal_solution_cnt.npy')
 signal_solution_co = np.load('scripts/light_signal_solution_co.npy')
 pump_solution_co = np.load('scripts/light_pump_solution_co.npy')
 
-
+z_max = np.load('scripts/z_max.npy')
 f = h5py.File('scripts/light_results_2.h5', 'r')
 print(f)
 z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
@@ -145,13 +150,16 @@ locs = pynlin.nlin.get_collision_location(
     m, fiber, single_interference_channel_spacing, 1 / baud_rate)
 print(locs)
 
-plt.figure(figsize=(10, 5))
+
+fig1 = plt.figure(figsize=(10, 5))
 for i, m_ in enumerate(m):
     plt.plot(z*1e-3, np.abs(I[i]), color="black")
     plt.axvline(locs[i] * 1e-3, color="red", linestyle="dashed")
 plt.xlabel("Position [km]")
+fig1.savefig('fig1.pdf')
 
-plt.figure()
+
+fig2 = plt.figure()
 plt.semilogy(m, np.abs(X0mm), marker="o", label="Numerical")
 plt.minorticks_on()
 plt.grid(which="both")
@@ -161,25 +169,29 @@ plt.title(
     rf"$f_B(z)=1$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
 )
 plt.legend()
+fig2.savefig('fig2.png')
 
 plt.show()
 
 # FULL X0mm EVALUATION FOR EVERY m =======================
 X_co = []
+X_co.append(0.0)
 X_cnt = []
+X_cnt.append(0.0)
+
 for interfering_grid_index in range(np.shape(signal_solution_co)[1]):
     print("summing all m for interfering channel ", interfering_grid_index)
     fB_co = interp1d(
         z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
     X0mm_co = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=fB_co(z))
-    X_co.append(np.sum(X0mm_co**2))
+    X_co.append(np.sum(np.abs(X0mm_co)**2))
 
     fB_cnt = interp1d(
         z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
     X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=fB_cnt(z))
-    X_cnt.append(np.sum(X0mm_cnt**2))
+    X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
 
 # PHASE NOISE COMPUTATION =======================
 # copropagating
@@ -191,22 +203,24 @@ cardinality = len(qam_symbols)
 # assign specific average optical power
 power_dBm = -5
 average_power =  dBm2watt(power_dBm)
-qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power)
+qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power /baud_rate)
 print(qam_symbols)
 Delta_theta_2 = 0
 print("variance: ", (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2) 
 )
 print(np.abs(X_co[1]))
 
-for i in range(0, num_channels):
+for i in range(1, num_channels):
    Delta_theta_ch_2 = 4 * fiber.gamma**2 * (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2) * np.abs(X_co[i])
    print("Interference with channel ", i+1)
    print("\tPhase std deviation: ", (np.sqrt(Delta_theta_ch_2)))
    Delta_theta_2 += Delta_theta_ch_2
 
 print("Total phase std deviation: ", np.sqrt(Delta_theta_2))
-print("Symbol average optical power: ", (np.abs(qam_symbols)**2).mean())
+print("Symbol average optical power: ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
+print("Symbol average optical energy: ", (np.abs(qam_symbols)**2).mean(), "J")
 
+print("Symbol average magnitude: ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
 # SIGNAL POWER MAY BE TOO HIGH = express b0 and g in phyisical terms
 
 # equations are expressed in W
