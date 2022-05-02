@@ -136,7 +136,6 @@ single_interference_channel_spacing = channel_spacing * interfering_grid_index
 fig, ax = plt.subplots()
 wdm.plot(ax, xaxis="frequency")
 
-
 # interpolate the amplification function using optimization results
 fB = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
 
@@ -220,8 +219,8 @@ for i in range(1, num_channels):
    print("\tPhase std deviation: ", (np.sqrt(Delta_theta_ch_2)))
    Delta_theta_2 += Delta_theta_ch_2
 
-print("Total phase std deviation: ", np.sqrt(Delta_theta_2))
-print("Symbol average optical power: ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
+print("Total phase VARIANCE: ", Delta_theta_2)
+print("\nSymbol average optical power: ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
 print("Symbol average optical energy: ", (np.abs(qam_symbols)**2).mean(), "J")
 
 print("Symbol average magnitude: ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
