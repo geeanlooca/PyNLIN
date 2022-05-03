@@ -68,7 +68,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
     results_path = '../results/'
 
     z_max = np.load(results_path + 'z_max.npy')
-    f = h5py.File(results_path + 'results_multi.h5', 'r')
+    f = h5py.File(results_path + 'mecozzi.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
 
@@ -88,10 +88,10 @@ for idx, power_dBm in enumerate(power_dBm_list):
     I = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
 
     approx = np.ones_like(m) /(beta2 * 2 * np.pi * single_interference_channel_spacing)
-    X0mm_co = pynlin.nlin.Xhkm_precomputed(
-        z, I, amplification_function=fB_co(z))
-    X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-        z, I, amplification_function=fB_cnt(z))
+    # X0mm_co = pynlin.nlin.Xhkm_precomputed(
+    #     z, I, amplification_function=fB_co(z))
+    # X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
+    #     z, I, amplification_function=fB_cnt(z))
     X0mm_none = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=None)
 
@@ -109,8 +109,8 @@ for idx, power_dBm in enumerate(power_dBm_list):
     fig2 = plt.figure(figsize=(10, 8))
     plt.plot(show = show_flag)
 
-    plt.semilogy(m, np.abs(X0mm_co), marker='x', color='green', label="coprop.")
-    plt.semilogy(m, np.abs(X0mm_cnt), marker='x', color='blue', label="counterprop.")
+    # plt.semilogy(m, np.abs(X0mm_co), marker='x', color='green', label="coprop.")
+    # plt.semilogy(m, np.abs(X0mm_cnt), marker='x', color='blue', label="counterprop.")
     plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
     plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
     plt.minorticks_on()
@@ -138,19 +138,19 @@ for idx, power_dBm in enumerate(power_dBm_list):
         fB_co = interp1d(
             z_max, signal_solution_co[:, interf_index], kind='linear')
         X0mm_co = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=fB_co(z))
+            z, I, amplification_function=None)
         X_co.append(np.sum(np.abs(X0mm_co)**2))
 
         fB_cnt = interp1d(
             z_max, signal_solution_cnt[:, interf_index], kind='linear')
         X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=fB_cnt(z))
+            z, I, amplification_function=None)
         X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
 
     # PHASE NOISE COMPUTATION =======================
     # copropagating
 
-    M = 32
+    M = 16
     qam = pynlin.constellations.QAM(M)
 
     qam_symbols = qam.symbols()
