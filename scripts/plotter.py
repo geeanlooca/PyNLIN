@@ -22,7 +22,7 @@ plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '26'
 
 # PLOTTING PARAMETERS
-interfering_grid_index = 1
+interfering_grid_index = 49
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
 
@@ -31,7 +31,7 @@ baud_rate = 10
 dispersion = 18
 fiber_length = 80 * 1e3
 channel_spacing = 100
-num_channels = 2
+num_channels = 50
 baud_rate = baud_rate * 1e9
 
 beta2 = pynlin.utils.dispersion_to_beta2(
@@ -66,7 +66,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
     pump_solution_co =     np.load(results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
 
     z_max = np.load(results_path + 'z_max.npy')
-    f = h5py.File(results_path + 'mecozzi.h5', 'r')
+    f = h5py.File(results_path + 'results_multi.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
 
@@ -86,10 +86,10 @@ for idx, power_dBm in enumerate(power_dBm_list):
     I = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
 
     approx = np.ones_like(m) /(beta2 * 2 * np.pi * single_interference_channel_spacing)
-    # X0mm_co = pynlin.nlin.Xhkm_precomputed(
-    #     z, I, amplification_function=fB_co(z))
-    # X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-    #     z, I, amplification_function=fB_cnt(z))
+    X0mm_co = pynlin.nlin.Xhkm_precomputed(
+        z, I, amplification_function=fB_co(z))
+    X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
+        z, I, amplification_function=fB_cnt(z))
     X0mm_none = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=None)
 
@@ -137,13 +137,13 @@ for idx, power_dBm in enumerate(power_dBm_list):
         fB_co = interp1d(
             z_max, signal_solution_co[:, interf_index], kind='linear')
         X0mm_co = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=None)
+            z, I, amplification_function=fB_co(z))
         X_co.append(np.sum(np.abs(X0mm_co)**2))
 
         fB_cnt = interp1d(
             z_max, signal_solution_cnt[:, interf_index], kind='linear')
         X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=None)
+            z, I, amplification_function=fB_co(z))
         X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
 
     # PHASE NOISE COMPUTATION =======================
