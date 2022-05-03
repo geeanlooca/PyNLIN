@@ -31,7 +31,7 @@ baud_rate = 10
 dispersion = 18
 fiber_length = 80 * 1e3
 channel_spacing = 100
-num_channels = 50
+num_channels = 2
 baud_rate = baud_rate * 1e9
 
 beta2 = pynlin.utils.dispersion_to_beta2(
@@ -58,14 +58,12 @@ for idx, power_dBm in enumerate(power_dBm_list):
     average_power =  dBm2watt(power_dBm)
 
     # SIMULATION DATA LOAD =================================
-    results_path = './'
+    results_path = '../results/'
 
     pump_solution_cnt =    np.load(results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
     signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
     signal_solution_co =   np.load(results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
     pump_solution_co =     np.load(results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
-
-    results_path = '../results/'
 
     z_max = np.load(results_path + 'z_max.npy')
     f = h5py.File(results_path + 'mecozzi.h5', 'r')
@@ -130,8 +128,9 @@ for idx, power_dBm in enumerate(power_dBm_list):
     X_cnt = []
     X_cnt.append(0.0)
 
+    # compute the first num_channels interferents (assume the WDM grid is identical)
     pbar_description = "Computing space integrals"
-    collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1]), leave=False)
+    collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[0:num_channels], leave=False)
     collisions_pbar.set_description(pbar_description)
 
     for interf_index in collisions_pbar:
@@ -162,8 +161,6 @@ for idx, power_dBm in enumerate(power_dBm_list):
     fig4 = plt.figure(figsize=(10, 10))
     plt.plot(show = show_flag)
     plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
-
-
 
     print("\nConstellation average: ")
     print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
