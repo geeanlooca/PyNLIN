@@ -101,10 +101,7 @@ partial_collision_margin = 5
 points_per_collision = 10
 
 
-power_per_channel_dBm = 3
-print("Power per channel: ", power_per_channel_dBm, "dBm")
-
-
+power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
@@ -121,182 +118,119 @@ max_num_collisions = len(pynlin.nlin.get_m_values(
 )
 integration_steps = max_num_collisions * points_per_collision
 
-# building high precision
+# Suggestion: 100m step is sufficient
+dz = 100
+integration_steps = int(np.ceil(fiber_length/dz))
 z_max = np.linspace(0, fiber_length, integration_steps)
 
-# np.save("z_max.npy", z_max)
+np.save("z_max.npy", z_max)
+pbar_description = "Optimizing vs signal power"
+pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
+pbar.set_description(pbar_description)
 
-# OPTIMIZER CO =================================
-####### POWER FIXED TO -5dBm
+for power_per_channel_dBm in pbar:
+    print("Power per channel: ", power_per_channel_dBm, "dBm")
 
-num_pumps = 8
-pump_band_b = lambda2nu(1510e-9)
-pump_band_a = lambda2nu(1410e-9)
-initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
+    # OPTIMIZER CO =================================
+    num_pumps = 8
+    pump_band_b = lambda2nu(1510e-9)
+    pump_band_a = lambda2nu(1410e-9)
+    initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
-power_per_channel = dBm2watt(power_per_channel_dBm)
-power_per_pump = dBm2watt(-10)
-signal_wavelengths = wdm.wavelength_grid()
-pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
-num_pumps = len(pump_wavelengths)
+    power_per_channel = dBm2watt(power_per_channel_dBm)
+    power_per_pump = dBm2watt(-10)
+    signal_wavelengths = wdm.wavelength_grid()
+    pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    num_pumps = len(pump_wavelengths)
 
-signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
-pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
+    signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
+    pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
 
-torch_amplifier = RamanAmplifier(
-    fiber_length,
-    integration_steps,
-    num_pumps,
-    signal_wavelengths,
-    power_per_channel,
-    fiber,
-)
+    torch_amplifier = RamanAmplifier(
+        fiber_length,
+        integration_steps,
+        num_pumps,
+        signal_wavelengths,
+        power_per_channel,
+        fiber,
+    )
 
-optimizer = CopropagatingOptimizer(
-    torch_amplifier,
-    torch.from_numpy(pump_wavelengths),
-    torch.from_numpy(pump_powers),
-)
+    optimizer = CopropagatingOptimizer(
+        torch_amplifier,
+        torch.from_numpy(pump_wavelengths),
+        torch.from_numpy(pump_powers),
+    )
 
-target_spectrum = watt2dBm(0.5 * signal_powers)
-pump_wavelengths, pump_powers = optimizer.optimize(
-    target_spectrum=target_spectrum,
-    epochs=500
-)
-amplifier = NumpyRamanAmplifier(fiber)
+    target_spectrum = watt2dBm(0.5 * signal_powers)
+    pump_wavelengths, pump_powers = optimizer.optimize(
+        target_spectrum=target_spectrum,
+        epochs=500
+    )
+    amplifier = NumpyRamanAmplifier(fiber)
 
-pump_solution_co, signal_solution_co = amplifier.solve(
-    signal_powers,
-    signal_wavelengths,
-    pump_powers,
-    pump_wavelengths,
-    z_max
-)
+    pump_solution_co, signal_solution_co = amplifier.solve(
+        signal_powers,
+        signal_wavelengths,
+        pump_powers,
+        pump_wavelengths,
+        z_max
+    )
 
+    # OPTIMIZER COUNTER =================================
 
+    num_pumps = 10
+    pump_band_b = lambda2nu(1480e-9)
+    pump_band_a = lambda2nu(1400e-9)
+    initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
-# pump_solution_co = np.load("./pump_solution_cnt.npy")
-# signal_solution_co = np.load("./signal_solution_cnt.npy")
-
-# OPTIMIZER COUNTER =================================
-
-num_pumps = 10
-pump_band_b = lambda2nu(1480e-9)
-pump_band_a = lambda2nu(1400e-9)
-initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
-
-power_per_channel = dBm2watt(power_per_channel_dBm)
-power_per_pump = dBm2watt(-45)
-signal_wavelengths = wdm.wavelength_grid()
-pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
-num_pumps = len(pump_wavelengths)
-
-
-signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
-pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-
-torch_amplifier_cnt = RamanAmplifier(
-    fiber_length,
-    integration_steps,
-    num_pumps,
-    signal_wavelengths,
-    power_per_channel,
-    fiber,
-    pump_direction=-1,
-)
-
-optimizer = CopropagatingOptimizer(
-    torch_amplifier_cnt,
-    torch.from_numpy(pump_wavelengths),
-    torch.from_numpy(pump_powers),
-)
-
-target_spectrum = watt2dBm(0.5 * signal_powers)
-pump_wavelengths_co, pump_powers_co = optimizer.optimize(
-    target_spectrum=target_spectrum,
-    epochs=500,
-    learning_rate=1e-3,
-    lock_wavelengths=150,
-)
-amplifier = NumpyRamanAmplifier(fiber)
-
-pump_solution_cnt, signal_solution_cnt = amplifier.solve(
-    signal_powers,
-    signal_wavelengths,
-    pump_powers_co,
-    pump_wavelengths_co,
-    z_max,
-    pump_direction=-1,
-    use_power_at_fiber_start=True,
-)
+    power_per_channel = dBm2watt(power_per_channel_dBm)
+    power_per_pump = dBm2watt(-45)
+    signal_wavelengths = wdm.wavelength_grid()
+    pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    num_pumps = len(pump_wavelengths)
 
 
-np.save("pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
-np.save("signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
+    signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
+    pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
 
-np.save("pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
-np.save("signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
-'''
+    torch_amplifier_cnt = RamanAmplifier(
+        fiber_length,
+        integration_steps,
+        num_pumps,
+        signal_wavelengths,
+        power_per_channel,
+        fiber,
+        pump_direction=-1,
+    )
 
-# COMPUTATION OF TIME INTEGRALS =================================
-# to be computed once for all, for all channels, and saved to file
-# using X0mm_time_integral_WDM_grid
-m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate)
+    optimizer = CopropagatingOptimizer(
+        torch_amplifier_cnt,
+        torch.from_numpy(pump_wavelengths),
+        torch.from_numpy(pump_powers),
+    )
 
-# print(m)
-# z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
-#     frequency_of_interest,
-#     interfering_frequency,
-#     baud_rate,
-#     fiber,
-#     fiber_length,
-#     pulse_shape="Nyquist",
-#     rolloff_factor=0.1,
-#     samples_per_symbol=10,
-#     points_per_collision=points_per_collision,
-#     use_multiprocessing=True,
-#     partial_collisions_start=partial_collision_margin,
-#     partial_collisions_end=partial_collision_margin,
-# )
+    target_spectrum = watt2dBm(0.5 * signal_powers)
+    pump_wavelengths_co, pump_powers_co = optimizer.optimize(
+        target_spectrum=target_spectrum,
+        epochs=500,
+        learning_rate=1e-3,
+        lock_wavelengths=150,
+    )
+    amplifier = NumpyRamanAmplifier(fiber)
+
+    pump_solution_cnt, signal_solution_cnt = amplifier.solve(
+        signal_powers,
+        signal_wavelengths,
+        pump_powers_co,
+        pump_wavelengths_co,
+        z_max,
+        pump_direction=-1,
+        use_power_at_fiber_start=True,
+    )
 
 
+    np.save("pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
+    np.save("signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
 
-
-## MECOZZI
-fiber = pynlin.fiber.Fiber(
-    effective_area=80e-12,
-    beta2=beta2
-)
-fiber_length = 500e3
-channel_spacing =102
-num_channels = 2
-baud_rate = 100e9
-print(channel_spacing)
-fiber = pynlin.fiber.Fiber(
-    effective_area=80e-12,
-    beta2=beta2
-)
-wdm = pynlin.wdm.WDM(
-    spacing=channel_spacing,
-    num_channels=num_channels,
-    center_frequency=190
-) 
-
-partial_collision_margin = 5
-points_per_collision = 10
-
-pynlin.nlin.X0mm_time_integral_WDM_grid(
-    baud_rate,
-    wdm,
-    fiber,
-    fiber_length,
-    "mecozzi.h5",
-    pulse_shape="Nyquist",
-    rolloff_factor=0.1,
-    samples_per_symbol=10,
-    points_per_collision=points_per_collision,
-    use_multiprocessing=True,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin,
-)
-'''
+    np.save("pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
+    np.save("signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
