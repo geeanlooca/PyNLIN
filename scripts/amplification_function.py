@@ -105,7 +105,7 @@ power_per_channel_dBm = 3
 print("Power per channel: ", power_per_channel_dBm, "dBm")
 
 
-'''
+
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -231,11 +231,11 @@ pump_solution_cnt, signal_solution_cnt = amplifier.solve(
 )
 
 
-np.save("pump_solution_co_"+power_per_channel_dBm+".npy", pump_solution_co)
-np.save("signal_solution_co_"+power_per_channel_dBm+".npy", signal_solution_co)
+np.save("pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
+np.save("signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
 
-np.save("pump_solution_cnt_"+power_per_channel_dBm+".npy", pump_solution_cnt)
-np.save("signal_solution_cnt_"+power_per_channel_dBm+".npy", signal_solution_cnt)
+np.save("pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
+np.save("signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
 '''
 
 # COMPUTATION OF TIME INTEGRALS =================================
@@ -259,6 +259,10 @@ m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate
 #     partial_collisions_end=partial_collision_margin,
 # )
 
+
+
+
+## MECOZZI
 fiber = pynlin.fiber.Fiber(
     effective_area=80e-12,
     beta2=beta2
@@ -295,3 +299,4 @@ pynlin.nlin.X0mm_time_integral_WDM_grid(
     partial_collisions_start=partial_collision_margin,
     partial_collisions_end=partial_collision_margin,
 )
+'''
