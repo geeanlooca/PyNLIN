@@ -1,5 +1,6 @@
 import argparse
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import numpy as np
 import h5py
 import math
@@ -22,9 +23,10 @@ plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '26'
 
 # PLOTTING PARAMETERS
-interfering_grid_index = 49
+interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
+ariety_list = [8, 16, 32, 64, 128]
 
 wavelength = 1550
 baud_rate = 10
@@ -49,8 +51,9 @@ wdm = pynlin.wdm.WDM(
 partial_collision_margin = 5
 points_per_collision = 10 
 
-Delta_theta_2_co = np.zeros(len(power_dBm_list))
-Delta_theta_2_cnt = np.zeros(len(power_dBm_list))
+Delta_theta_2_co = np.ndarray(shape=(len(power_dBm_list), len(ariety_list)))
+Delta_theta_2_cnt = np.ndarray(shape=(len(power_dBm_list), len(ariety_list)))
+
 
 show_flag = False
 
@@ -69,6 +72,12 @@ for idx, power_dBm in enumerate(power_dBm_list):
     f = h5py.File(results_path + 'results_multi.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
+    # COMPUTE THE fB =================================
+
+    pump_solution_cnt = np.power(np.divide(pump_solution_cnt, pump_solution_cnt[0, :]), 2)
+    signal_solution_cnt = np.power(np.divide(signal_solution_cnt, signal_solution_cnt[0, :]) , 2)
+    signal_solution_co = np.power(np.divide(signal_solution_co, signal_solution_co[0, :]), 2)
+    pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
 
     # XPM COEFFICIENT EVALUATION, single m =================================
     # compute the collisions between the two furthest WDM channels
@@ -76,14 +85,41 @@ for idx, power_dBm in enumerate(power_dBm_list):
     interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
     single_interference_channel_spacing = interfering_frequency - frequency_of_interest
 
-    # interpolate the amplification function using optimization results
-    fB_co = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
-    fB_cnt = interp1d(z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
+
 
     # compute the X0mm coefficients given the precompute time integrals
     m = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
     z = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
     I = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
+
+
+    # PLOT A COUPLE OF CHANNEL fB
+    select_idx = [0, 49]
+    fB_co_1 = interp1d(z_max, signal_solution_co[:, select_idx[0]], kind='linear')
+    fB_cnt_1 = interp1d(z_max, signal_solution_cnt[:, select_idx[0]], kind='linear')
+    fB_co_2 = interp1d(z_max, signal_solution_co[:, select_idx[1]], kind='linear')
+    fB_cnt_2 = interp1d(z_max, signal_solution_cnt[:, select_idx[1]], kind='linear')
+
+    fig_fB = plt.figure(figsize=(10, 7))
+    plt.plot(show = show_flag)
+    c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
+
+    plt.plot(z*1e-3, fB_co_1(z), color=c[0],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".0f")+"THz co.", linewidth = 3)
+    plt.plot(z*1e-3, fB_cnt_1(z), color=c[1],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".0f")+"THz count.", linewidth = 3)
+    plt.plot(z*1e-3, fB_co_2(z), color=c[2],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".0f")+"THz co.", linewidth = 3)
+    plt.plot(z*1e-3, fB_cnt_2(z), color=c[3],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12,".0f")+"THz count.", linewidth = 3)
+
+    plt.grid()
+    plt.xlabel("Position [km]")
+    plt.ylabel(r"$f_B$")
+    plt.legend()
+    fig_fB.tight_layout()
+    fig_fB.savefig('f_B_chan_'+str(power_dBm)+'.pdf')    
+
+
+    # interpolate the amplification function using optimization results
+    fB_co = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
+    fB_cnt = interp1d(z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
 
     approx = np.ones_like(m) /(beta2 * 2 * np.pi * single_interference_channel_spacing)
     X0mm_co = pynlin.nlin.Xhkm_precomputed(
@@ -95,22 +131,34 @@ for idx, power_dBm in enumerate(power_dBm_list):
 
     locs = pynlin.nlin.get_collision_location(
         m, fiber, single_interference_channel_spacing, 1 / baud_rate)
-    fig1 = plt.figure(figsize=(10, 7))
+    fig1 = plt.figure(figsize=(10, 10))
+    plt.subplot(2, 1, 1)
     plt.plot(show = show_flag)
-    for i, m_ in enumerate(m):
-        plt.plot(z*1e-3, np.abs(I[i]), color="black")
-        plt.axvline(locs[i] * 1e-3, color="blue", linestyle="dashed")
+    for i, m_ in enumerate(m[5:-5]):
+        i = i+5
+        plt.plot(z*1e-3, np.abs(I[i]) * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
+        plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+
+    plt.subplot(2, 1, 2)
+    plt.plot(show = show_flag)
+    for i, m_ in enumerate(m[5:-5]):
+        i = i+5
+        plt.plot(z*1e-3, np.abs(I[i]) * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
+        plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
     plt.xlabel("Position [km]")
+
+
     fig1.tight_layout()
     fig1.savefig('collision_shape_'+str(power_dBm)+'.pdf')
 
-    fig2 = plt.figure(figsize=(10, 8))
+
+    fig2 = plt.figure(figsize=(10, 6))
     plt.plot(show = show_flag)
 
-    # plt.semilogy(m, np.abs(X0mm_co), marker='x', color='green', label="coprop.")
-    # plt.semilogy(m, np.abs(X0mm_cnt), marker='x', color='blue', label="counterprop.")
-    plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
-    plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
+    plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="coprop.")
+    plt.semilogy(m, np.abs(X0mm_cnt), marker='x', markersize = 10, color='blue', label="counterprop.")
+    # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
+    # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
     plt.minorticks_on()
     plt.grid(which="both")
     plt.xlabel(r"Collision index $m$")
@@ -143,50 +191,71 @@ for idx, power_dBm in enumerate(power_dBm_list):
         fB_cnt = interp1d(
             z_max, signal_solution_cnt[:, interf_index], kind='linear')
         X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=fB_co(z))
+            z, I, amplification_function=fB_cnt(z))
         X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
 
     # PHASE NOISE COMPUTATION =======================
     # copropagating
 
-    M = 16
-    qam = pynlin.constellations.QAM(M)
+    for ar_idx, M in enumerate(ariety_list):
+        qam = pynlin.constellations.QAM(M)
 
-    qam_symbols = qam.symbols()
-    cardinality = len(qam_symbols)
+        qam_symbols = qam.symbols()
+        cardinality = len(qam_symbols)
 
-    # assign specific average optical energy
-    qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power/baud_rate)
+        # assign specific average optical energy
+        qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power/baud_rate)
 
-    fig4 = plt.figure(figsize=(10, 10))
-    plt.plot(show = show_flag)
-    plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
+        fig4 = plt.figure(figsize=(10, 10))
+        plt.plot(show = show_flag)
+        plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
 
-    print("\nConstellation average: ")
-    print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
-    print("\toptical energy = ", (np.abs(qam_symbols)**2).mean(), "J")
-    print("\tmagnitude      = ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
+        print("\nConstellation average: ")
+        print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
+        print("\toptical energy = ", (np.abs(qam_symbols)**2).mean(), "J")
+        print("\tmagnitude      = ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
 
-    constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2)
+        constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2)
 
-    for i in range(1, num_channels):
-        Delta_theta_ch_2_co = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
-        Delta_theta_2_co[idx] += Delta_theta_ch_2_co
-        Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[i])
-        Delta_theta_2_cnt[idx] += Delta_theta_ch_2_cnt
+        for i in range(1, num_channels):
+            Delta_theta_ch_2_co = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
+            Delta_theta_2_co[idx, ar_idx] += Delta_theta_ch_2_co
+            Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[i])
+            Delta_theta_2_cnt[idx, ar_idx] += Delta_theta_ch_2_cnt
 
-    print("Total phase variance (CO): ", Delta_theta_2_co[idx])
-    print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
+        print("Total phase variance (CO): ", Delta_theta_2_co[idx])
+        print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
 
 
-fig_final = plt.figure(figsize=(10, 5))
+ar_idx = 2 # 16-QAM
+fig_power = plt.figure(figsize=(10, 5))
 plt.plot(show = True)
-plt.semilogy(power_dBm_list, Delta_theta_2_co, marker='x', color='green', label="coprop.")
-plt.semilogy(power_dBm_list, Delta_theta_2_cnt, marker='x', color='blue',label="counterprop.")
+plt.semilogy(power_dBm_list, Delta_theta_2_co[:, ar_idx], marker='x', markersize = 10, color='green', label="coprop.")
+plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="counterprop.")
 plt.minorticks_on()
 plt.grid(which="both")
 plt.xlabel(r"Power [dBm]")
 plt.ylabel(r"$\Delta \theta^2$")
 plt.legend()
-fig_final.tight_layout()
-fig_final.savefig("power_noise.pdf")
+# fig_power.tight_layout()
+# fig_power.savefig("power_noise.pdf")
+
+idx = 5
+
+fig_ariety = plt.figure(figsize=(10, 10))
+plt.plot(show = True)
+plt.subplot(2, 1, 1)
+plt.loglog(ariety_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
+
+plt.ylabel(r"$\Delta \theta^2$")
+
+plt.subplot(2, 1, 2)
+plt.loglog(ariety_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
+plt.minorticks_on()
+plt.grid(which="both")
+plt.xlabel(r"QAM modulation ariety")
+plt.xticks(ariety_list)
+plt.ylabel(r"$\Delta \theta^2$")
+plt.legend()
+#fig_ariety.tight_layout()
+fig_ariety.savefig("ariety_noise.pdf")
