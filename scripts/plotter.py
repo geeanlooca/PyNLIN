@@ -26,7 +26,7 @@ plt.rcParams['font.size'] = '26'
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-ariety_list = [8, 16, 32, 64, 128]
+ariety_list = [8, 16, 32, 64, 128, 256]
 
 wavelength = 1550
 baud_rate = 10
@@ -51,9 +51,13 @@ wdm = pynlin.wdm.WDM(
 partial_collision_margin = 5
 points_per_collision = 10 
 
-Delta_theta_2_co = np.ndarray(shape=(len(power_dBm_list), len(ariety_list)))
-Delta_theta_2_cnt = np.ndarray(shape=(len(power_dBm_list), len(ariety_list)))
+print("beta2: ", fiber.beta2)
+print("gamma: ", fiber.gamma)
 
+Delta_theta_2_co = np.zeros_like(
+    np.ndarray(shape=(len(power_dBm_list), len(ariety_list)))
+    )
+Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
 
@@ -100,21 +104,22 @@ for idx, power_dBm in enumerate(power_dBm_list):
     fB_co_2 = interp1d(z_max, signal_solution_co[:, select_idx[1]], kind='linear')
     fB_cnt_2 = interp1d(z_max, signal_solution_cnt[:, select_idx[1]], kind='linear')
 
-    fig_fB = plt.figure(figsize=(10, 7))
-    plt.plot(show = show_flag)
-    c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
+    if True:
+        fig_fB = plt.figure(figsize=(10, 7))
+        plt.plot(show = show_flag)
+        c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
 
-    plt.plot(z*1e-3, fB_co_1(z), color=c[0],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".0f")+"THz co.", linewidth = 3)
-    plt.plot(z*1e-3, fB_cnt_1(z), color=c[1],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".0f")+"THz count.", linewidth = 3)
-    plt.plot(z*1e-3, fB_co_2(z), color=c[2],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".0f")+"THz co.", linewidth = 3)
-    plt.plot(z*1e-3, fB_cnt_2(z), color=c[3],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12,".0f")+"THz count.", linewidth = 3)
+        plt.plot(z*1e-3, fB_co_1(z), color=c[0],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, co.", linewidth = 3)
+        plt.plot(z*1e-3, fB_cnt_1(z), color=c[1],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, count.", linewidth = 3)
+        plt.plot(z*1e-3, fB_co_2(z), color=c[2],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")+"THz, co.", linewidth = 3)
+        plt.plot(z*1e-3, fB_cnt_2(z), color=c[3],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12,".1f")+"THz, count.", linewidth = 3)
 
-    plt.grid()
-    plt.xlabel("Position [km]")
-    plt.ylabel(r"$f_B$")
-    plt.legend()
-    fig_fB.tight_layout()
-    fig_fB.savefig('f_B_chan_'+str(power_dBm)+'.pdf')    
+        plt.grid()
+        plt.xlabel("Position [km]")
+        plt.ylabel(r"$f_B$")
+        plt.legend()
+        fig_fB.tight_layout()
+        fig_fB.savefig('f_B_'+str(power_dBm)+'.pdf')    
 
 
     # interpolate the amplification function using optimization results
@@ -129,46 +134,48 @@ for idx, power_dBm in enumerate(power_dBm_list):
     X0mm_none = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=None)
 
-    locs = pynlin.nlin.get_collision_location(
-        m, fiber, single_interference_channel_spacing, 1 / baud_rate)
-    fig1 = plt.figure(figsize=(10, 10))
-    plt.subplot(2, 1, 1)
-    plt.plot(show = show_flag)
-    for i, m_ in enumerate(m[5:-5]):
-        i = i+5
-        plt.plot(z*1e-3, np.abs(I[i]) * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
-        plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+    if False:
+        locs = pynlin.nlin.get_collision_location(
+            m, fiber, single_interference_channel_spacing, 1 / baud_rate)
+        fig1 = plt.figure(figsize=(10, 10))
+        plt.subplot(2, 1, 1)
+        plt.plot(show = show_flag)
+        for i, m_ in enumerate(m[5:-5]):
+            i = i+5
+            plt.plot(z*1e-3, np.abs(I[i]) * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-    plt.subplot(2, 1, 2)
-    plt.plot(show = show_flag)
-    for i, m_ in enumerate(m[5:-5]):
-        i = i+5
-        plt.plot(z*1e-3, np.abs(I[i]) * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
-        plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-    plt.xlabel("Position [km]")
-
-
-    fig1.tight_layout()
-    fig1.savefig('collision_shape_'+str(power_dBm)+'.pdf')
+        plt.subplot(2, 1, 2)
+        plt.plot(show = show_flag)
+        for i, m_ in enumerate(m[5:-5]):
+            i = i+5
+            plt.plot(z*1e-3, np.abs(I[i]) * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+        plt.xlabel("Position [km]")
 
 
-    fig2 = plt.figure(figsize=(10, 6))
-    plt.plot(show = show_flag)
+        fig1.tight_layout()
+        fig1.savefig('collision_shape_'+str(power_dBm)+'.pdf')
 
-    plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="coprop.")
-    plt.semilogy(m, np.abs(X0mm_cnt), marker='x', markersize = 10, color='blue', label="counterprop.")
-    # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
-    # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
-    plt.minorticks_on()
-    plt.grid(which="both")
-    plt.xlabel(r"Collision index $m$")
-    plt.ylabel(r"$X_{0,m,m}$ [m/s]")
-    # plt.title(
-    #     rf"$f_B(z)$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
-    # )
-    plt.legend()
-    fig2.tight_layout()
-    fig2.savefig('X0mm_'+str(power_dBm)+'.pdf')
+
+        fig2 = plt.figure(figsize=(10, 6))
+        plt.plot(show = show_flag)
+
+        plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="coprop.")
+        plt.semilogy(m, np.abs(X0mm_cnt), marker='x', markersize = 10, color='blue', label="counterprop.")
+        # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
+        # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
+        plt.minorticks_on()
+        plt.grid(which="both")
+        plt.xlabel(r"Collision index $m$")
+        plt.ylabel(r"$X_{0,m,m}$ [m/s]")
+        # plt.title(
+        #     rf"$f_B(z)$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
+        # )
+        plt.legend()
+        fig2.tight_layout()
+        fig2.savefig('X0mm_'+str(power_dBm)+'.pdf')
+
 
     # FULL X0mm EVALUATION FOR EVERY m =======================
     X_co = []
@@ -210,13 +217,16 @@ for idx, power_dBm in enumerate(power_dBm_list):
         plt.plot(show = show_flag)
         plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
 
-        print("\nConstellation average: ")
+        print("\nConstellation", M ,"-QAM, average: ")
         print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
         print("\toptical energy = ", (np.abs(qam_symbols)**2).mean(), "J")
         print("\tmagnitude      = ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
 
         constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2)
+        print("\tenergy variance      = ", constellation_variance)
 
+        Delta_theta_ch_2_co = 0
+        Delta_theta_ch_2_cnt = 0
         for i in range(1, num_channels):
             Delta_theta_ch_2_co = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
             Delta_theta_2_co[idx, ar_idx] += Delta_theta_ch_2_co
@@ -237,25 +247,33 @@ plt.grid(which="both")
 plt.xlabel(r"Power [dBm]")
 plt.ylabel(r"$\Delta \theta^2$")
 plt.legend()
-# fig_power.tight_layout()
-# fig_power.savefig("power_noise.pdf")
+fig_power.tight_layout()
+fig_power.savefig("power_noise.pdf")
+
 
 idx = 5
 
-fig_ariety = plt.figure(figsize=(10, 10))
-plt.plot(show = True)
-plt.subplot(2, 1, 1)
-plt.loglog(ariety_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
+fig_ariety, (ax1,ax2) = plt.subplots(nrows=2, sharex=True, figsize=(10,10))
 
-plt.ylabel(r"$\Delta \theta^2$")
+# ax3 = fig_ariety.add_subplot(111, zorder=-1)
+# # for _, spine in ax3.spines.items():
+# #     spine.set_visible(False)
+# # ax3.tick_params(labelleft=False, labelbottom=False, left=False, right=False )
+# # ax3.get_shared_x_axes().join(ax3,ax1)
+# ax3.grid(axis="x")
 
-plt.subplot(2, 1, 2)
-plt.loglog(ariety_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
-plt.minorticks_on()
-plt.grid(which="both")
-plt.xlabel(r"QAM modulation ariety")
-plt.xticks(ariety_list)
-plt.ylabel(r"$\Delta \theta^2$")
-plt.legend()
-#fig_ariety.tight_layout()
+ax1.loglog(ariety_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
+ax2.loglog(ariety_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
+plt.subplots_adjust(hspace=0.0)
+
+ax1.grid()
+ax2.grid()
+ax1.set_ylabel(r"$\Delta \theta^2$")
+ax2.set_ylabel(r"$\Delta \theta^2$")
+ax2.legend()
+ax1.legend()
+ax2.set_xlabel("QAM modulation ariety")
+ax2.set_xticks(ticks=ariety_list, labels = ariety_list)
+
+fig_ariety.tight_layout()
 fig_ariety.savefig("ariety_noise.pdf")
