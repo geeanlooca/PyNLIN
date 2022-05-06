@@ -26,7 +26,7 @@ plt.rcParams['font.size'] = '26'
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-ariety_list = [8, 16, 32, 64, 128, 256]
+arity_list = [8, 16, 32, 64, 128, 256]
 
 wavelength = 1550
 baud_rate = 10
@@ -55,7 +55,7 @@ print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
 
 Delta_theta_2_co = np.zeros_like(
-    np.ndarray(shape=(len(power_dBm_list), len(ariety_list)))
+    np.ndarray(shape=(len(power_dBm_list), len(arity_list)))
     )
 Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
 
@@ -101,6 +101,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
     select_idx = [0, 49]
     fB_co_1 = interp1d(z_max, signal_solution_co[:, select_idx[0]], kind='linear')
     fB_cnt_1 = interp1d(z_max, signal_solution_cnt[:, select_idx[0]], kind='linear')
+
     fB_co_2 = interp1d(z_max, signal_solution_co[:, select_idx[1]], kind='linear')
     fB_cnt_2 = interp1d(z_max, signal_solution_cnt[:, select_idx[1]], kind='linear')
 
@@ -108,11 +109,12 @@ for idx, power_dBm in enumerate(power_dBm_list):
         fig_fB = plt.figure(figsize=(10, 7))
         plt.plot(show = show_flag)
         c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
+        # format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")
+        plt.plot(z*1e-3, fB_co_1(z), color="lightgreen",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, co.", linewidth = 3)        
+        plt.plot(z*1e-3, fB_co_2(z), color="green",label = "192.5THz, co.", linewidth = 3)
 
-        plt.plot(z*1e-3, fB_co_1(z), color=c[0],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, co.", linewidth = 3)
-        plt.plot(z*1e-3, fB_cnt_1(z), color=c[1],label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, count.", linewidth = 3)
-        plt.plot(z*1e-3, fB_co_2(z), color=c[2],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")+"THz, co.", linewidth = 3)
-        plt.plot(z*1e-3, fB_cnt_2(z), color=c[3],label = format(wdm.frequency_grid()[select_idx[1]]*1e-12,".1f")+"THz, count.", linewidth = 3)
+        plt.plot(z*1e-3, fB_cnt_1(z), color="lightblue",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, count.", linewidth = 3)
+        plt.plot(z*1e-3, fB_cnt_2(z), color="blue",label = "192.5THz, count.", linewidth = 3)
 
         plt.grid()
         plt.xlabel("Position [km]")
@@ -134,26 +136,25 @@ for idx, power_dBm in enumerate(power_dBm_list):
     X0mm_none = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=None)
 
-    if False:
+    if True:
         locs = pynlin.nlin.get_collision_location(
             m, fiber, single_interference_channel_spacing, 1 / baud_rate)
-        fig1 = plt.figure(figsize=(10, 10))
-        plt.subplot(2, 1, 1)
+
+        fig1, (ax1,ax2, ax3) = plt.subplots(nrows=3, sharex=True, figsize=(10,12))
         plt.plot(show = show_flag)
+
         for i, m_ in enumerate(m[5:-5]):
             i = i+5
-            plt.plot(z*1e-3, np.abs(I[i]) * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax1.plot(z*1e-3, np.abs(I[i]) * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            ax1.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-        plt.subplot(2, 1, 2)
-        plt.plot(show = show_flag)
-        for i, m_ in enumerate(m[5:-5]):
-            i = i+5
-            plt.plot(z*1e-3, np.abs(I[i]) * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            plt.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-        plt.xlabel("Position [km]")
+            ax2.plot(z*1e-3, np.abs(I[i]) * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
+            ax3.plot(z*1e-3, np.abs(I[i]), color=cm.viridis(i/(len(m)-10)/3*2))
+            ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
+        ax3.set_xlabel("Position [km]")
         fig1.tight_layout()
         fig1.savefig('collision_shape_'+str(power_dBm)+'.pdf')
 
@@ -204,7 +205,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
     # PHASE NOISE COMPUTATION =======================
     # copropagating
 
-    for ar_idx, M in enumerate(ariety_list):
+    for ar_idx, M in enumerate(arity_list):
         qam = pynlin.constellations.QAM(M)
 
         qam_symbols = qam.symbols()
@@ -253,17 +254,17 @@ fig_power.savefig("power_noise.pdf")
 
 idx = 5
 
-fig_ariety, (ax1,ax2) = plt.subplots(nrows=2, sharex=True, figsize=(10,10))
+fig_arity, (ax1,ax2) = plt.subplots(nrows=2, sharex=True, figsize=(10,10))
 
-# ax3 = fig_ariety.add_subplot(111, zorder=-1)
+# ax3 = fig_arity.add_subplot(111, zorder=-1)
 # # for _, spine in ax3.spines.items():
 # #     spine.set_visible(False)
 # # ax3.tick_params(labelleft=False, labelbottom=False, left=False, right=False )
 # # ax3.get_shared_x_axes().join(ax3,ax1)
 # ax3.grid(axis="x")
 
-ax1.loglog(ariety_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
-ax2.loglog(ariety_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
+ax1.loglog(arity_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
+ax2.loglog(arity_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
 plt.subplots_adjust(hspace=0.0)
 
 ax1.grid()
@@ -272,8 +273,8 @@ ax1.set_ylabel(r"$\Delta \theta^2$")
 ax2.set_ylabel(r"$\Delta \theta^2$")
 ax2.legend()
 ax1.legend()
-ax2.set_xlabel("QAM modulation ariety")
-ax2.set_xticks(ticks=ariety_list, labels = ariety_list)
+ax2.set_xlabel("QAM modulation arity")
+ax2.set_xticks(ticks=arity_list, labels = arity_list)
 
-fig_ariety.tight_layout()
-fig_ariety.savefig("ariety_noise.pdf")
+fig_arity.tight_layout()
+fig_arity.savefig("arity_noise.pdf")
