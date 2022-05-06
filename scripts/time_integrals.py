@@ -119,34 +119,34 @@ m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate
 # )
 
 ## MECOZZI
-fiber = pynlin.fiber.Fiber(
-    effective_area=80e-12,
-    beta2=beta2
-)
-fiber_length = 500e3
-channel_spacing =102
-num_channels = 2
-baud_rate = 100e9
-print(channel_spacing)
-fiber = pynlin.fiber.Fiber(
-    effective_area=80e-12,
-    beta2=beta2
-)
-wdm = pynlin.wdm.WDM(
-    spacing=channel_spacing,
-    num_channels=num_channels,
-    center_frequency=190
-) 
+# fiber = pynlin.fiber.Fiber(
+#     effective_area=80e-12,
+#     beta2=beta2
+# )
+# fiber_length = 500e3
+# channel_spacing =102
+# num_channels = 2
+# baud_rate = 100e9
+# print(channel_spacing)
+# fiber = pynlin.fiber.Fiber(
+#     effective_area=80e-12,
+#     beta2=beta2
+# )
+# wdm = pynlin.wdm.WDM(
+#     spacing=channel_spacing,
+#     num_channels=num_channels,
+#     center_frequency=190
+# ) 
 
-partial_collision_margin = 5
-points_per_collision = 10
+# partial_collision_margin = 5
+# points_per_collision = 10
 
 pynlin.nlin.X0mm_time_integral_WDM_grid(
     baud_rate,
     wdm,
     fiber,
     fiber_length,
-    "mecozzi.h5",
+    "timing_results.h5",
     pulse_shape="Nyquist",
     rolloff_factor=0.1,
     samples_per_symbol=10,
