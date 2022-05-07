@@ -27,6 +27,7 @@ interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
 arity_list = [8, 16, 32, 64, 128, 256]
+coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
 baud_rate = 10
@@ -61,11 +62,22 @@ Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
 
+results_path = '../results/'
+
+f_0_9 = h5py.File(results_path + '0_9_results.h5', 'r')
+f_19_29 = h5py.File(results_path + '19_29_results.h5', 'r')
+f_39_49 = h5py.File(results_path + '39_49_results.h5', 'r')
+f = h5py.File('merged_time_integrals.h5', 'w')
+f.create_group('time_integrals')
+h5py.copy(f_0_9['time_integrals'], f)
+h5py.copy(f_19_29['time_integrals'], f)
+h5py.copy(f_39_49['time_integrals'], f)
+
+
+'''
 for idx, power_dBm in enumerate(power_dBm_list):
     average_power =  dBm2watt(power_dBm)
-
     # SIMULATION DATA LOAD =================================
-    results_path = '../results/'
 
     pump_solution_cnt =    np.load(results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
     signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
@@ -82,21 +94,6 @@ for idx, power_dBm in enumerate(power_dBm_list):
     signal_solution_cnt = np.power(np.divide(signal_solution_cnt, signal_solution_cnt[0, :]) , 2)
     signal_solution_co = np.power(np.divide(signal_solution_co, signal_solution_co[0, :]), 2)
     pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
-
-    # XPM COEFFICIENT EVALUATION, single m =================================
-    # compute the collisions between the two furthest WDM channels
-    frequency_of_interest = wdm.frequency_grid()[0]
-    interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
-    single_interference_channel_spacing = interfering_frequency - frequency_of_interest
-
-
-
-    # compute the X0mm coefficients given the precompute time integrals
-    m = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-    z = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-    I = np.array(f['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-
-
     # PLOT A COUPLE OF CHANNEL fB
     select_idx = [0, 49]
     fB_co_1 = interp1d(z_max, signal_solution_co[:, select_idx[0]], kind='linear')
@@ -122,13 +119,29 @@ for idx, power_dBm in enumerate(power_dBm_list):
         plt.legend()
         fig_fB.tight_layout()
         fig_fB.savefig('f_B_'+str(power_dBm)+'.pdf')    
+        for coi in coi_list:
+
+
+    # XPM COEFFICIENT EVALUATION, single m =================================
+    # compute the collisions between the two furthest WDM channels
+    frequency_of_interest = wdm.frequency_grid()[coi]
+    interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
+    single_interference_channel_spacing = interfering_frequency - frequency_of_interest
+
+
+
+    # compute the X0mm coefficients given the precompute time integrals
+    for coi in coi_list
+    m = np.array(f['/time_integrals/channel_'+str(coi)+'/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
+    z = np.array(f['/time_integrals/channel_'+str(coi)+'/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
+    I = np.array(f['/time_integrals/channel_'+str(coi)+'/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
 
 
     # interpolate the amplification function using optimization results
     fB_co = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
     fB_cnt = interp1d(z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
 
-    approx = np.ones_like(m) /(beta2 * 2 * np.pi * single_interference_channel_spacing)
+    approx = np.ones_like(m) np.abs(1/(beta2 * 2 * np.pi * single_interference_channel_spacing))
     X0mm_co = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=fB_co(z))
     X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
@@ -277,4 +290,4 @@ ax2.set_xlabel("QAM modulation arity")
 ax2.set_xticks(ticks=arity_list, labels = arity_list)
 
 fig_arity.tight_layout()
-fig_arity.savefig("arity_noise.pdf")
+fig_arity.savefig("arity_noise.pdf")'''
