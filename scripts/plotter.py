@@ -87,8 +87,7 @@ X_cnt = np.zeros_like(
 X_none = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
 )
-
-
+'''
 for pow_idx, power_dBm in enumerate(power_dBm_list):
     print("Computing power ", power_dBm)
     average_power = dBm2watt(power_dBm)
@@ -110,7 +109,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
     pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
 
     z_max = np.load(results_path + 'z_max.npy')
-    f = h5py.File(results_path + 'results_multi.h5', 'r')
+    #f = h5py.File(results_path + 'results_multi.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
     # compute the X0mm coefficients given the precompute time integrals
@@ -177,6 +176,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
             X0mm_co = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_co(z))
             X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
+
             fB_cnt = interp1d(
                 z_max, signal_solution_cnt[:, incremental], kind='linear')
             X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
@@ -186,37 +186,46 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
             X0mm_none = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=None)
             X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
+            print(X_co)
+            print(X_cnt)
+            print(X_none)
 
 np.save("X_co.npy", X_co)
 np.save("X_cnt.npy", X_cnt)
 np.save("X_none.npy", X_none)
-
+'''
 X_co = np.load("X_co.npy")
 X_cnt = np.load("X_cnt.npy")
 X_none = np.load("X_none.npy")
+print(X_co)
+print(X_cnt)
+print(X_none)
 
-std_average_power = dBm2watt(-10)
+
+
+
 ar_idx = 0  # 16-QAM
 M = 16
+for pow_idx, power_dBm in enumerate(power_dBm_list):
+    average_power = dBm2watt(power_dBm)
+    qam = pynlin.constellations.QAM(M)
+    qam_symbols = qam.symbols()
 
-qam = pynlin.constellations.QAM(M)
-qam_symbols = qam.symbols()
+    # assign specific average optical energy
+    qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power / baud_rate)
+    constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
 
-# assign specific average optical energy
-qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(std_average_power / baud_rate)
-constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
+    print("X co: ", np.sum(np.abs(X_co)))
+    print("X cnt: ", np.sum(np.abs(X_cnt)))
+    print("X none: ", np.sum(np.abs(X_none)))
+    for coi_idx, coi in enumerate(coi_list):
+        Delta_theta_2_co[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, pow_idx])
+        Delta_theta_2_cnt[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[coi_idx, pow_idx])
+        Delta_theta_2_none[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx])
 
-print("X co: ", np.sum(np.abs(X_co)))
-print("X cnt: ", np.sum(np.abs(X_cnt)))
-print("X none: ", np.sum(np.abs(X_none)))
-for coi_idx, coi in enumerate(coi_list):
-    Delta_theta_2_none[coi_idx, :, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, :])
-    Delta_theta_2_co[coi_idx, :, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, :])
-    Delta_theta_2_cnt[coi_idx, :, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[coi_idx, :])
-
-print("delta co: ", Delta_theta_2_co)
-print("delta cnt: ", Delta_theta_2_cnt)
-print("delta none: ", Delta_theta_2_none)
+    print("delta co: ", Delta_theta_2_co)
+    print("delta cnt: ", Delta_theta_2_cnt)
+    print("delta none: ", Delta_theta_2_none)
 
 markers = ["x", "+", "s", "o", "x", "+"]
 
@@ -244,7 +253,7 @@ fig_power.savefig("power_noise.pdf")
 
 pow_idx = 1 # -10dBm
 
-fig_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 5))
+fig_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 10))
 plt.plot(show=True)
 ax1.semilogy(coi_list, Delta_theta_2_co[:, pow_idx, ar_idx], marker='x', markersize=10, color='green', label="ch." + str(coi) + "co.")
 plt.grid(which="both")
@@ -255,8 +264,10 @@ plt.grid(which="both")
 ax3.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='x', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
 
 plt.minorticks_on()
-plt.grid(which="both")
 plt.xlabel(r"Channel index")
+ax1.grid(which="both")
+ax2.grid(which="both")
+ax3.grid(which="both")
 ax1.set_ylabel(r"$\Delta \theta^2$")
 ax2.set_ylabel(r"$\Delta \theta^2$")
 ax3.set_ylabel(r"$\Delta \theta^2$")
