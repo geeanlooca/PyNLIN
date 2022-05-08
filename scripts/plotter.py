@@ -25,7 +25,7 @@ plt.rcParams['font.size'] = '26'
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
-power_dBm_list = np.linspace(-20, 0, 3)
+power_dBm_list = np.linspace(-20, 0, 11)
 arity_list = [16]
 coi_list = [0, 9, 19, 29, 39, 49]
 
@@ -202,8 +202,6 @@ print(X_cnt)
 print(X_none)
 
 
-
-
 ar_idx = 0  # 16-QAM
 M = 16
 for pow_idx, power_dBm in enumerate(power_dBm_list):
@@ -223,54 +221,52 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
         Delta_theta_2_cnt[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[coi_idx, pow_idx])
         Delta_theta_2_none[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx])
 
-    print("delta co: ", Delta_theta_2_co)
-    print("delta cnt: ", Delta_theta_2_cnt)
-    print("delta none: ", Delta_theta_2_none)
+    # print("delta co: ", Delta_theta_2_co)
+    # print("delta cnt: ", Delta_theta_2_cnt)
+    # print("delta none: ", Delta_theta_2_none)
 
-markers = ["x", "+", "s", "o", "x", "+"]
+markers = ["x", "+", "o", "o", "x", "+"]
 
 fig_power, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 10))
 plt.plot(show=True)
-for coi_idx, coi in enumerate(coi_list):
+coi_selection = [0, 19, 49]
+for coi_idx, coi in enumerate(coi_selection):
     ax1.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
                 markersize=10, color='green', label="ch." + str(coi) + " co.")
-
     ax2.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
                 markersize=10, color='blue', label="ch." + str(coi) + " count.")
-
     ax3.semilogy(power_dBm_list, Delta_theta_2_none[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                markersize=10, color='grey', label="ch." + str(coi) + " count.")
+                markersize=10, color='grey', label="ch." + str(coi+1))
 ax1.grid(which="both")
+plt.annotate("ciao", (0, 0))
 ax2.grid(which="both")
 ax3.grid(which="both")
 plt.xlabel(r"Power [dBm]")
 ax1.set_ylabel(r"$\Delta \theta^2$")
 ax2.set_ylabel(r"$\Delta \theta^2$")
 ax3.set_ylabel(r"$\Delta \theta^2$")
-fig_power.tight_layout()
+ax3.legend()
+plt.minorticks_on()
+plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 fig_power.savefig("power_noise.pdf")
 
 
-pow_idx = 1 # -10dBm
+pow_idx = np.where(power_dBm_list==-10)[0]
 
-fig_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 10))
+fig_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 7))
 plt.plot(show=True)
-ax1.semilogy(coi_list, Delta_theta_2_co[:, pow_idx, ar_idx], marker='x', markersize=10, color='green', label="ch." + str(coi) + "co.")
+ax1.semilogy(coi_list, Delta_theta_2_co[:, pow_idx, ar_idx], marker='s', markersize=10, color='green', label="ch." + str(coi) + "co.")
 plt.grid(which="both")
-
-ax2.semilogy(coi_list, Delta_theta_2_cnt[:, pow_idx, ar_idx], marker='x', markersize=10, color='blue', label="ch." + str(coi) + "count.")
+ax2.semilogy(coi_list, Delta_theta_2_cnt[:, pow_idx, ar_idx], marker='s', markersize=10, color='blue', label="ch." + str(coi) + "count.")
 plt.grid(which="both")
-
-ax3.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='x', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
-
-plt.minorticks_on()
+ax3.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='s', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
 plt.xlabel(r"Channel index")
+plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
 ax1.grid(which="both")
 ax2.grid(which="both")
 ax3.grid(which="both")
 ax1.set_ylabel(r"$\Delta \theta^2$")
 ax2.set_ylabel(r"$\Delta \theta^2$")
 ax3.set_ylabel(r"$\Delta \theta^2$")
-plt.subplots_adjust(hspace=0.0)
-fig_channel.tight_layout()
+plt.subplots_adjust(left = 0.2, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 fig_channel.savefig("channel_noise.pdf")
