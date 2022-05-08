@@ -77,6 +77,17 @@ f_39_49 = h5py.File(results_path + '39_49_results.h5', 'r')
 # h5py.copy(f_19_29['time_integrals'], f)
 # h5py.copy(f_39_49['time_integrals'], f)
 
+# sum of all the varianced (variances are the sum of all the X0mm over m)
+X_co = np.zeros_like(
+    np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
+)
+X_cnt = np.zeros_like(
+    np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
+)
+X_none = np.zeros_like(
+    np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
+)
+
 for pow_idx, power_dBm in enumerate(power_dBm_list):
     print("Computing power ", power_dBm)
     average_power = dBm2watt(power_dBm)
@@ -91,6 +102,12 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
     pump_solution_co = np.load(
         results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
 
+    # compute fB squaring
+    pump_solution_cnt = np.power(np.divide(pump_solution_cnt, pump_solution_cnt[0, :]), 2)
+    signal_solution_cnt = np.power(np.divide(signal_solution_cnt, signal_solution_cnt[0, :]), 2)
+    signal_solution_co = np.power(np.divide(signal_solution_co, signal_solution_co[0, :]), 2)
+    pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
+
     z_max = np.load(results_path + 'z_max.npy')
     f = h5py.File(results_path + 'results_multi.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
@@ -98,12 +115,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
     # compute the X0mm coefficients given the precompute time integrals
     # FULL X0mm EVALUATION FOR EVERY m =======================
     for coi_idx, coi in enumerate(coi_list):
-        X_co = []
-        X_co.append(0.0)
-        X_cnt = []
-        X_cnt.append(0.0)
-        X_none = []
-        X_none.append(0.0)
+
         print("Computing Channel Of Interest ", coi + 1)
 
         # compute the first num_channels interferents (assume the WDM grid is identical)
@@ -163,90 +175,59 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
                 z_max, signal_solution_co[:, incremental], kind='linear')
             X0mm_co = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_co(z))
-            X_co.append(np.sum(np.abs(X0mm_co)**2))
-
+            X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
+            print(X_co)
             fB_cnt = interp1d(
                 z_max, signal_solution_cnt[:, incremental], kind='linear')
             X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_cnt(z))
-            X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
+            X_cnt[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
 
             X0mm_none = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_cnt(z))
-            X_none.append(np.sum(np.abs(X0mm_cnt)**2))
-
-        print("X co: ", np.sum(np.abs(X_co)))
-        print("X cnt: ", np.sum(np.abs(X_cnt)))
-        print("X none: ", np.sum(np.abs(X_none)))
-
-        # PHASE NOISE COMPUTATION =======================
-        # summing all interfering contributions and plug constellation
-        for ar_idx, M in enumerate(arity_list):
-            qam = pynlin.constellations.QAM(M)
-
-            qam_symbols = qam.symbols()
-            cardinality = len(qam_symbols)
-
-            # assign specific average optical energy
-            qam_symbols = qam_symbols / \
-                np.sqrt(np.mean(np.abs(qam_symbols)**2)) * \
-                np.sqrt(average_power / baud_rate)
-            constellation_variance = (
-                np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
-
-            # fig4 = plt.figure(figsize=(10, 10))
-            # plt.plot(show = show_flag)
-            # plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
-
-            # print("\nConstellation", M ,"-QAM, average: ")
-            # print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
-            # print("\toptical energy = ", (np.abs(qam_symbols)**2).mean(), "J")
-            # print("\tmagnitude      = ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
-
-            #print("\tenergy variance      = ", constellation_variance)
-
-            Delta_theta_ch_2_co = 0
-            Delta_theta_ch_2_cnt = 0
-            Delta_theta_ch_2_none = 0
-            for i in range(1, num_channels):
-                Delta_theta_ch_2_co = 4 * fiber.gamma**2 * \
-                    constellation_variance * np.abs(X_co[i])
-                Delta_theta_2_co[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_co
-                Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * \
-                    constellation_variance * np.abs(X_cnt[i])
-                Delta_theta_2_cnt[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_cnt
-                Delta_theta_ch_2_none = 4 * fiber.gamma**2 * \
-                    constellation_variance * np.abs(X_none[i])
-                Delta_theta_2_none[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_none
-                # print("Total phase variance (CO): ", Delta_theta_2_co[idx])
-            # print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
-
-np.save("Delta_co.npy", Delta_theta_2_co)
-np.save("Delta_cnt.npy", Delta_theta_2_cnt)
-np.save("Delta_none.npy", Delta_theta_2_none)
-
-Delta_theta_2_none = np.load("Delta_none.npy")
-Delta_theta_2_co = np.load("Delta_co.npy")
-Delta_theta_2_cnt = np.load("Delta_cnt.npy")
+            X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
 
 
+std_average_power = dBm2watt(-10)
 ar_idx = 0  # 16-QAM
+M = 16
+
+qam = pynlin.constellations.QAM(M)
+qam_symbols = qam.symbols()
+
+# assign specific average optical energy
+qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(std_average_power / baud_rate)
+constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
+
+print("X co: ", np.sum(np.abs(X_co)))
+print("X cnt: ", np.sum(np.abs(X_cnt)))
+print("X none: ", np.sum(np.abs(X_none)))
+for coi_idx, coi in enumerate(coi_list):
+    Delta_theta_2_none[coi_idx, :, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, :])
+    Delta_theta_2_co[coi_idx, :, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, :])
+    Delta_theta_2_cnt[coi_idx, :, ar_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[coi_idx, :])
+
+print("delta co: ", Delta_theta_2_co)
+print("delta cnt: ", Delta_theta_2_cnt)
+print("delta none: ", Delta_theta_2_none)
+
 fig_power = plt.figure(figsize=(10, 10))
 plt.plot(show=True)
 
 markers = ["x", "+", "s", "o", "x", "+"]
-
 for coi_idx in range(len(coi_list)):
     plt.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                 markersize=10, color='green', label="ch." + str(coi_idx + 1) + "coprop.")
+                markersize=10, color='green', label="ch." + str(coi_idx + 1) + "coprop.")
     plt.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                 markersize=10, color='blue', label="ch." + str(coi_idx + 1) + "counterprop.")
+                markersize=10, color='blue', label="ch." + str(coi_idx + 1) + "counterprop.")
     plt.semilogy(power_dBm_list, Delta_theta_2_none[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                 markersize=10, color='purple', label="ch." + str(coi_idx + 1) + "counterprop.")
+                markersize=10, color='purple', label="ch." + str(coi_idx + 1) + "counterprop.")
 plt.minorticks_on()
 plt.grid(which="both")
 plt.xlabel(r"Power [dBm]")
 plt.ylabel(r"$\Delta \theta^2$")
 plt.legend()
+
+
 fig_power.tight_layout()
 fig_power.savefig("power_noise.pdf")
