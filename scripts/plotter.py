@@ -88,6 +88,7 @@ X_none = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
 )
 
+
 for pow_idx, power_dBm in enumerate(power_dBm_list):
     print("Computing power ", power_dBm)
     average_power = dBm2watt(power_dBm)
@@ -176,7 +177,6 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
             X0mm_co = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_co(z))
             X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
-            print(X_co)
             fB_cnt = interp1d(
                 z_max, signal_solution_cnt[:, incremental], kind='linear')
             X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
@@ -184,9 +184,16 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
             X_cnt[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
 
             X0mm_none = pynlin.nlin.Xhkm_precomputed(
-                z, I, amplification_function=fB_cnt(z))
-            X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
+                z, I, amplification_function=None)
+            X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
 
+np.save("X_co.npy", X_co)
+np.save("X_cnt.npy", X_cnt)
+np.save("X_none.npy", X_none)
+
+X_co = np.load("X_co.npy")
+X_cnt = np.load("X_cnt.npy")
+X_none = np.load("X_none.npy")
 
 std_average_power = dBm2watt(-10)
 ar_idx = 0  # 16-QAM
@@ -211,23 +218,48 @@ print("delta co: ", Delta_theta_2_co)
 print("delta cnt: ", Delta_theta_2_cnt)
 print("delta none: ", Delta_theta_2_none)
 
-fig_power = plt.figure(figsize=(10, 10))
-plt.plot(show=True)
-
 markers = ["x", "+", "s", "o", "x", "+"]
-for coi_idx in range(len(coi_list)):
-    plt.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                markersize=10, color='green', label="ch." + str(coi_idx + 1) + "coprop.")
-    plt.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                markersize=10, color='blue', label="ch." + str(coi_idx + 1) + "counterprop.")
-    plt.semilogy(power_dBm_list, Delta_theta_2_none[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                markersize=10, color='purple', label="ch." + str(coi_idx + 1) + "counterprop.")
-plt.minorticks_on()
-plt.grid(which="both")
+
+fig_power, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 10))
+plt.plot(show=True)
+for coi_idx, coi in enumerate(coi_list):
+    ax1.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                markersize=10, color='green', label="ch." + str(coi) + " co.")
+
+    ax2.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                markersize=10, color='blue', label="ch." + str(coi) + " count.")
+
+    ax3.semilogy(power_dBm_list, Delta_theta_2_none[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                markersize=10, color='grey', label="ch." + str(coi) + " count.")
+ax1.grid(which="both")
+ax2.grid(which="both")
+ax3.grid(which="both")
 plt.xlabel(r"Power [dBm]")
-plt.ylabel(r"$\Delta \theta^2$")
-plt.legend()
-
-
+ax1.set_ylabel(r"$\Delta \theta^2$")
+ax2.set_ylabel(r"$\Delta \theta^2$")
+ax3.set_ylabel(r"$\Delta \theta^2$")
 fig_power.tight_layout()
 fig_power.savefig("power_noise.pdf")
+
+
+pow_idx = 1 # -10dBm
+
+fig_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 5))
+plt.plot(show=True)
+ax1.semilogy(coi_list, Delta_theta_2_co[:, pow_idx, ar_idx], marker='x', markersize=10, color='green', label="ch." + str(coi) + "co.")
+plt.grid(which="both")
+
+ax2.semilogy(coi_list, Delta_theta_2_cnt[:, pow_idx, ar_idx], marker='x', markersize=10, color='blue', label="ch." + str(coi) + "count.")
+plt.grid(which="both")
+
+ax3.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='x', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
+
+plt.minorticks_on()
+plt.grid(which="both")
+plt.xlabel(r"Channel index")
+ax1.set_ylabel(r"$\Delta \theta^2$")
+ax2.set_ylabel(r"$\Delta \theta^2$")
+ax3.set_ylabel(r"$\Delta \theta^2$")
+plt.subplots_adjust(hspace=0.0)
+fig_channel.tight_layout()
+fig_channel.savefig("channel_noise.pdf")
