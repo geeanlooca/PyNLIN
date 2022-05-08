@@ -59,7 +59,7 @@ Delta_theta_2_co = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(arity_list)))
 )
 Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
-
+Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 show_flag = False
 
 results_path = '../results/'
@@ -174,6 +174,11 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
             X0mm_none = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_cnt(z))
             X_none.append(np.sum(np.abs(X0mm_cnt)**2))
+
+            print("X co: ", np.sum(np.abs(X0mm_co)**2))
+            print("X cnt: ", np.sum(np.abs(X0mm_cnt)**2))
+            print("X none: ", np.sum(np.abs(X0mm_none)**2))
+
         # PHASE NOISE COMPUTATION =======================
         # summing all interfering contributions and plug constellation
         for ar_idx, M in enumerate(arity_list):
@@ -202,6 +207,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
 
             Delta_theta_ch_2_co = 0
             Delta_theta_ch_2_cnt = 0
+            Delta_theta_ch_2_none = 0
             for i in range(1, num_channels):
                 Delta_theta_ch_2_co = 4 * fiber.gamma**2 * \
                     constellation_variance * np.abs(X_co[i])
@@ -209,13 +215,17 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
                 Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * \
                     constellation_variance * np.abs(X_cnt[i])
                 Delta_theta_2_cnt[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_cnt
-
+                Delta_theta_ch_2_none = 4 * fiber.gamma**2 * \
+                    constellation_variance * np.abs(X_none[i])
+                Delta_theta_2_none[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_none
                 # print("Total phase variance (CO): ", Delta_theta_2_co[idx])
             # print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
 
 np.save("Delta_co.npy", Delta_theta_2_co)
 np.save("Delta_cnt.npy", Delta_theta_2_cnt)
+np.save("Delta_none.npy", Delta_theta_2_none)
 
+Delta_theta_2_none = np.load("Delta_none.npy")
 Delta_theta_2_co = np.load("Delta_co.npy")
 Delta_theta_2_cnt = np.load("Delta_cnt.npy")
 
@@ -224,13 +234,15 @@ ar_idx = 0  # 16-QAM
 fig_power = plt.figure(figsize=(10, 10))
 plt.plot(show=True)
 
-markers = ["x", "+", "q", "o"]
+markers = ["x", "+", "s", "o"]
 
 for coi_idx in range(len(coi_list)):
     plt.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                 markersize=10, color='green', label="ch." + str(coi + 1) + "coprop.")
+                 markersize=10, color='green', label="ch." + str(coi_idx + 1) + "coprop.")
     plt.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
-                 markersize=10, color='blue', label="ch." + str(coi + 1) + "counterprop.")
+                 markersize=10, color='blue', label="ch." + str(coi_idx + 1) + "counterprop.")
+    plt.semilogy(power_dBm_list, Delta_theta_2_none[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                 markersize=10, color='purple', label="ch." + str(coi_idx + 1) + "counterprop.")
 plt.minorticks_on()
 plt.grid(which="both")
 plt.xlabel(r"Power [dBm]")
