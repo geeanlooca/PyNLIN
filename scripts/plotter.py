@@ -25,7 +25,7 @@ plt.rcParams['font.size'] = '26'
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
-power_dBm_list = np.linspace(-20, 0, 11)
+power_dBm_list = np.linspace(-20, 0, 3)
 arity_list = [16]
 coi_list = [19, 29, 39, 49]
 
@@ -50,14 +50,14 @@ wdm = pynlin.wdm.WDM(
     center_frequency=190
 )
 partial_collision_margin = 5
-points_per_collision = 10 
+points_per_collision = 10
 
 print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
 
 Delta_theta_2_co = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(arity_list)))
-    )
+)
 Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
@@ -67,9 +67,9 @@ results_path = '../results/'
 #f_0_9 = h5py.File(results_path + '0_9_results.h5', 'r')
 f_19_29 = h5py.File(results_path + '19_29_results.h5', 'r')
 f_39_49 = h5py.File(results_path + '39_49_results.h5', 'r')
-#print(np.array(f_0_9['/time_integrals/channel_1/interfering_channel_1/m']))
-print(np.array(f_19_29['/time_integrals/channel_1/interfering_channel_1/m']))
-print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_1/integrals']))
+# print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_2/m']))
+# print(np.array(f_19_29['/time_integrals/channel_1/interfering_channel_1/m']))
+# print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_1/integrals']))
 
 # f = h5py.File('merged_time_integrals.h5', 'w')
 # f.create_group('time_integrals')
@@ -77,126 +77,105 @@ print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_1/integral
 # h5py.copy(f_19_29['time_integrals'], f)
 # h5py.copy(f_39_49['time_integrals'], f)
 
-for idx, power_dBm in enumerate(power_dBm_list):
-    average_power =  dBm2watt(power_dBm)
+for pow_idx, power_dBm in enumerate(power_dBm_list):
+    print("Computing power ", power_dBm)
+    average_power = dBm2watt(power_dBm)
     # SIMULATION DATA LOAD =================================
 
-    pump_solution_cnt =    np.load(results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
-    signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
-    signal_solution_co =   np.load(results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
-    pump_solution_co =     np.load(results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
+    pump_solution_cnt = np.load(
+        results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
+    signal_solution_cnt = np.load(
+        results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
+    signal_solution_co = np.load(
+        results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
+    pump_solution_co = np.load(
+        results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
 
     z_max = np.load(results_path + 'z_max.npy')
     f = h5py.File(results_path + 'results_multi.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
-    # # plot a pair of fB
-    # pump_solution_cnt = np.power(np.divide(pump_solution_cnt, pump_solution_cnt[0, :]), 2)
-    # signal_solution_cnt = np.power(np.divide(signal_solution_cnt, signal_solution_cnt[0, :]) , 2)
-    # signal_solution_co = np.power(np.divide(signal_solution_co, signal_solution_co[0, :]), 2)
-    # pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
-    # # PLOT A COUPLE OF CHANNEL fB
-    # select_idx = [0, 49]
-    # fB_co_1 = interp1d(z_max, signal_solution_co[:, select_idx[0]], kind='linear')
-    # fB_cnt_1 = interp1d(z_max, signal_solution_cnt[:, select_idx[0]], kind='linear')
-
-    # fB_co_2 = interp1d(z_max, signal_solution_co[:, select_idx[1]], kind='linear')
-    # fB_cnt_2 = interp1d(z_max, signal_solution_cnt[:, select_idx[1]], kind='linear')
-
-    # if True:
-    #     fig_fB = plt.figure(figsize=(10, 7))
-    #     plt.plot(show = show_flag)
-    #     c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
-    #     # format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")
-    #     plt.plot(z*1e-3, fB_co_1(z), color="lightgreen",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, co.", linewidth = 3)        
-    #     plt.plot(z*1e-3, fB_co_2(z), color="green",label = "192.5THz, co.", linewidth = 3)
-
-    #     plt.plot(z*1e-3, fB_cnt_1(z), color="lightblue",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz, count.", linewidth = 3)
-    #     plt.plot(z*1e-3, fB_cnt_2(z), color="blue",label = "192.5THz, count.", linewidth = 3)
-
-    #     plt.grid()
-    #     plt.xlabel("Position [km]")
-    #     plt.ylabel(r"$f_B$")
-    #     plt.legend()
-    #     fig_fB.tight_layout()
-    #     fig_fB.savefig('f_B_'+str(power_dBm)+'.pdf')    
-
-   
     # compute the X0mm coefficients given the precompute time integrals
+    # FULL X0mm EVALUATION FOR EVERY m =======================
     for coi_idx, coi in enumerate(coi_list):
-        print("Computing Channel Of Interest ", coi+1)
-        if coi==0:
-            m = np.array(f_0_9['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-            z = np.array(f_0_9['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-            I = np.array(f_0_9['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-        elif coi==9:
-            m = np.array(f_0_9['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-            z = np.array(f_0_9['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-            I = np.array(f_0_9['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-        elif coi==19:
-            m = np.array(f_19_29['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-            z = np.array(f_19_29['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-            I = np.array(f_19_29['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-        elif coi==29:
-            m = np.array(f_19_29['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-            z = np.array(f_19_29['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-            I = np.array(f_19_29['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-        elif coi==39:
-            m = np.array(f_39_49['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-            z = np.array(f_39_49['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-            I = np.array(f_39_49['/time_integrals/channel_0/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-        elif coi==49:
-            m = np.array(f_39_49['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-            z = np.array(f_39_49['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-            I = np.array(f_39_49['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-
-        
-        # XPM COEFFICIENT EVALUATION, single m =================================
-        # compute the collisions between the two furthest WDM channels
-        frequency_of_interest = wdm.frequency_grid()[coi]
-        interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
-        single_interference_channel_spacing = interfering_frequency - frequency_of_interest
-
-
-        # interpolate the amplification function using optimization results
-        fB_co = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
-        fB_cnt = interp1d(z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
-
-        approx = np.ones_like(m) * np.abs(1/(beta2 * 2 * np.pi * single_interference_channel_spacing))
-        X0mm_co = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=fB_co(z))
-        X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=fB_cnt(z))
-        X0mm_none = pynlin.nlin.Xhkm_precomputed(
-            z, I, amplification_function=None)
-
-        # FULL X0mm EVALUATION FOR EVERY m =======================
         X_co = []
         X_co.append(0.0)
         X_cnt = []
         X_cnt.append(0.0)
+        X_none = []
+        X_none.append(0.0)
+        print("Computing Channel Of Interest ", coi + 1)
 
         # compute the first num_channels interferents (assume the WDM grid is identical)
+        interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
+            coi, wdm.frequency_grid())
         pbar_description = "Computing space integrals"
-        collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[0:num_channels], leave=False)
+        collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
+                                    0:num_channels - 1], leave=False)
         collisions_pbar.set_description(pbar_description)
 
-        for interf_index in collisions_pbar:
+        for incremental, interf_index in enumerate(collisions_pbar):
+            #print("interfering channel : ", incremental)
+            if coi == 0:
+                m = np.array(
+                    f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+                z = np.array(
+                    f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+                I = np.array(
+                    f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+            elif coi == 9:
+                m = np.array(
+                    f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+                z = np.array(
+                    f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+                I = np.array(
+                    f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+            elif coi == 19:
+                m = np.array(
+                    f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+                z = np.array(
+                    f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+                I = np.array(
+                    f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+            elif coi == 29:
+                m = np.array(
+                    f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+                z = np.array(
+                    f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+                I = np.array(
+                    f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+            elif coi == 39:
+                m = np.array(
+                    f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+                z = np.array(
+                    f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+                I = np.array(
+                    f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+            elif coi == 49:
+                m = np.array(
+                    f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+                z = np.array(
+                    f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+                I = np.array(
+                    f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+
             fB_co = interp1d(
-                z_max, signal_solution_co[:, interf_index], kind='linear')
+                z_max, signal_solution_co[:, incremental], kind='linear')
             X0mm_co = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_co(z))
             X_co.append(np.sum(np.abs(X0mm_co)**2))
 
             fB_cnt = interp1d(
-                z_max, signal_solution_cnt[:, interf_index], kind='linear')
+                z_max, signal_solution_cnt[:, incremental], kind='linear')
             X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
                 z, I, amplification_function=fB_cnt(z))
             X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
 
+            X0mm_none = pynlin.nlin.Xhkm_precomputed(
+                z, I, amplification_function=fB_cnt(z))
+            X_none.append(np.sum(np.abs(X0mm_cnt)**2))
         # PHASE NOISE COMPUTATION =======================
-        # copropagating
-
+        # summing all interfering contributions and plug constellation
         for ar_idx, M in enumerate(arity_list):
             qam = pynlin.constellations.QAM(M)
 
@@ -204,38 +183,54 @@ for idx, power_dBm in enumerate(power_dBm_list):
             cardinality = len(qam_symbols)
 
             # assign specific average optical energy
-            qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power/baud_rate)
+            qam_symbols = qam_symbols / \
+                np.sqrt(np.mean(np.abs(qam_symbols)**2)) * \
+                np.sqrt(average_power / baud_rate)
+            constellation_variance = (
+                np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
 
             # fig4 = plt.figure(figsize=(10, 10))
             # plt.plot(show = show_flag)
             # plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
 
-            print("\nConstellation", M ,"-QAM, average: ")
-            print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
-            print("\toptical energy = ", (np.abs(qam_symbols)**2).mean(), "J")
-            print("\tmagnitude      = ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
+            # print("\nConstellation", M ,"-QAM, average: ")
+            # print("\toptical power  =  ", (np.abs(qam_symbols)**2 * baud_rate).mean(), "W")
+            # print("\toptical energy = ", (np.abs(qam_symbols)**2).mean(), "J")
+            # print("\tmagnitude      = ", (np.abs(qam_symbols)).mean(), "sqrt(W*s)")
 
-            constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2)
-            print("\tenergy variance      = ", constellation_variance)
+            #print("\tenergy variance      = ", constellation_variance)
 
             Delta_theta_ch_2_co = 0
             Delta_theta_ch_2_cnt = 0
             for i in range(1, num_channels):
-                Delta_theta_ch_2_co = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
-                Delta_theta_2_co[coi_idx,idx, ar_idx] += Delta_theta_ch_2_co
-                Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[i])
-                Delta_theta_2_cnt[coi_idx,idx,ar_idx] += Delta_theta_ch_2_cnt
+                Delta_theta_ch_2_co = 4 * fiber.gamma**2 * \
+                    constellation_variance * np.abs(X_co[i])
+                Delta_theta_2_co[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_co
+                Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * \
+                    constellation_variance * np.abs(X_cnt[i])
+                Delta_theta_2_cnt[coi_idx, pow_idx, ar_idx] += Delta_theta_ch_2_cnt
 
-            # print("Total phase variance (CO): ", Delta_theta_2_co[idx])
+                # print("Total phase variance (CO): ", Delta_theta_2_co[idx])
             # print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
 
+np.save("Delta_co.npy", Delta_theta_2_co)
+np.save("Delta_cnt.npy", Delta_theta_2_cnt)
 
-ar_idx = 2 # 16-QAM
-fig_power = plt.figure(figsize=(10, 5))
-plt.plot(show = True)
-for coi_idx, coi in enumerate(coi_list):
-    plt.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker='x', markersize = 10, color='green', label="ch."+str(coi+1)+"coprop.")
-    plt.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker='x', markersize = 10,color='blue',label="ch."+str(coi+1)+"counterprop.")
+Delta_theta_2_co = np.load("Delta_co.npy")
+Delta_theta_2_cnt = np.load("Delta_cnt.npy")
+
+
+ar_idx = 0  # 16-QAM
+fig_power = plt.figure(figsize=(10, 10))
+plt.plot(show=True)
+
+markers = ["x", "+", "q", "o"]
+
+for coi_idx in range(len(coi_list)):
+    plt.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                 markersize=10, color='green', label="ch." + str(coi + 1) + "coprop.")
+    plt.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                 markersize=10, color='blue', label="ch." + str(coi + 1) + "counterprop.")
 plt.minorticks_on()
 plt.grid(which="both")
 plt.xlabel(r"Power [dBm]")
@@ -243,31 +238,3 @@ plt.ylabel(r"$\Delta \theta^2$")
 plt.legend()
 fig_power.tight_layout()
 fig_power.savefig("power_noise.pdf")
-
-
-idx = 5
-
-fig_arity, (ax1,ax2) = plt.subplots(nrows=2, sharex=True, figsize=(10,10))
-
-# ax3 = fig_arity.add_subplot(111, zorder=-1)
-# # for _, spine in ax3.spines.items():
-# #     spine.set_visible(False)
-# # ax3.tick_params(labelleft=False, labelbottom=False, left=False, right=False )
-# # ax3.get_shared_x_axes().join(ax3,ax1)
-# ax3.grid(axis="x")
-
-ax1.loglog(arity_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
-ax2.loglog(arity_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
-plt.subplots_adjust(hspace=0.0)
-
-ax1.grid()
-ax2.grid()
-ax1.set_ylabel(r"$\Delta \theta^2$")
-ax2.set_ylabel(r"$\Delta \theta^2$")
-ax2.legend()
-ax1.legend()
-ax2.set_xlabel("QAM modulation arity")
-ax2.set_xticks(ticks=arity_list, labels = arity_list)
-
-fig_arity.tight_layout()
-fig_arity.savefig("arity_noise.pdf")
