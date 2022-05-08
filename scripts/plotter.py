@@ -27,7 +27,7 @@ interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 3)
 arity_list = [16]
-coi_list = [19, 29, 39, 49]
+coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
 baud_rate = 10
@@ -64,7 +64,7 @@ show_flag = False
 
 results_path = '../results/'
 
-#f_0_9 = h5py.File(results_path + '0_9_results.h5', 'r')
+f_0_9 = h5py.File(results_path + '0_9_results.h5', 'r')
 f_19_29 = h5py.File(results_path + '19_29_results.h5', 'r')
 f_39_49 = h5py.File(results_path + '39_49_results.h5', 'r')
 # print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_2/m']))
@@ -175,9 +175,9 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
                 z, I, amplification_function=fB_cnt(z))
             X_none.append(np.sum(np.abs(X0mm_cnt)**2))
 
-            print("X co: ", np.sum(np.abs(X0mm_co)**2))
-            print("X cnt: ", np.sum(np.abs(X0mm_cnt)**2))
-            print("X none: ", np.sum(np.abs(X0mm_none)**2))
+        print("X co: ", np.sum(np.abs(X_co)))
+        print("X cnt: ", np.sum(np.abs(X_cnt)))
+        print("X none: ", np.sum(np.abs(X_none)))
 
         # PHASE NOISE COMPUTATION =======================
         # summing all interfering contributions and plug constellation
@@ -234,7 +234,7 @@ ar_idx = 0  # 16-QAM
 fig_power = plt.figure(figsize=(10, 10))
 plt.plot(show=True)
 
-markers = ["x", "+", "s", "o"]
+markers = ["x", "+", "s", "o", "x", "+"]
 
 for coi_idx in range(len(coi_list)):
     plt.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
