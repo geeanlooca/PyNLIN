@@ -118,7 +118,7 @@ integration_steps = max_num_collisions * points_per_collision
 z_max = np.linspace(0, fiber_length, integration_steps)
 
 # OPTIMIZER =================================
-scheme = "co"
+scheme = "cnt"
 
 if scheme == "co":
     num_pumps = 8
@@ -196,7 +196,6 @@ if scheme == "co":
         pump_powers,
         pump_wavelengths,
         z_max,
-        pump_direction=-1,
     )
 
     np.save("pump_solution_co.npy", pump_solution)
