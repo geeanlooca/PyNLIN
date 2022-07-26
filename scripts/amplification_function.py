@@ -166,7 +166,6 @@ elif scheme == "cnt":
         power_per_channel,
         fiber,
         pump_direction=-1,
-        use_power_at_fiber_start=True,
     )
 else:
     raise NotImplementedError(
