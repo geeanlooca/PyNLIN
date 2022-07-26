@@ -128,7 +128,27 @@ if scheme == "co":
 
     power_per_channel = dBm2watt(-5)
     power_per_pump = dBm2watt(-10)
+elif scheme == "cnt":
+    num_pumps = 10
+    pump_band_b = lambda2nu(1480e-9)
+    pump_band_a = lambda2nu(1400e-9)
+    initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
+    power_per_channel = dBm2watt(-5)
+    power_per_pump = dBm2watt(-45)
+else:
+    raise NotImplementedError(
+    "Cannot yet use bidirectional pumping, not implemented!"
+    )
+
+signal_wavelengths = wdm.wavelength_grid()
+pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+num_pumps = len(pump_wavelengths)
+
+signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
+pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
+
+if scheme == "co":
     torch_amplifier = RamanAmplifier(
         fiber_length,
         integration_steps,
@@ -138,16 +158,7 @@ if scheme == "co":
         fiber,
         pump_direction=1
     )
-
 elif scheme == "cnt":
-    num_pumps = 10
-    pump_band_b = lambda2nu(1480e-9)
-    pump_band_a = lambda2nu(1400e-9)
-    initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
-
-    power_per_channel = dBm2watt(-5)
-    power_per_pump = dBm2watt(-45)
-
     torch_amplifier = RamanAmplifier(
         fiber_length,
         integration_steps,
@@ -162,12 +173,6 @@ else:
     "Cannot yet use bidirectional pumping, not implemented!"
     )
 
-signal_wavelengths = wdm.wavelength_grid()
-pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
-num_pumps = len(pump_wavelengths)
-
-signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
-pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
 
 optimizer = CopropagatingOptimizer(
     torch_amplifier,
