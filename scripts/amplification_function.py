@@ -156,7 +156,6 @@ if scheme == "co":
         signal_wavelengths,
         power_per_channel,
         fiber,
-        pump_direction=1
     )
 elif scheme == "cnt":
     torch_amplifier = RamanAmplifier(
@@ -166,7 +165,8 @@ elif scheme == "cnt":
         signal_wavelengths,
         power_per_channel,
         fiber,
-        pump_direction=-1
+        pump_direction=-1,
+        use_power_at_fiber_start=True,
     )
 else:
     raise NotImplementedError(
