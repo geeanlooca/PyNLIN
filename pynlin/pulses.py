@@ -68,3 +68,61 @@ class RaisedCosinePulse(Pulse):
 
         self.t = t
         self.g = gt
+
+class NyquistPulse(Pulse):
+    def __init__(
+        self,
+        baud_rate: float = 10e9,
+        num_symbols: float = 1e3,
+        samples_per_symbol: float = 2**5,
+        rolloff: float = 0.1,
+    ):
+        super().__init__(baud_rate, num_symbols, samples_per_symbol)
+        self.rolloff = rolloff
+        self._generate()
+
+    def data(self) -> Tuple[np.ndarray, np.ndarray]:
+        return self.g, self.t
+
+    def _generate(self):
+        dt = self.T0 / self.samples_per_symbol
+        Ndt = self.samples_per_symbol * self.num_symbols
+        t = np.arange(-Ndt / 2, Ndt / 2) * dt
+
+        gt = np.sinc(t/self.T0)/np.sqrt(self.T0)
+
+        # Correct analytical normalization (finiteness of interval make it imprecise)
+        energy = scipy.integrate.trapezoid(np.abs(gt) ** 2, t)
+        gt = gt / np.sqrt(energy)
+
+        self.t = t
+        self.g = gt
+
+class GaussianPulse(Pulse):
+    def __init__(
+        self,
+        baud_rate: float = 10e9,
+        num_symbols: float = 1e3,
+        samples_per_symbol: float = 2**5,
+        rolloff: float = 0.1,
+    ):
+        super().__init__(baud_rate, num_symbols, samples_per_symbol)
+        self.rolloff = rolloff
+        self._generate()
+
+    def data(self) -> Tuple[np.ndarray, np.ndarray]:
+        return self.g, self.t
+
+    def _generate(self):
+        dt = self.T0 / self.samples_per_symbol
+        Ndt = self.samples_per_symbol * self.num_symbols
+        t = np.arange(-Ndt / 2, Ndt / 2) * dt
+
+        gt = np.exp(-t**2/(2*(self.T0**2))) / np.sqrt((np.sqrt(np.pi) * self.T0))
+        
+        # Correct analytical normalization (finiteness of interval make it imprecise)
+        energy = scipy.integrate.trapezoid(np.abs(gt) ** 2, t)
+        gt = gt / np.sqrt(energy)
+
+        self.t = t
+        self.g = gt

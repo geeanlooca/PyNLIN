@@ -12,7 +12,7 @@ from tqdm.contrib.concurrent import process_map
 
 from pynlin.constellations import Constellation
 from pynlin.fiber import Fiber
-from pynlin.pulses import Pulse, RaisedCosinePulse
+from pynlin.pulses import Pulse, RaisedCosinePulse, GaussianPulse, NyquistPulse
 from pynlin.wdm import WDM
 
 
@@ -159,6 +159,7 @@ def compute_all_collisions_X0mm_time_integrals(
     baud_rate: float,
     fiber: Fiber,
     fiber_length: float,
+    pulse_shape: str,
     rolloff_factor: float = 0.1,
     samples_per_symbol=5,
     points_per_collision: int = 10,
@@ -195,12 +196,27 @@ def compute_all_collisions_X0mm_time_integrals(
     tau_max = fiber.beta2 * fiber_length * 2 * np.pi * channel_spacing
     num_symbols = np.abs(4 * math.ceil(tau_max / T))
 
-    pulse = RaisedCosinePulse(
-        baud_rate=baud_rate,
-        samples_per_symbol=samples_per_symbol,
-        num_symbols=num_symbols,
-        rolloff=rolloff_factor,
-    )
+    if pulse_shape == "RaisedCosine":
+        pulse = RaisedCosinePulse(baud_rate=baud_rate,
+                                  samples_per_symbol=samples_per_symbol,
+                                  num_symbols=num_symbols,
+                                  rolloff=rolloff_factor,)
+    elif pulse_shape == "Nyquist":
+        pulse = NyquistPulse(baud_rate=baud_rate,
+                             samples_per_symbol=samples_per_symbol,
+                             num_symbols=num_symbols,
+                             rolloff=rolloff_factor,)
+    elif pulse_shape == "Gaussian":
+        pulse = GaussianPulse(baud_rate=baud_rate,
+                              samples_per_symbol=samples_per_symbol,
+                              num_symbols=num_symbols,
+                              rolloff=rolloff_factor,)
+    else:
+        print("Invalid pulse_shape, using Raised Cosine...")
+        pulse = RaisedCosinePulse(baud_rate=baud_rate,
+                                  samples_per_symbol=samples_per_symbol,
+                                  num_symbols=num_symbols,
+                                  rolloff=rolloff_factor,)
 
     npoints_z = math.ceil(len(M) * points_per_collision)
     z = np.linspace(0, fiber_length, npoints_z)
