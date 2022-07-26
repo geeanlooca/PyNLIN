@@ -188,27 +188,27 @@ if scheme == "co":
     pump_solution, signal_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
-        pump_powers_co,
-        pump_wavelengths_co,
+        pump_powers,
+        pump_wavelengths,
         z_max,
         pump_direction=-1,
     )
 
-    np.save("pump_solution_co.npy", pump_solution_co)
-    np.save("signal_solution_co.npy", signal_solution_co)
+    np.save("pump_solution_co.npy", pump_solution)
+    np.save("signal_solution_co.npy", signal_solution)
 elif scheme == "cnt":
     pump_solution, signal_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
-        pump_powers_co,
-        pump_wavelengths_co,
+        pump_powers,
+        pump_wavelengths,
         z_max,
         pump_direction=-1,
         use_power_at_fiber_start=True,
     )
-
-    pump_solution_co = np.load("./pump_solution_cnt.npy")
-    signal_solution_co = np.load("./signal_solution_cnt.npy")
+    
+    np.save("pump_solution_co.npy", pump_solution)
+    np.save("signal_solution_co.npy", signal_solution)
 else:
     raise NotImplementedError(
     "Cannot yet use bidirectional pumping, not implemented!"
