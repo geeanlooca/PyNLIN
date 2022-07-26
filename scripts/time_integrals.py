@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument(
     "-L",
     "--fiber-length",
-    default=80,
+    default=70,
     type=float,
     help="The length of the fiber in kilometers.",
 )
