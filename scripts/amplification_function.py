@@ -118,7 +118,7 @@ integration_steps = max_num_collisions * points_per_collision
 z_max = np.linspace(0, fiber_length, integration_steps)
 
 # OPTIMIZER =================================
-scheme = "cnt"
+scheme = "co"
 
 if scheme == "co":
     num_pumps = 8
@@ -210,8 +210,8 @@ elif scheme == "cnt":
         use_power_at_fiber_start=True,
     )
     
-    np.save("pump_solution_co.npy", pump_solution)
-    np.save("signal_solution_co.npy", signal_solution)
+    np.save("pump_solution_cnt.npy", pump_solution)
+    np.save("signal_solution_cnt.npy", signal_solution)
 else:
     raise NotImplementedError(
     "Cannot yet use bidirectional pumping, not implemented!"
