@@ -87,7 +87,7 @@ X_cnt = np.zeros_like(
 X_none = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
 )
-'''
+
 for pow_idx, power_dBm in enumerate(power_dBm_list):
     print("Computing power ", power_dBm)
     average_power = dBm2watt(power_dBm)
@@ -193,7 +193,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
 np.save("X_co.npy", X_co)
 np.save("X_cnt.npy", X_cnt)
 np.save("X_none.npy", X_none)
-'''
+
 X_co = np.load("X_co.npy")
 X_cnt = np.load("X_cnt.npy")
 X_none = np.load("X_none.npy")
