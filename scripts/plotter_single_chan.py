@@ -27,7 +27,7 @@ plt.rcParams['font.size'] = '26'
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 #power_dBm_list = np.linspace(-20, 0, 3)
-power_dBm_list = [-10]
+power_dBm_list = [-10.0]
 
 arity_list = [16]
 
@@ -75,7 +75,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
     signal_solution_co =   np.load(results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
     pump_solution_co =     np.load(results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
 
-    z_max = np.load(results_path + 'z_max.npy')
+    #z_max = np.load(results_path + 'z_max.npy')
     f = h5py.File(results_path + '0_9_results.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
