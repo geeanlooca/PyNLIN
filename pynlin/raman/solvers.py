@@ -103,6 +103,8 @@ class RamanAmplifier:
         pump_direction=1,
         use_power_at_fiber_start=False,
         check_photon_count=False,
+        reference_bandwidth=0.1,
+        temperature=300,
     ):
 
         raman_coefficient = self.fiber.raman_coefficient
@@ -111,6 +113,7 @@ class RamanAmplifier:
         num_signals = signal_power.shape[0]
         num_pumps = pump_power.shape[0]
         total_signals = num_pumps + num_signals
+        num_ase = num_signals
 
         signal_direction = np.ones_like(signal_power)
         if np.isscalar(pump_direction):
@@ -131,10 +134,29 @@ class RamanAmplifier:
         wavelengths = np.concatenate((self.pump_wavelengths, self.signal_wavelengths))
         frequencies = lambda2nu(wavelengths)
 
+        num_ase = num_signals
+
         input_power = np.concatenate((self.pump_power, self.signal_power))
+        input_power_with_ase = np.concatenate((self.pump_power, self.signal_power, np.zeros(num_ase)))
 
         losses_linear = self.get_linear_losses(wavelengths)
+
         gain_matrix = self.compute_gain_matrix(frequencies)
+
+
+        # Compute the frequency shifts for each wave
+        frequency_shifts = np.zeros((total_signals, total_signals))
+        for i in range(total_signals):
+            frequency_shifts[i, :] = frequencies - frequencies[i]
+        
+        h_planck = 6.626e-34
+        kB = 1.380649e-23
+        # Compute the phonon occupancy factor (adopt the view pump+ase)
+        Hinv = np.exp(h_planck * np.abs(frequency_shifts) / (kB * temperature)) - 1
+        np.fill_diagonal(Hinv, 1e56) # random fill the diagonal
+        eta_plus = 1 + 1 / Hinv
+        np.fill_diagonal(eta_plus, 0)
+        gain_matrix_ase = eta_plus * gain_matrix
 
         if shooting:
             if not use_power_at_fiber_start:
@@ -143,31 +165,35 @@ class RamanAmplifier:
                 )
 
             sol = scipy.integrate.odeint(
-                RamanAmplifier.raman_ode,
-                input_power,
+                RamanAmplifier.raman_ode_with_ase,
+                input_power_with_ase,
                 z,
-                args=(losses_linear, gain_matrix, self.direction),
+                args=(losses_linear, gain_matrix, gain_matrix_ase, np.hstack((self.direction, np.ones(num_ase))), temperature, reference_bandwidth, num_pumps, num_signals, frequencies),
             )
 
             pump_solution = sol[:, :num_pumps]
-            signal_solution = sol[:, num_pumps:]
+            signal_solution = sol[:, num_pumps:num_pumps+num_signals]
+            ase_solution = sol[:, -num_ase:]
 
         else:
             sol = scipy.integrate.odeint(
-                RamanAmplifier.raman_ode,
-                input_power,
+                RamanAmplifier.raman_ode_with_ase,
+                input_power_with_ase,
                 z,
-                args=(losses_linear, gain_matrix, self.direction),
+                args=(losses_linear, gain_matrix, gain_matrix_ase, np.hstack((self.direction, np.ones(num_ase))), temperature, reference_bandwidth, num_pumps, num_signals, frequencies),
             )
 
             pump_solution = sol[:, :num_pumps]
-            signal_solution = sol[:, num_pumps:]
+            signal_solution = sol[:, num_pumps:num_pumps+num_signals]
+            ase_solution = sol[:, -num_ase:]
+
 
         if check_photon_count:
             photon_count = np.sum(sol / frequencies, axis=1)
             return pump_solution, signal_solution, photon_count
         else:
-            return pump_solution, signal_solution
+            return pump_solution, signal_solution, ase_solution
+
 
     def compute_gain_matrix(self, frequencies):
         """Generate the matrix of Raman gains between each pair of frequencies."""
@@ -203,6 +229,43 @@ class RamanAmplifier:
             ) * P[:, np.newaxis]
         except ValueError:
             breakpoint()
+        return direction * np.squeeze(dPdz)
+
+    @staticmethod
+    def raman_ode_with_ase(P, z, losses, gain_matrix, gain_matrix_ase, direction, temperature, ref_bandwidth, num_pumps, num_signals, frequencies):
+        """System of equations describing a Raman amplifier. With ASE. No Rayleigh back-reflection. No ASE-to-pump power transfer"""
+        h_planck = 6.626e-34
+
+        num_ase = num_signals
+        num_power = (num_signals + num_pumps)
+
+        P_ = P[:num_power]
+        P_ase = P[-num_ase:]
+        losses_ase = losses[-num_ase:]
+
+        gain_factor = np.matmul(gain_matrix, P_[:, np.newaxis])
+        
+        #      | Pumps | Signals |
+        #Pumps     A        B
+        #------
+        # ASE      C        D
+        #        
+        try:
+
+            dPowerdz = (-losses[:, np.newaxis] + gain_factor) * P_[:, np.newaxis]
+
+            gain_factor_ase = np.matmul(gain_matrix_ase, P_[:, np.newaxis])
+            gain_factor_ase = gain_factor_ase[-num_ase:]
+
+            dASEdz = -losses[-num_ase:, np.newaxis] * P_ase[:, np.newaxis]
+            dASEdz += gain_factor[-num_ase:] * P_ase[:, np.newaxis]
+            dASEdz += (
+                gain_factor_ase * 2 * h_planck * frequencies[-num_ase:, np.newaxis] * ref_bandwidth
+            )
+
+        except ValueError:
+            breakpoint()
+        dPdz = np.vstack((dPowerdz, dASEdz))
         return direction * np.squeeze(dPdz)
 
     @staticmethod
