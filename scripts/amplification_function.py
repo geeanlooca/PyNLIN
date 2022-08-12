@@ -76,15 +76,17 @@ args = parser.parse_args()
 ###############################
 length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
-
-results_path = '../results_'+str(length_setup)+'/'
+num_co = 4
+num_cnt = 8
+optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+results_path = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 
 # Warning: manual selection of loading of previous data: be sure about previously used params
 # No sanity check is done
 optimize = True
 profiles = True
 
-if input("\nAmplification function profiles: \n\t>"+str(length_setup)+"km \n\t>optimize="+str(optimize)+" \n\t>profiles="+str(profiles)+" \nAre you sure? (y/[n])") != "y":
+if input("\nAmplification function profiles: \n\t>"+str(length_setup)+"km \n\t>optimize="+str(optimize)+" \n\t>profiles="+str(profiles)+" \n\t>bi setup= ("+str(num_co)+"_co, "+str(num_cnt)+"_cnt) \nAre you sure? (y/[n])") != "y":
     exit()
 
 beta2 = pynlin.utils.dispersion_to_beta2(
@@ -116,7 +118,7 @@ points_per_collision = 10
 
 
 power_per_channel_dBm_list = np.linspace(-20, 0, 11)
-power_per_channel_dBm_list = [-20.0, -10.0, 0.0]
+#power_per_channel_dBm_list = [-20.0, -10.0, 0.0]
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -146,7 +148,7 @@ for power_per_channel_dBm in pbar:
     #print("Power per channel: ", power_per_channel_dBm, "dBm")
 
 # OPTIMIZER BIDIRECTIONAL =================================
-    num_pumps = 12
+    num_pumps = num_co+num_cnt
     pump_band_b = lambda2nu(1510e-9)
     pump_band_a = lambda2nu(1410e-9)
     initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
@@ -161,8 +163,18 @@ for power_per_channel_dBm in pbar:
     
     initial_power_co = dBm2watt(-10)
     initial_power_cnt = dBm2watt(-45)
-    pump_powers = np.array([initial_power_co, initial_power_co, initial_power_co, initial_power_co, initial_power_co, initial_power_co, initial_power_cnt, initial_power_cnt, initial_power_cnt, initial_power_cnt, initial_power_cnt, initial_power_cnt])
-    pump_directions = [1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1]
+    pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
+    print(pump_directions)
+
+    pump_powers = []
+    for direc in pump_directions:
+        if direc == 1:
+            pump_powers.append(initial_power_co)
+        else:
+            pump_powers.append(initial_power_cnt)
+
+    pump_powers = np.array(pump_powers)
+
     if optimize:
         torch_amplifier = RamanAmplifier(
             fiber_length,
@@ -183,13 +195,15 @@ for power_per_channel_dBm in pbar:
         target_spectrum = watt2dBm(0.5 * signal_powers)
         pump_wavelengths_bi, pump_powers_bi = optimizer.optimize(
             target_spectrum=target_spectrum,
-            epochs=500
+            epochs=1000,
+            learning_rate=1e-2
         )
-        np.save(results_path+"optimization/opt_wavelengths_bi"+str(power_per_channel_dBm)+".npy", pump_wavelengths_bi)
-        np.save(results_path+"optimization/opt_powers_bi"+str(power_per_channel_dBm)+".npy", pump_powers_bi)
+        print("\n\nOPTIMIZED POWERS= ", pump_powers_bi, "\n\n")
+        np.save(optimization_result_path+"opt_wavelengths_bi"+str(power_per_channel_dBm)+".npy", pump_wavelengths_bi)
+        np.save(optimization_result_path+"opt_powers_bi"+str(power_per_channel_dBm)+".npy", pump_powers_bi)
     else:
-        pump_wavelengths_bi = np.load(results_path+"optimization/opt_wavelengths_bi"+str(power_per_channel_dBm)+".npy")
-        pump_powers_bi = np.load(results_path+"optimization/opt_powers_bi"+str(power_per_channel_dBm)+".npy")
+        pump_wavelengths_bi = np.load(optimization_result_path+"opt_wavelengths_bi"+str(power_per_channel_dBm)+".npy")
+        pump_powers_bi = np.load(optimization_result_path+"opt_powers_bi"+str(power_per_channel_dBm)+".npy")
     if profiles: 
         amplifier = NumpyRamanAmplifier(fiber)
 

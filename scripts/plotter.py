@@ -48,7 +48,7 @@ interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
 arity_list = [16]
-coi_list = [0, 9, 19, 29, 39, 49]
+coi_list = [0, 24, 49]
 
 wavelength = 1550
 baud_rate = 10
@@ -83,7 +83,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = False
+compute_X0mm_space_integrals = True
 
 if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(length_setup)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
     exit()
@@ -108,6 +108,9 @@ if compute_X0mm_space_integrals:
     X_cnt = np.zeros_like(X_co)
     X_bi = np.zeros_like(X_co)
     X_none = np.zeros_like(X_co)
+    ase_co = np.zeros_like(X_co)
+    ase_cnt = np.zeros_like(X_co)
+    ase_bi = np.zeros_like(X_co)
 
     for pow_idx, power_dBm in enumerate(power_dBm_list):
         print("Computing power ", power_dBm)
@@ -126,7 +129,14 @@ if compute_X0mm_space_integrals:
             results_path + 'pump_solution_bi_' + str(power_dBm) + '.npy')
         signal_solution_bi = np.load(
             results_path + 'signal_solution_bi_' + str(power_dBm) + '.npy')
-
+    
+        # ASE power evolution
+        ase_solution_co = np.load(
+            results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
+        ase_solution_cnt = np.load(
+            results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
+        ase_solution_bi = np.load(
+            results_path + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
         # compute fB squaring
         pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
@@ -153,7 +163,7 @@ if compute_X0mm_space_integrals:
             collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
                                         0:num_channels - 1], leave=False)
             collisions_pbar.set_description(pbar_description)
-
+            '''
             for incremental, interf_index in enumerate(collisions_pbar):
                 #print("interfering channel : ", incremental)
                 if coi == 0:
@@ -228,21 +238,35 @@ if compute_X0mm_space_integrals:
                 #print(X_co)
                 #print(X_cnt)
                 #print(X_none)
+                '''
+        print("\ncomputing channel: ", coi_idx, "\n\n")
+        print(ase_solution_co[-1, coi_idx])
+        ase_co[coi_idx,pow_idx] = ase_solution_co[-1, coi_idx]
+        ase_cnt[coi_idx,pow_idx] = ase_solution_cnt[-1, coi_idx]
+        ase_bi[coi_idx,pow_idx] = ase_solution_bi[-1, coi_idx]
 
+    print(ase_co)
     np.save("X_co.npy", X_co)
     np.save("X_cnt.npy", X_cnt)
     np.save("X_bi.npy", X_bi)
     np.save("X_none.npy", X_none)
+    np.save("ase_co.npy", ase_co)
+    np.save("ase_cnt.npy", ase_cnt)
+    np.save("ase_bi.npy", ase_bi)
+
 else:
     X_co = np.load("X_co.npy")
     X_cnt = np.load("X_cnt.npy")
     X_bi = np.load("X_bi.npy")
     X_none = np.load("X_none.npy")
+    ase_co = np.load("ase_co.npy")
+    ase_cnt = np.load("ase_cnt.npy")
+    ase_bi = np.load("ase_bi.npy")
     print(X_co)
     print(X_cnt)
     print(X_bi)
     print(X_none)
-
+    print(ase_co)
 ar_idx = 0  # 16-QAM
 M = 16
 for pow_idx, power_dBm in enumerate(power_dBm_list):
@@ -297,7 +321,65 @@ ax4.set_ylabel(r"$\Delta \theta^2$")
 ax4.legend()
 plt.minorticks_on()
 plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
-fig_power.savefig(plot_save_path+"power_noise_single.pdf")
+fig_power.savefig(plot_save_path+"power_noise.pdf")
+
+
+print(ase_co)
+fig_ase, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 10))
+plt.plot(show=True)
+coi_selection = [0, 19, 49]
+for coi_idx, coi in enumerate(coi_selection):
+    ax1.semilogy(power_dBm_list, ase_co[coi_idx, :], marker=markers[coi_idx],
+                markersize=10, color='green', label="ch." + str(coi) + " co.")
+    ax2.semilogy(power_dBm_list, ase_cnt[coi_idx, :], marker=markers[coi_idx],
+                markersize=10, color='blue', label="ch." + str(coi) + " count.")
+    ax3.semilogy(power_dBm_list, ase_bi[coi_idx, :], marker=markers[coi_idx],
+                markersize=10, color='orange', label="ch." + str(coi+1))
+ax1.grid(which="both")
+#plt.annotate("ciao", (0, 0))
+ax2.grid(which="both")
+ax3.grid(which="both")
+
+plt.xlabel(r"Power [dBm]")
+ax1.set_ylabel(r"ASE power")
+ax2.set_ylabel(r"ASE power")
+ax3.set_ylabel(r"ASE power")
+ax3.legend()
+plt.minorticks_on()
+plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+fig_ase.savefig(plot_save_path+"ase_power_noise.pdf")
+
+fig_comparison, (ax1, ax2, ax3, ax4) = plt.subplots(nrows= 4, sharex = True, figsize=(10, 10))
+plt.plot(show=True)
+coi_selection = [0, 19, 49]
+for coi_idx, coi in enumerate(coi_selection):
+    ax1.semilogy(power_dBm_list, Delta_theta_2_co[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                markersize=10, color='green', label="ch." + str(coi) + " co.")
+    ax2.semilogy(power_dBm_list, Delta_theta_2_cnt[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                markersize=10, color='blue', label="ch." + str(coi) + " count.")
+    ax3.semilogy(power_dBm_list, Delta_theta_2_bi[coi_idx, :, ar_idx], marker=markers[coi_idx],
+                markersize=10, color='orange', label="ch." + str(coi+1))
+    ax1.semilogy(power_dBm_list, ase_co[coi_idx, :], marker=markers[coi_idx],
+                markersize=10, color='black', label="ch." + str(coi) + " co.")
+    ax2.semilogy(power_dBm_list, ase_cnt[coi_idx, :], marker=markers[coi_idx],
+                markersize=10, color='black', label="ch." + str(coi) + " count.")
+    ax3.semilogy(power_dBm_list, ase_bi[coi_idx, :], marker=markers[coi_idx],
+                markersize=10, color='black', label="ch." + str(coi+1))
+ax1.grid(which="both")
+#plt.annotate("ciao", (0, 0))
+ax2.grid(which="both")
+ax3.grid(which="both")
+ax4.grid(which="both")
+
+plt.xlabel(r"Power [dBm]")
+ax1.set_ylabel(r"$\Delta \theta^2$")
+ax2.set_ylabel(r"$\Delta \theta^2$")
+ax3.set_ylabel(r"$\Delta \theta^2$")
+ax4.set_ylabel(r"$\Delta \theta^2$")
+ax4.legend()
+plt.minorticks_on()
+plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+fig_ase.savefig(plot_save_path+"comparison.pdf")
 
 
 pow_idx = np.where(power_dBm_list==-10)[0]
@@ -311,6 +393,7 @@ plt.grid(which="both")
 ax3.semilogy(coi_list, Delta_theta_2_bi[:, pow_idx, ar_idx], marker='s', markersize=10, color='orange', label="ch." + str(coi) + "perf.")
 plt.grid(which="both")
 ax4.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='s', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
+plt.grid(which="both")
 plt.xlabel(r"Channel index")
 plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
 ax1.grid(which="both")
@@ -323,4 +406,25 @@ ax2.set_ylabel(r"$\Delta \theta^2$")
 ax4.set_ylabel(r"$\Delta \theta^2$")
 ax3.set_ylabel(r"$\Delta \theta^2$")
 plt.subplots_adjust(left = 0.2, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
-fig_channel.savefig(plot_save_path+"channel_noise_single.pdf")
+fig_channel.savefig(plot_save_path+"channel_noise.pdf")
+
+
+fig_ase_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(12, 10))
+plt.plot(show=True)
+ax1.semilogy(coi_list, ase_co[:, pow_idx], marker='s', markersize=10, color='green', label="ch." + str(coi) + "co.")
+plt.grid(which="both")
+ax2.semilogy(coi_list, ase_cnt[:, pow_idx], marker='s', markersize=10, color='blue', label="ch." + str(coi) + "count.")
+plt.grid(which="both")
+ax3.semilogy(coi_list, ase_bi[:, pow_idx], marker='s', markersize=10, color='orange', label="ch." + str(coi) + "bi.")
+plt.grid(which="both")
+plt.xlabel(r"Channel index")
+plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
+ax1.grid(which="both")
+ax2.grid(which="both")
+ax3.grid(which="both")
+
+ax1.set_ylabel(r"$\Delta \theta^2$")
+ax2.set_ylabel(r"$\Delta \theta^2$")
+ax3.set_ylabel(r"$\Delta \theta^2$")
+plt.subplots_adjust(left = 0.2, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+fig_ase_channel.savefig(plot_save_path+"ase_channel_noise.pdf")

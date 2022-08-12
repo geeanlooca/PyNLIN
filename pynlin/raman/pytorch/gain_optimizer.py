@@ -55,7 +55,7 @@ class CopropagatingOptimizer(nn.Module):
         self,
         target_spectrum: np.ndarray = None,
         epochs: int = 100,
-        learning_rate: float = 1e-1,
+        learning_rate: float = 2e-2,
         lock_wavelengths: int = 100,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Run the optimization algorithm."""

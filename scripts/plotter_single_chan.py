@@ -80,6 +80,7 @@ Delta_theta_2_co = np.zeros_like(
     np.ndarray(shape=(len(power_dBm_list), len(arity_list)))
     )
 Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
+Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
 
@@ -150,8 +151,8 @@ for idx, power_dBm in enumerate(power_dBm_list):
         ax.plot(z*1e-3, fB_cnt_1(z), color="lightblue",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz", linewidth = 3, zorder=-1)
         ax.plot(z*1e-3, fB_cnt_2(z), color="blue",label = "192.5THz", linewidth = 3, zorder=-1)
 
-        ax.plot(z*1e-3, fB_bi_1(z), color="yellow",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz", linewidth = 3, zorder=-1)
-        ax.plot(z*1e-3, fB_bi_2(z), color="orange",label = "192.5THz", linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_bi_1(z), color="orange",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz", linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_bi_2(z), color="red",label = "192.5THz", linewidth = 3, zorder=-1)
 
         '''
         # Configure arc
@@ -346,6 +347,8 @@ for idx, power_dBm in enumerate(power_dBm_list):
     X_co.append(0.0)
     X_cnt = []
     X_cnt.append(0.0)
+    X_bi = []
+    X_bi.append(0.0)
 
     # compute the first num_channels interferents (assume the WDM grid is identical)
     pbar_description = "Computing space integrals over interfering channels"
@@ -364,6 +367,12 @@ for idx, power_dBm in enumerate(power_dBm_list):
         X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
             z, I, amplification_function=fB_cnt(z))
         X_cnt.append(np.sum(np.abs(X0mm_cnt)**2))
+
+        fB_bi = interp1d(
+            z_max, signal_solution_bi[:, interf_index], kind='linear')
+        X0mm_bi = pynlin.nlin.Xhkm_precomputed(
+            z, I, amplification_function=fB_bi(z))
+        X_bi.append(np.sum(np.abs(X0mm_bi)**2))
 
     # PHASE NOISE COMPUTATION =======================
     # copropagating
@@ -391,11 +400,15 @@ for idx, power_dBm in enumerate(power_dBm_list):
 
         Delta_theta_ch_2_co = 0
         Delta_theta_ch_2_cnt = 0
+        Delta_theta_ch_2_bi = 0
+
         for i in range(1, num_channels):
             Delta_theta_ch_2_co = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
             Delta_theta_2_co[idx, ar_idx] += Delta_theta_ch_2_co
             Delta_theta_ch_2_cnt = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[i])
             Delta_theta_2_cnt[idx, ar_idx] += Delta_theta_ch_2_cnt
+            Delta_theta_ch_2_bi = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[i])
+            Delta_theta_2_bi[idx, ar_idx] += Delta_theta_ch_2_bi
 
         print("Total phase variance (CO): ", Delta_theta_2_co[idx])
         print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
@@ -406,13 +419,14 @@ fig_power = plt.figure(figsize=(10, 5))
 plt.plot(show = True)
 plt.semilogy(power_dBm_list, Delta_theta_2_co[:, ar_idx], marker='x', markersize = 10, color='green', label="coprop.")
 plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="counterprop.")
+plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="bidirection.")
 plt.minorticks_on()
 plt.grid(which="both")
 plt.xlabel(r"Power [dBm]")
 plt.ylabel(r"$\Delta \theta^2$")
 plt.legend()
 fig_power.tight_layout()
-fig_power.savefig(plot_save_path+"power_noise.pdf")
+fig_power.savefig(plot_save_path+"power_noise_strange.pdf")
 
 
 idx = 0
