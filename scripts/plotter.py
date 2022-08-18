@@ -139,12 +139,12 @@ if compute_X0mm_space_integrals:
             results_path + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
         # compute fB squaring
-        pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
-        signal_solution_co = np.power(np.divide(signal_solution_co, signal_solution_co[0, :]), 2)
-        pump_solution_cnt = np.power(np.divide(pump_solution_cnt, pump_solution_cnt[0, :]), 2)
-        signal_solution_cnt = np.power(np.divide(signal_solution_cnt, signal_solution_cnt[0, :]), 2)
-        pump_solution_bi = np.power(np.divide(pump_solution_bi, pump_solution_bi[0, :]), 2)
-        signal_solution_bi = np.power(np.divide(signal_solution_bi, signal_solution_bi[0, :]), 2)
+        pump_solution_co =    np.divide(pump_solution_co, pump_solution_co[0, :])
+        signal_solution_co =  np.divide(signal_solution_co, signal_solution_co[0, :])
+        pump_solution_cnt =   np.divide(pump_solution_cnt, pump_solution_cnt[0, :])
+        signal_solution_cnt = np.divide(signal_solution_cnt, signal_solution_cnt[0, :])
+        pump_solution_bi =    np.divide(pump_solution_bi, pump_solution_bi[0, :])
+        signal_solution_bi =  np.divide(signal_solution_bi, signal_solution_bi[0, :])
 
         #z_max = np.load(results_path + 'z_max.npy')
         #f = h5py.File(results_path + 'results_multi.h5', 'r')
