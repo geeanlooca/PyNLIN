@@ -78,8 +78,8 @@ class CopropagatingOptimizer(nn.Module):
         # do not optimize wavelengths for the first `lock_wavelengths` epochs
         self.pump_wavelengths.requires_grad = False
 
-        pbar = tqdm.trange(epochs)
-        for epoch in pbar:
+        #pbar = tqdm.trange(epochs)
+        for epoch in range(epochs):
 
             if epoch > lock_wavelengths:
                 self.pump_wavelengths.requires_grad = True
@@ -99,11 +99,11 @@ class CopropagatingOptimizer(nn.Module):
                     torch.max(signal_spectrum) - torch.min(signal_spectrum)
                 ).item()
 
-            pbar.set_description(
-                f"Loss: {loss.item():.4f}"
-                + f"\tBest Loss: {best_loss:.4f}"
-                + f"\tFlatness: {flatness:.2f} dB"
-            )
+            # pbar.set_description(
+            #     f"Loss: {loss.item():.4f}"
+            #     + f"\tBest Loss: {best_loss:.4f}"
+            #     + f"\tFlatness: {flatness:.2f} dB"
+            # )
 
             if loss.item() < best_loss:
                 pump_wavelengths = self.unscale(
@@ -112,7 +112,7 @@ class CopropagatingOptimizer(nn.Module):
                 best_wavelengths = torch.clone(pump_wavelengths)
                 best_powers = torch.clone(self.pump_powers)
                 best_loss = loss.item()
-
+        print(f"\nFlatness: {flatness:.2f} dB")
         return (
             best_wavelengths.detach().numpy().squeeze() * 1e-9,
             torch.abs(best_powers).detach().numpy().squeeze(),

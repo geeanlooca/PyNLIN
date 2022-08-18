@@ -163,7 +163,6 @@ if compute_X0mm_space_integrals:
             collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
                                         0:num_channels - 1], leave=False)
             collisions_pbar.set_description(pbar_description)
-            '''
             for incremental, interf_index in enumerate(collisions_pbar):
                 #print("interfering channel : ", incremental)
                 if coi == 0:
@@ -238,7 +237,6 @@ if compute_X0mm_space_integrals:
                 #print(X_co)
                 #print(X_cnt)
                 #print(X_none)
-                '''
         print("\ncomputing channel: ", coi_idx, "\n\n")
         print(ase_solution_co[-1, coi_idx])
         ase_co[coi_idx,pow_idx] = ase_solution_co[-1, coi_idx]

@@ -22,7 +22,7 @@ from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
-
+from random import shuffle
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-R", "--baud-rate", default=10, help="The baud rate of each WDM channel in GHz."
@@ -119,9 +119,10 @@ partial_collision_margin = 5
 points_per_collision = 10
 
 
-power_per_channel_dBm_list = np.linspace(-20, 0, 11)
-power_per_channel_dBm_list = [-8.0, -6.0, -4.0, -2.0, -0.0]
+power_per_channel_dBm_list = [-8.0, -6.0, -4.0, -2.0, 0.0]
 power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
+power_per_channel_dBm_list = np.linspace(-20, 0, 11)
+
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -149,12 +150,15 @@ pbar.set_description(pbar_description)
 
 for power_per_channel_dBm in pbar:
     #print("Power per channel: ", power_per_channel_dBm, "dBm")
-
 # OPTIMIZER BIDIRECTIONAL =================================
     num_pumps = num_co+num_cnt
     pump_band_b = lambda2nu(1510e-9)
     pump_band_a = lambda2nu(1410e-9)
     initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
+    #shuffle(initial_pump_frequencies)
+    
+    print("INITIAL PUMP FREQUENCIES:\n\t")
+    print(initial_pump_frequencies)
 
     power_per_channel = dBm2watt(power_per_channel_dBm)
     power_per_pump = dBm2watt(-10)
@@ -165,7 +169,7 @@ for power_per_channel_dBm in pbar:
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     
     initial_power_co = dBm2watt(-10)
-    initial_power_cnt = dBm2watt(-45)
+    initial_power_cnt = dBm2watt(-10)
     pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
     print(pump_directions)
 
@@ -198,8 +202,8 @@ for power_per_channel_dBm in pbar:
         target_spectrum = watt2dBm(0.5 * signal_powers)
         pump_wavelengths_bi, pump_powers_bi = optimizer.optimize(
             target_spectrum=target_spectrum,
-            epochs=1000,
-            learning_rate=1e-2
+            epochs=500,
+            learning_rate=1e-3
         )
         print("\n\nOPTIMIZED POWERS= ", pump_powers_bi, "\n\n")
         np.save(optimization_result_path+"opt_wavelengths_bi"+str(power_per_channel_dBm)+".npy", pump_wavelengths_bi)
@@ -225,7 +229,8 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"signal_solution_bi_"+str(power_per_channel_dBm)+".npy", signal_solution_bi)
         np.save(results_path+"ase_solution_bi_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
 
-
+for power_per_channel_dBm in pbar:
+    #print("Power per channel: ", power_per_channel_dBm, "dBm")
 # OPTIMIZER CO =================================
     num_pumps = 8
     pump_band_b = lambda2nu(1510e-9)
@@ -284,6 +289,9 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
         np.save(results_path+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
         np.save(results_path+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
+
+for power_per_channel_dBm in pbar:
+    #print("Power per channel: ", power_per_channel_dBm, "dBm")
 # OPTIMIZER COUNTER =================================
 
     num_pumps = 10

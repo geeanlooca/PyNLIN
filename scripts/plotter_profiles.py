@@ -46,8 +46,6 @@ fiber_length = length_setup * 1e3
 plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
 results_path = '../results_'+str(length_setup)+'/'
 
-
-
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
@@ -75,6 +73,8 @@ wdm = pynlin.wdm.WDM(
     num_channels=num_channels,
     center_frequency=190
 )
+signal_wavelengths = wdm.wavelength_grid()
+
 partial_collision_margin = 5
 points_per_collision = 10 
 
@@ -97,7 +97,7 @@ for config in configs:
     num_cnt = config[1]
     for idx, power_dBm in enumerate(power_dBm_list):
         average_power =  dBm2watt(power_dBm)
-        results_path = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+        results_path = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_order/'
         plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
         # SIMULATION DATA LOAD =================================
         
@@ -113,6 +113,16 @@ for config in configs:
         signal_solution_bi =  np.load(results_path + 'signal_solution_bi_' + str(power_dBm) + '.npy')
         ase_solution_bi = np.load(results_path + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
+
+        plt.figure()
+        plt.plot(signal_wavelengths, watt2dBm(signal_solution_co[-1]), color="k")
+        plt.show()
+        plt.figure()
+        plt.plot(signal_wavelengths, watt2dBm(signal_solution_cnt[-1]), color="k")
+        plt.show()
+        plt.figure()
+        plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
+        plt.show()
 
         x_annotation = 100 
         #z_max = np.load(results_path + 'z_max.npy')
