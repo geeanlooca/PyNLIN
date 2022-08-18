@@ -79,6 +79,8 @@ fiber_length = length_setup * 1e3
 num_co = 4
 num_cnt = 8
 optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
+
 results_path = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 
 # Warning: manual selection of loading of previous data: be sure about previously used params
@@ -118,7 +120,8 @@ points_per_collision = 10
 
 
 power_per_channel_dBm_list = np.linspace(-20, 0, 11)
-#power_per_channel_dBm_list = [-20.0, -10.0, 0.0]
+power_per_channel_dBm_list = [-8.0, -6.0, -4.0, -2.0, -0.0]
+power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -221,7 +224,8 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_bi_"+str(power_per_channel_dBm)+".npy", pump_solution_bi)
         np.save(results_path+"signal_solution_bi_"+str(power_per_channel_dBm)+".npy", signal_solution_bi)
         np.save(results_path+"ase_solution_bi_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
-'''
+
+
 # OPTIMIZER CO =================================
     num_pumps = 8
     pump_band_b = lambda2nu(1510e-9)
@@ -259,11 +263,11 @@ for power_per_channel_dBm in pbar:
             epochs=500
         )
 
-        np.save(results_path+"optimization/opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
-        np.save(results_path+"optimization/opt_powers_co"+str(power_per_channel_dBm)+".npy", pump_powers_co)
+        np.save(optimization_result_path_cocnt+"/opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
+        np.save(optimization_result_path_cocnt+"/opt_powers_co"+str(power_per_channel_dBm)+".npy", pump_powers_co)
     else: 
-        pump_wavelengths_co = np.load(results_path+"optimization/opt_wavelengths_co"+str(power_per_channel_dBm)+".npy")
-        pump_powers_co = np.load(results_path+"optimization/opt_powers_co"+str(power_per_channel_dBm)+".npy")
+        pump_wavelengths_co = np.load(optimization_result_path_cocnt+"optimization/opt_wavelengths_co"+str(power_per_channel_dBm)+".npy")
+        pump_powers_co = np.load(optimization_result_path_cocnt+"optimization/opt_powers_co"+str(power_per_channel_dBm)+".npy")
 
     if profiles:
         amplifier = NumpyRamanAmplifier(fiber)
@@ -321,11 +325,11 @@ for power_per_channel_dBm in pbar:
             learning_rate=1e-3,
             lock_wavelengths=150,
         )
-        np.save(results_path+"optimization/opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy", pump_wavelengths_cnt)
-        np.save(results_path+"optimization/opt_powers_cnt"+str(power_per_channel_dBm)+".npy", pump_powers_cnt)
+        np.save(optimization_result_path_cocnt+"opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy", pump_wavelengths_cnt)
+        np.save(optimization_result_path_cocnt+"opt_powers_cnt"+str(power_per_channel_dBm)+".npy", pump_powers_cnt)
     else: 
-        pump_wavelengths_cnt = np.load(results_path+"optimization/opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy")
-        pump_powers_cnt = np.load(results_path+"optimization/opt_powers_cnt"+str(power_per_channel_dBm)+".npy")
+        pump_wavelengths_cnt = np.load(optimization_result_path_cocnt+"opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy")
+        pump_powers_cnt = np.load(optimization_result_path_cocnt+"opt_powers_cnt"+str(power_per_channel_dBm)+".npy")
 
 
     if profiles:
@@ -345,4 +349,4 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
         np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
         np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-'''
+

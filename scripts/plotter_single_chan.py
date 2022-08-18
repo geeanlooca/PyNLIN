@@ -31,7 +31,7 @@ args = parser.parse_args()
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
-plt.rcParams['font.size'] = '26'
+plt.rcParams['font.size'] = '16'
 
 ###############################
 #### fiber length setup #######
@@ -294,7 +294,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
         locs = pynlin.nlin.get_collision_location(
             m, fiber, single_interference_channel_spacing, 1 / baud_rate)
 
-        fig1, (ax1,ax2, ax3, ax4) = plt.subplots(nrows=4, sharex=True, figsize=(10,10))
+        fig1, (ax1) = plt.subplots(nrows=1, sharex=True, figsize=(10,4.5))
         plt.plot(show = show_flag)
 
         for i, m_ in enumerate(m[5:-5]):
@@ -304,20 +304,21 @@ for idx, power_dBm in enumerate(power_dBm_list):
             ax1.plot(z*1e-3, fB_co(z), color="purple")
             ax1.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-            ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            ax2.plot(z*1e-3, fB_cnt(z), color="purple")
-            ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            # ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            # ax2.plot(z*1e-3, fB_cnt(z), color="purple")
+            # ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-            ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            ax3.plot(z*1e-3, fB_bi(z), color="purple")
-            ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            # ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            # ax3.plot(z*1e-3, fB_bi(z), color="purple")
+            # ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-            ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
-            ax4.plot(z*1e-3, np.ones_like(z), color="purple")
-            ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            # ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
+            # ax4.plot(z*1e-3, np.ones_like(z), color="purple")
+            # ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-        ax3.set_xlabel("Position [km]")
+        ax1.set_xlabel("Position [km]")
         plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0.0, right = 9.8/10, top=9.9/10)
+        fig1.tight_layout()
         fig1.savefig(plot_save_path+'collision_shape_'+str(power_dBm)+'.pdf')
 
 
