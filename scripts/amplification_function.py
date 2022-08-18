@@ -228,6 +228,9 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_bi_"+str(power_per_channel_dBm)+".npy", pump_solution_bi)
         np.save(results_path+"signal_solution_bi_"+str(power_per_channel_dBm)+".npy", signal_solution_bi)
         np.save(results_path+"ase_solution_bi_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
+    plt.figure()
+    plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
+    plto.show()
 
 for power_per_channel_dBm in pbar:
     #print("Power per channel: ", power_per_channel_dBm, "dBm")
@@ -357,4 +360,3 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
         np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
         np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-

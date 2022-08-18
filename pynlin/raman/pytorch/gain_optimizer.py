@@ -77,9 +77,9 @@ class CopropagatingOptimizer(nn.Module):
 
         # do not optimize wavelengths for the first `lock_wavelengths` epochs
         self.pump_wavelengths.requires_grad = False
-
-        #pbar = tqdm.trange(epochs)
-        for epoch in range(epochs):
+        reg_lambda = 0.0
+        pbar = tqdm.trange(epochs)
+        for epoch in pbar:
 
             if epoch > lock_wavelengths:
                 self.pump_wavelengths.requires_grad = True
@@ -89,7 +89,7 @@ class CopropagatingOptimizer(nn.Module):
             )
 
             signal_spectrum = self.forward(pump_wavelengths * 1e-9, self.pump_powers)
-            loss = loss_function(signal_spectrum, _target_spectrum)
+            loss = loss_function(signal_spectrum, _target_spectrum) + reg_lambda * torch.sum(self.pump_powers)
             loss.backward()
             torch_optimizer.step()
             torch_optimizer.zero_grad()
@@ -99,11 +99,11 @@ class CopropagatingOptimizer(nn.Module):
                     torch.max(signal_spectrum) - torch.min(signal_spectrum)
                 ).item()
 
-            # pbar.set_description(
-            #     f"Loss: {loss.item():.4f}"
-            #     + f"\tBest Loss: {best_loss:.4f}"
-            #     + f"\tFlatness: {flatness:.2f} dB"
-            # )
+            pbar.set_description(
+                f"Loss: {loss.item():.4f}"
+                + f"\tBest Loss: {best_loss:.4f}"
+                + f"\tFlatness: {flatness:.2f} dB"
+            )
 
             if loss.item() < best_loss:
                 pump_wavelengths = self.unscale(

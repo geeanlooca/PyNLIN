@@ -235,9 +235,9 @@ for power_per_channel_dBm in pbar:
           if max(watt2dBm(signal_solution_bi[-1]))-min(watt2dBm(signal_solution_bi[-1])) < 4:
             unsatisfactory = False
             print("Satisfaction reached for wavelenfths", pump_wavelengths)
-            
+
           plt.figure()
           plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
-          plt.savefig(plot_save_path+"tryhard_no_"+str(count)+"pumps"+str(power_dBm)+ "_bi.pdf")
+          plt.savefig("tryhard_no_"+str(count)+"pumps"+str(power_per_channel_dBm)+ "_bi.pdf")
       count = count + 1
       shuffle(pump_wavelengths)
