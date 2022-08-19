@@ -30,7 +30,7 @@ args = parser.parse_args()
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
-plt.rcParams['font.size'] = '26'
+plt.rcParams['font.size'] = '24'
 
 ###############################
 #### fiber length setup #######
@@ -86,7 +86,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = True
+compute_X0mm_space_integrals = False
 
 if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(length_setup)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
     exit()
@@ -385,32 +385,50 @@ fig_ase.savefig(plot_save_path+"comparison.pdf")
 
 pow_idx = np.where(power_dBm_list==-10)[0]
 
-fig_channel, (ax1, ax2, ax3, ax4) = plt.subplots(nrows= 4, sharex = True, figsize=(12, 10))
+fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
-ax1.semilogy(coi_list, Delta_theta_2_co[:, pow_idx, ar_idx], marker='s', markersize=10, color='green', label="ch." + str(coi) + "co.")
+ax1.plot(coi_list, np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*1e5), marker='s', markersize=10, color='green', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.semilogy(coi_list, Delta_theta_2_cnt[:, pow_idx, ar_idx], marker='s', markersize=10, color='blue', label="ch." + str(coi) + "count.")
+ax2.plot(coi_list, np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*1e5), marker='s', markersize=10, color='blue', label="ch." + str(coi) + "CNT.")
 plt.grid(which="both")
-ax3.semilogy(coi_list, Delta_theta_2_bi[:, pow_idx, ar_idx], marker='s', markersize=10, color='orange', label="ch." + str(coi) + "perf.")
+ax3.plot(coi_list, np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*1e5), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "BI")
 plt.grid(which="both")
-ax4.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='s', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
+ax4.plot(coi_list, np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*1e5), marker='s', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
 plt.grid(which="both")
-plt.xlabel(r"Channel index")
-plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
-# ax1.grid(which="both")
-# ax2.grid(which="both")
-# ax3.grid(which="both")
-# ax4.grid(which="both")
+# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+# ax2.yaxis.set_major_locator(plt.MaxNLocator(5))
+# ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
+# ax4.yaxis.set_major_locator(plt.MaxNLocator(5))
 
-ax1.set_ylabel(r"$\Delta \theta^2$")
-ax2.set_ylabel(r"$\Delta \theta^2$")
-ax4.set_ylabel(r"$\Delta \theta^2$")
-ax3.set_ylabel(r"$\Delta \theta^2$")
-plt.subplots_adjust(left = 0.2, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+# ax1.yaxis.set_minor_locator(plt.MaxNLocator(2))
+# ax2.yaxis.set_minor_locator(plt.MaxNLocator(2))
+# ax3.yaxis.set_minor_locator(plt.MaxNLocator(2))
+# ax4.yaxis.set_minor_locator(plt.MaxNLocator(2))
+ax2.yaxis.set_label_position("right")
+ax2.yaxis.tick_right()
+ax4.yaxis.set_label_position("right")
+ax4.yaxis.tick_right()
+plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
+ax1.grid(which="both")
+ax2.grid(which="both")
+ax3.grid(which="both")
+plt.xlabel(r"Channel index")
+
+ax4.grid(which="both")
+plt.xlabel(r"Channel index")
+
+ax1.set_ylabel(r"$\Delta \theta^2$ [$10^{-5}$dBrad]")
+ax2.set_ylabel(r"$\Delta \theta^2$ [$10^{-5}$dBrad]")
+ax4.set_ylabel(r"$\Delta \theta^2$ [$10^{-5}$dBrad]")
+ax3.set_ylabel(r"$\Delta \theta^2$ [$10^{-5}$dBrad]")
+plt.autoscale(True)
+plt.subplots_adjust(left = 0.15, wspace=0.0, hspace=0, right = 8.5/10, top=9.5/10)
+
 fig_channel.savefig(plot_save_path+"channel_noise.pdf")
 
 
-fig_ase_channel, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(12, 10))
+fig_ase_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(10,6))
+
 plt.plot(show=True)
 ax1.semilogy(coi_list, ase_co[:, pow_idx], marker='s', markersize=10, color='green', label="ch." + str(coi) + "co.")
 plt.grid(which="both")
