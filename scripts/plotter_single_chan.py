@@ -31,14 +31,14 @@ args = parser.parse_args()
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
-plt.rcParams['font.size'] = '16'
+plt.rcParams['font.size'] = '24'
 
 ###############################
 #### fiber length setup #######
 ###############################
 length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
-num_co  = 8
+num_co  = 4
 num_cnt = 8
 plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
 results_path = '../results_'+str(length_setup)+'/'
@@ -49,7 +49,7 @@ time_integrals_results_path = '../results/'
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 #power_dBm_list = np.linspace(-20, 0, 3)
-power_dBm_list = [-10.0]
+power_dBm_list = [-20.0]
 
 arity_list = [16]
 
@@ -156,20 +156,16 @@ for idx, power_dBm in enumerate(power_dBm_list):
     #### fB
     ##########################
     if True:
-        fig_fB = plt.figure(figsize=(10, 7))
+        fig_fB = plt.figure(figsize=(10, 8))
         ax = fig_fB.add_subplot(1, 1, 1)
         plt.plot(show = show_flag)
         c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
         # format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")
-        ax.plot(z*1e-3, fB_co_1(z), color="lightgreen",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz", linewidth = 3, zorder=-1)        
-        ax.plot(z*1e-3, fB_co_2(z), color="green",label = "192.5THz", linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_co_1(z), color="green",label = "CO",  linewidth = 3, zorder=-1)        
+        ax.plot(z*1e-3, fB_cnt_1(z), color="blue",label = "CNT",  linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_bi_1(z), color="red",label = "BI",  linewidth = 3, zorder=-1)
 
-        ax.plot(z*1e-3, fB_cnt_1(z), color="lightblue",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz", linewidth = 3, zorder=-1)
-        ax.plot(z*1e-3, fB_cnt_2(z), color="blue",label = "192.5THz", linewidth = 3, zorder=-1)
-
-        ax.plot(z*1e-3, fB_bi_1(z), color="orange",label = format(wdm.frequency_grid()[select_idx[0]]*1e-12, ".1f")+"THz", linewidth = 3, zorder=-1)
-        ax.plot(z*1e-3, fB_bi_2(z), color="red",label = "192.5THz", linewidth = 3, zorder=-1)
-
+## arc design
         '''
         # Configure arc
         center_x = 50            # x coordinate
@@ -283,12 +279,34 @@ for idx, power_dBm in enumerate(power_dBm_list):
                 linewidth = 3)
         ax.text(x1+length_x+2.1, y1+length_y, "Bidirectional")
         '''
-        plt.grid()
+##
+        plt.grid(which="both")
         plt.xlabel("Position [km]")
         plt.ylabel(r"$f_B$")
         plt.legend()
+        plt.yticks(range(5))
         fig_fB.tight_layout()
-        fig_fB.savefig(plot_save_path+'f_B_'+str(power_dBm)+'.pdf')    
+        fig_fB.savefig(plot_save_path+'f_B_1'+str(power_dBm)+'.pdf')    
+
+
+        fig_fB_2 = plt.figure(figsize=(10, 8))
+        ax = fig_fB_2.add_subplot(1, 1, 1)
+        plt.plot(show = show_flag)
+        c = cm.viridis(np.linspace(0.1, 0.9, 4),1)
+        # format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")
+        ax.plot(z*1e-3, fB_co_2(z), color="green",label = "CO", linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_cnt_2(z), color="blue",label = "CNT", linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_bi_2(z), color="red",label = "BI", linewidth = 3, zorder=-1)
+
+## arc design < insert here eventually
+##
+        plt.grid(which="both")
+        plt.xlabel("Position [km]")
+        plt.ylabel(r"$f_B$")
+        plt.legend()
+        plt.yticks(range(5))
+        fig_fB_2.tight_layout()
+        fig_fB_2.savefig(plot_save_path+'f_B_50'+str(power_dBm)+'.pdf')   
 
 
     # interpolate the amplification function using optimization results
@@ -316,7 +334,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
         ##########################
         #### COLLISION SHAPEs
         ##########################
-        fig1, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=4, sharex=True, figsize=(10,10))
+        fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(10,6))
         plt.plot(show = show_flag)
 
         for i, m_ in enumerate(m[5:-5]):
@@ -325,14 +343,17 @@ for idx, power_dBm in enumerate(power_dBm_list):
             ax1.plot(z*1e-3, np.abs(I[i])/max_I * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
             ax1.plot(z*1e-3, fB_co(z), color="purple")
             ax1.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax1.axhline(0.5, color="grey", linestyle="dotted")
 
             ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
             ax2.plot(z*1e-3, fB_cnt(z), color="purple")
             ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax2.axhline(0.5, color="grey", linestyle="dotted")
 
             ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
             ax3.plot(z*1e-3, fB_bi(z), color="purple")
             ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax3.axhline(0.5, color="grey", linestyle="dotted")
 
             ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
             ax4.plot(z*1e-3, np.ones_like(z), color="purple")
