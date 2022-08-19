@@ -38,9 +38,11 @@ plt.rcParams['font.size'] = '16'
 ###############################
 length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
-
+num_co  = 8
+num_cnt = 8
 plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
 results_path = '../results_'+str(length_setup)+'/'
+results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 time_integrals_results_path = '../results/'
 
 # PLOTTING PARAMETERS
@@ -82,6 +84,16 @@ Delta_theta_2_co = np.zeros_like(
 Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 
+
+
+interfering_list = range(num_channels-1)
+Noise_spacing_co = np.zeros_like(
+    np.ndarray(shape=(len(power_dBm_list), len(interfering_list)))
+    )
+Noise_spacing_cnt = np.zeros_like(Noise_spacing_co)
+Noise_spacing_bi = np.zeros_like(Noise_spacing_co)
+Noise_spacing_none = np.zeros_like(Noise_spacing_co)
+
 show_flag = False
 
 if input("\nSingle channel collision plotter: \n\t>Length= "+str(length_setup)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>interfering_grid_index= "+str(interfering_grid_index)+"\nAre you sure? (y/[n])") != "y":
@@ -96,20 +108,20 @@ for idx, power_dBm in enumerate(power_dBm_list):
     signal_solution_co =   np.load(results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
     pump_solution_cnt =    np.load(results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
     signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
-    pump_solution_bi =     np.load(results_path + 'pump_solution_bi_' + str(power_dBm) + '.npy')
-    signal_solution_bi =   np.load(results_path + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+    pump_solution_bi =     np.load(results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
+    signal_solution_bi =   np.load(results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
 
     #z_max = np.load(results_path + 'z_max.npy')
     f = h5py.File(time_integrals_results_path + '0_9_results.h5', 'r')
     z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
 
     # COMPUTE THE fB =================================
-    pump_solution_co = np.power(np.divide(pump_solution_co, pump_solution_co[0, :]), 2)
-    signal_solution_co = np.power(np.divide(signal_solution_co, signal_solution_co[0, :]), 2)
-    pump_solution_cnt = np.power(np.divide(pump_solution_cnt, pump_solution_cnt[0, :]), 2)
-    signal_solution_cnt = np.power(np.divide(signal_solution_cnt, signal_solution_cnt[0, :]) , 2)
-    pump_solution_bi = np.power(np.divide(pump_solution_bi, pump_solution_bi[0, :]), 2)
-    signal_solution_bi = np.power(np.divide(signal_solution_bi, signal_solution_bi[0, :]), 2)
+    pump_solution_co =   np.divide(pump_solution_co, pump_solution_co[0, :])
+    signal_solution_co = np.divide(signal_solution_co, signal_solution_co[0, :])
+    pump_solution_cnt =  np.divide(pump_solution_cnt, pump_solution_cnt[0, :])
+    signal_solution_cnt =np.divide(signal_solution_cnt, signal_solution_cnt[0, :])
+    pump_solution_bi =   np.divide(pump_solution_bi, pump_solution_bi[0, :])
+    signal_solution_bi = np.divide(signal_solution_bi, signal_solution_bi[0, :])
 
     # XPM COEFFICIENT EVALUATION, single m =================================
     # compute the collisions between the two furthest WDM channels
@@ -137,8 +149,12 @@ for idx, power_dBm in enumerate(power_dBm_list):
 
     fB_co_2 = interp1d(z_max, signal_solution_co[:, select_idx[1]], kind='linear')
     fB_cnt_2 = interp1d(z_max, signal_solution_cnt[:, select_idx[1]], kind='linear')
-    fB_bi_2 = interp1d(z_max, signal_solution_bi[:, select_idx[0]], kind='linear')
+    fB_bi_2 = interp1d(z_max, signal_solution_bi[:, select_idx[1]], kind='linear')
 
+
+    ##########################
+    #### fB
+    ##########################
     if True:
         fig_fB = plt.figure(figsize=(10, 7))
         ax = fig_fB.add_subplot(1, 1, 1)
@@ -290,38 +306,45 @@ for idx, power_dBm in enumerate(power_dBm_list):
     X0mm_none = pynlin.nlin.Xhkm_precomputed(
         z, I, amplification_function=None)
 
+
+    # X0mm PLOTTING
     if True:
         locs = pynlin.nlin.get_collision_location(
             m, fiber, single_interference_channel_spacing, 1 / baud_rate)
 
-        fig1, (ax1) = plt.subplots(nrows=1, sharex=True, figsize=(10,4.5))
+
+        ##########################
+        #### COLLISION SHAPEs
+        ##########################
+        fig1, (ax1, ax2, ax3, ax4) = plt.subplots(nrows=4, sharex=True, figsize=(10,10))
         plt.plot(show = show_flag)
 
         for i, m_ in enumerate(m[5:-5]):
             i = i+5
-            max_I = np.max(I[:])
+            max_I =np.max(np.abs(I[:]))
             ax1.plot(z*1e-3, np.abs(I[i])/max_I * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
             ax1.plot(z*1e-3, fB_co(z), color="purple")
             ax1.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-            # ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            # ax2.plot(z*1e-3, fB_cnt(z), color="purple")
-            # ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            ax2.plot(z*1e-3, fB_cnt(z), color="purple")
+            ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-            # ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            # ax3.plot(z*1e-3, fB_bi(z), color="purple")
-            # ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            ax3.plot(z*1e-3, fB_bi(z), color="purple")
+            ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-            # ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
-            # ax4.plot(z*1e-3, np.ones_like(z), color="purple")
-            # ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
+            ax4.plot(z*1e-3, np.ones_like(z), color="purple")
+            ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-        ax1.set_xlabel("Position [km]")
+        ax4.set_xlabel("Position [km]")
         plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0.0, right = 9.8/10, top=9.9/10)
-        fig1.tight_layout()
         fig1.savefig(plot_save_path+'collision_shape_'+str(power_dBm)+'.pdf')
 
-
+        ##########################
+        #### X0mm
+        ##########################
         fig2 = plt.figure(figsize=(10, 6))
         plt.plot(show = show_flag)
 
@@ -350,12 +373,13 @@ for idx, power_dBm in enumerate(power_dBm_list):
     X_cnt.append(0.0)
     X_bi = []
     X_bi.append(0.0)
+    X_none = []
+    X_none.append(0.0)
 
     # compute the first num_channels interferents (assume the WDM grid is identical)
     pbar_description = "Computing space integrals over interfering channels"
-    collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[0:num_channels], leave=False)
+    collisions_pbar = tqdm.tqdm(range(1, 50), leave=False)
     collisions_pbar.set_description(pbar_description)
-
     for interf_index in collisions_pbar:
         fB_co = interp1d(
             z_max, signal_solution_co[:, interf_index], kind='linear')
@@ -374,6 +398,12 @@ for idx, power_dBm in enumerate(power_dBm_list):
         X0mm_bi = pynlin.nlin.Xhkm_precomputed(
             z, I, amplification_function=fB_bi(z))
         X_bi.append(np.sum(np.abs(X0mm_bi)**2))
+
+        fB_none = interp1d(
+            z_max, signal_solution_bi[:, interf_index], kind='linear')
+        X0mm_none = pynlin.nlin.Xhkm_precomputed(
+            z, I, amplification_function=None)
+        X_none.append(np.sum(np.abs(X0mm_none)**2))
 
     # PHASE NOISE COMPUTATION =======================
     # copropagating
@@ -410,42 +440,80 @@ for idx, power_dBm in enumerate(power_dBm_list):
             Delta_theta_2_cnt[idx, ar_idx] += Delta_theta_ch_2_cnt
             Delta_theta_ch_2_bi = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[i])
             Delta_theta_2_bi[idx, ar_idx] += Delta_theta_ch_2_bi
+        for i in interfering_list:
+            Noise_spacing_co[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
+            Noise_spacing_cnt[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_cnt[i])
+            Noise_spacing_bi[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[i])
+            Noise_spacing_none[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[i])
+
 
         print("Total phase variance (CO): ", Delta_theta_2_co[idx])
         print("Total phase variance (CNT): ", Delta_theta_2_cnt[idx])
 
 
 ar_idx = 0 # 16-QAM
-fig_power = plt.figure(figsize=(10, 5))
-plt.plot(show = True)
-plt.semilogy(power_dBm_list, Delta_theta_2_co[:, ar_idx], marker='x', markersize = 10, color='green', label="coprop.")
-plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="counterprop.")
-plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="bidirection.")
-plt.minorticks_on()
-plt.grid(which="both")
-plt.xlabel(r"Power [dBm]")
-plt.ylabel(r"$\Delta \theta^2$")
-plt.legend()
-fig_power.tight_layout()
-fig_power.savefig(plot_save_path+"power_noise_strange.pdf")
-
+# fig_power = plt.figure(figsize=(10, 5))
+# plt.plot(show = True)
+# plt.semilogy(power_dBm_list, Delta_theta_2_co[:, ar_idx], marker='x', markersize = 10, color='green', label="coprop.")
+# plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="counterprop.")
+# plt.semilogy(power_dBm_list, Delta_theta_2_cnt[:, ar_idx], marker='x', markersize = 10,color='blue',label="bidirection.")
+# plt.minorticks_on()
+# plt.grid(which="both")
+# plt.xlabel(r"Power [dBm]")
+# plt.ylabel(r"$\Delta \theta^2$")
+# plt.legend()
+# fig_power.tight_layout()
+# fig_power.savefig(plot_save_path+"power_noise_strange.pdf")
 
 idx = 0
 
-fig_arity, (ax1,ax2) = plt.subplots(nrows=2, sharex=True, figsize=(10,10))
 
-ax1.loglog(arity_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
-ax2.loglog(arity_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
-plt.subplots_adjust(hspace=0.0)
+# fig_arity, (ax1,ax2) = plt.subplots(nrows=2, sharex=True, figsize=(10,10))
+
+# ax1.loglog(arity_list, Delta_theta_2_co[idx, :], marker='x', markersize = 10, color='green', label="coprop.")
+# ax2.loglog(arity_list, Delta_theta_2_cnt[idx, :], marker='x', markersize = 10,color='blue',label="counterprop.")
+# plt.subplots_adjust(hspace=0.0)
+
+# ax1.grid()
+# ax2.grid()
+# ax1.set_ylabel(r"$\Delta \theta^2$")
+# ax2.set_ylabel(r"$\Delta \theta^2$")
+# ax2.legend()
+# ax1.legend()
+# ax2.set_xlabel("QAM modulation arity")
+# ax2.set_xticks(arity_list)
+
+# fig_arity.tight_layout()
+# fig_arity.savefig(plot_save_path+"arity_noise.pdf")
+
+fig_spacing, (ax1,ax2, ax3, ax4) = plt.subplots(nrows=4, sharex=True, figsize=(10,10))
+
+for idx, power_dBm in enumerate(power_dBm_list):
+
+    ax1.semilogy(interfering_list, Noise_spacing_co[idx, :], marker='x', markersize = 7, color='green', label="coprop.")
+    ax2.semilogy(interfering_list, Noise_spacing_cnt[idx, :], marker='x', markersize = 7,color='blue',label="counterprop.")
+    ax3.semilogy(interfering_list, Noise_spacing_bi[idx, :], marker='x', markersize = 7,color='orange',label="bidir.")
+    ax4.semilogy(interfering_list, Noise_spacing_none[idx, :], marker='x', markersize = 7,color='grey',label="perf.")
+
+    plt.subplots_adjust(hspace=0.0)
 
 ax1.grid()
 ax2.grid()
+ax3.grid()
+ax4.grid()
+
 ax1.set_ylabel(r"$\Delta \theta^2$")
 ax2.set_ylabel(r"$\Delta \theta^2$")
-ax2.legend()
-ax1.legend()
-ax2.set_xlabel("QAM modulation arity")
-ax2.set_xticks(arity_list)
+ax3.set_ylabel(r"$\Delta \theta^2$")
+ax4.set_ylabel(r"$\Delta \theta^2$")
 
-fig_arity.tight_layout()
-fig_arity.savefig(plot_save_path+"arity_noise.pdf")
+ax1.legend()
+ax2.legend()
+ax3.legend()
+ax4.legend()
+
+ax2.set_xlabel("Channel spacing index")
+ax2.set_xticks([1, 10, 20, 30, 40, 50])
+
+fig_spacing.tight_layout()
+fig_spacing.savefig(plot_save_path+"spacing_noise.pdf")

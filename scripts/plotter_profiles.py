@@ -91,13 +91,14 @@ show_pumps = False
 
 if input("\nASE-Signal_pump profile plotter: \n\t>Length= "+str(length_setup)+"km \n\t>power list= "+str(power_dBm_list)+"\nAre you sure? (y/[n])") != "y":
     exit()
-configs = [[4, 8]]
+configs = [[8, 8]]
 for config in configs:
     num_co = config[0]
     num_cnt = config[1]
     for idx, power_dBm in enumerate(power_dBm_list):
         average_power =  dBm2watt(power_dBm)
-        results_path = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_order/'
+        results_path = '../results_'+str(length_setup)+'/'
+        retults_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
         plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
         # SIMULATION DATA LOAD =================================
         
@@ -109,20 +110,17 @@ for config in configs:
         signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
         ase_solution_cnt = np.load(results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
         
-        pump_solution_bi =    np.load(results_path + 'pump_solution_bi_' + str(power_dBm) + '.npy')
-        signal_solution_bi =  np.load(results_path + 'signal_solution_bi_' + str(power_dBm) + '.npy')
-        ase_solution_bi = np.load(results_path + 'ase_solution_bi_' + str(power_dBm) + '.npy')
+        pump_solution_bi =    np.load(retults_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
+        signal_solution_bi =  np.load(retults_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+        ase_solution_bi = np.load(retults_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
 
-        plt.figure()
-        plt.plot(signal_wavelengths, watt2dBm(signal_solution_co[-1]), color="k")
-        plt.show()
-        plt.figure()
-        plt.plot(signal_wavelengths, watt2dBm(signal_solution_cnt[-1]), color="k")
-        plt.show()
-        plt.figure()
-        plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
-        plt.show()
+        # plt.figure()
+        # plt.plot(signal_wavelengths, watt2dBm(signal_solution_co[-1]), color="k")
+        # plt.figure()
+        # plt.plot(signal_wavelengths, watt2dBm(signal_solution_cnt[-1]), color="k")
+        # plt.figure()
+        # plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
 
         x_annotation = 100 
         #z_max = np.load(results_path + 'z_max.npy')

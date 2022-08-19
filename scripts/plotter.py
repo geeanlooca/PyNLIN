@@ -38,7 +38,10 @@ plt.rcParams['font.size'] = '26'
 length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
 
+num_co  = 8
+num_cnt = 8
 results_path = '../results_'+str(length_setup)+'/'
+results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
 time_integrals_results_path = '../results/'
 
@@ -48,7 +51,7 @@ interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
 arity_list = [16]
-coi_list = [0, 24, 49]
+coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
 baud_rate = 10
@@ -57,7 +60,7 @@ channel_spacing = 100
 num_channels = 50
 baud_rate = baud_rate * 1e9
 
-beta2 = pynlin.utils.dispersion_to_beta2(
+beta2 = -pynlin.utils.dispersion_to_beta2(
     dispersion * 1e-12 / (1e-9 * 1e3), wavelength * 1e-9
 )
 fiber = pynlin.fiber.Fiber(
@@ -74,7 +77,7 @@ points_per_collision = 10
 
 print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
-
+print(wdm.frequency_grid())
 Delta_theta_2_co = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(arity_list)))
 )
@@ -126,9 +129,9 @@ if compute_X0mm_space_integrals:
         signal_solution_cnt = np.load(
             results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
         pump_solution_bi = np.load(
-            results_path + 'pump_solution_bi_' + str(power_dBm) + '.npy')
+            results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
         signal_solution_bi = np.load(
-            results_path + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+            results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
     
         # ASE power evolution
         ase_solution_co = np.load(
@@ -136,7 +139,7 @@ if compute_X0mm_space_integrals:
         ase_solution_cnt = np.load(
             results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
         ase_solution_bi = np.load(
-            results_path + 'ase_solution_bi_' + str(power_dBm) + '.npy')
+            results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
         # compute fB squaring
         pump_solution_co =    np.divide(pump_solution_co, pump_solution_co[0, :])
@@ -394,10 +397,10 @@ ax4.semilogy(coi_list, Delta_theta_2_none[:, pow_idx, ar_idx], marker='s', marke
 plt.grid(which="both")
 plt.xlabel(r"Channel index")
 plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
-ax1.grid(which="both")
-ax2.grid(which="both")
-ax3.grid(which="both")
-ax4.grid(which="both")
+# ax1.grid(which="both")
+# ax2.grid(which="both")
+# ax3.grid(which="both")
+# ax4.grid(which="both")
 
 ax1.set_ylabel(r"$\Delta \theta^2$")
 ax2.set_ylabel(r"$\Delta \theta^2$")
