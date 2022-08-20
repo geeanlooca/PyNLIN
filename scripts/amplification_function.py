@@ -76,8 +76,8 @@ args = parser.parse_args()
 ###############################
 length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
-num_co = 4
-num_cnt = 8
+num_co = 16
+num_cnt = 4
 optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
 
@@ -121,6 +121,7 @@ points_per_collision = 10
 
 power_per_channel_dBm_list = [-8.0, -6.0, -4.0, -2.0, 0.0]
 power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
+power_per_channel_dBm_list = [0.0, -2.0, -4.0]
 power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 
 # PRECISION REQUIREMENTS ESTIMATION =================================
@@ -169,7 +170,7 @@ for power_per_channel_dBm in pbar:
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     
     initial_power_co = dBm2watt(-10)
-    initial_power_cnt = dBm2watt(-10)
+    initial_power_cnt = dBm2watt(-30)
     pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
     print(pump_directions)
 
@@ -200,10 +201,15 @@ for power_per_channel_dBm in pbar:
         )
 
         target_spectrum = watt2dBm(0.5 * signal_powers)
+        if power_per_channel>-6.0:
+            learning_rate=3e-4
+        else:
+            learning_rate=1e-3
+
         pump_wavelengths_bi, pump_powers_bi = optimizer.optimize(
             target_spectrum=target_spectrum,
             epochs=500,
-            learning_rate=1e-3
+            learning_rate=learning_rate
         )
         print("\n\nOPTIMIZED POWERS= ", pump_powers_bi, "\n\n")
         np.save(optimization_result_path+"opt_wavelengths_bi"+str(power_per_channel_dBm)+".npy", pump_wavelengths_bi)
@@ -230,8 +236,9 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"ase_solution_bi_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
     plt.figure()
     plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
-    plto.show()
+    plt.savefig(results_path+"signal_profile_"+str(power_per_channel_dBm)+".pdf")
 
+'''
 for power_per_channel_dBm in pbar:
     #print("Power per channel: ", power_per_channel_dBm, "dBm")
 # OPTIMIZER CO =================================
@@ -360,3 +367,4 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
         np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
         np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
+        '''
