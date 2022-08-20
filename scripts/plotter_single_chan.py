@@ -6,6 +6,7 @@ import h5py
 import math
 import os
 from scipy.interpolate import interp1d
+from scipy.integrate import quad
 import tqdm
 import pynlin
 import pynlin.wdm
@@ -297,7 +298,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
         # format(wdm.frequency_grid()[select_idx[1]]*1e-12, ".1f")
         ax.plot(z*1e-3, fB_co_2(z), color="green",label = "CO", linewidth = 3, zorder=-1)
         ax.plot(z*1e-3, fB_cnt_2(z), color="blue",label = "CNT", linewidth = 3, zorder=-1)
-        ax.plot(z*1e-3, fB_bi_2(z), color="red",label = "BI", linewidth = 3, zorder=-1)
+        ax.plot(z*1e-3, fB_bi_2(z), color="orange",label = "BI", linewidth = 3, zorder=-1)
 
 ## arc design < insert here eventually
 ##
@@ -375,7 +376,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
         ##########################
         #### COLLISION SHAPEs 50
         ##########################
-        if False:
+        if True:
             f2 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
             interfering_grid_index = 10
 
@@ -434,7 +435,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
             plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0.0, right = 9.8/10, top=9.9/10)
             fig1.savefig(plot_save_path+'collision_shape_last_'+str(power_dBm)+'.pdf')
 
-        
+
         ##########################
         #### X0mm
         ##########################
@@ -573,33 +574,28 @@ idx = 0
 # fig_arity.tight_layout()
 # fig_arity.savefig(plot_save_path+"arity_noise.pdf")
 
-fig_spacing, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(10,6))
+fig_spacing, (ax1, ax2,ax3) = plt.subplots(nrows=3, sharex=True, figsize=(10,10))
+interfering_list = range(1, 51)
+fB_co = [interp1d(z_max, signal_solution_co[:, intx-1], kind='linear') for intx in interfering_list]
+fB_cnt = [interp1d(z_max, signal_solution_cnt[:, intx-1], kind='linear')for intx in interfering_list]
+fB_bi =  [interp1d(z_max, signal_solution_bi[:, intx-1], kind='linear')for intx in interfering_list]
+ax1.plot(interfering_list, [1e-3*quad(fB_intx, 0, fiber_length)[0] for fB_intx in fB_co], marker='x', markersize = 7, color='green', label="coprop.")
+ax2.plot(interfering_list,  [1e-3*quad(fB_intx, 0, fiber_length)[0] for fB_intx in fB_cnt], marker='x', markersize = 7,color='blue', label="counterprop.")
+ax3.plot(interfering_list,  [1e-3*quad(fB_intx, 0, fiber_length)[0] for fB_intx in fB_bi], marker='x', markersize = 7,color='orange',label="bidir.")
 
-for idx, power_dBm in enumerate(power_dBm_list):
-    ax1.plot(interfering_list, 10*log10(Noise_spacing_co[idx, :]), marker='x', markersize = 7, color='green', label="coprop.")
-    ax2.plot(interfering_list, 10*log10(Noise_spacing_cnt[idx, :]), marker='x', markersize = 7,color='blue',label="counterprop.")
-    ax3.plot(interfering_list, 10*log10(Noise_spacing_bi[idx, :]), marker='x', markersize = 7,color='orange',label="bidir.")
-    ax4.plot(interfering_list, 10*log10(Noise_spacing_none[idx, :]), marker='x', markersize = 7,color='grey',label="perf.")
-
-    plt.subplots_adjust(hspace=0.0)
+plt.subplots_adjust(hspace=0.0)
 
 ax1.grid()
 ax2.grid()
 ax3.grid()
-ax4.grid()
 
-ax1.set_ylabel(r"$\Delta \theta^2$")
-ax2.set_ylabel(r"$\Delta \theta^2$")
-ax3.set_ylabel(r"$\Delta \theta^2$")
-ax4.set_ylabel(r"$\Delta \theta^2$")
+ax2.set_ylabel(r"$\int dz f_B(z)$ [km]")
+ax1.text(3, 140, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax2.text(3, 33, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax3.text(3, 65, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
 
-ax1.legend()
-ax2.legend()
-ax3.legend()
-ax4.legend()
-
-ax4.set_xlabel("Channel spacing index")
+ax3.set_xlabel("Channel index")
 ax2.set_xticks([1, 10, 20, 30, 40, 50])
 
-fig_spacing.tight_layout()
+plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 fig_spacing.savefig(plot_save_path+"spacing_noise.pdf")

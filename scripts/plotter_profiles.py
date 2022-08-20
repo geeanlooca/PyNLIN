@@ -43,8 +43,9 @@ length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
 
 
-plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
-results_path = '../results_'+str(length_setup)+'/'
+plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/' + \
+    str(length_setup) + 'km/'
+results_path = '../results_' + str(length_setup) + '/'
 
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
@@ -76,44 +77,55 @@ wdm = pynlin.wdm.WDM(
 signal_wavelengths = wdm.wavelength_grid()
 
 partial_collision_margin = 5
-points_per_collision = 10 
+points_per_collision = 10
 
 print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
 
 Delta_theta_2_co = np.zeros_like(
     np.ndarray(shape=(len(power_dBm_list), len(arity_list)))
-    )
+)
 Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
 
 show_plots = False
 show_pumps = False
-
-if input("\nASE-Signal_pump profile plotter: \n\t>Length= "+str(length_setup)+"km \n\t>power list= "+str(power_dBm_list)+"\nAre you sure? (y/[n])") != "y":
+linestyles = ["solid", "dashed", "dotted"]
+coi_list = [0, 24, 49]
+if input("\nASE-Signal_pump profile plotter: \n\t>Length= " + str(length_setup) + "km \n\t>power list= " + str(power_dBm_list) + "\nAre you sure? (y/[n])") != "y":
     exit()
 configs = [[8, 2]]
 for config in configs:
     num_co = config[0]
     num_cnt = config[1]
     for idx, power_dBm in enumerate(power_dBm_list):
-        average_power =  dBm2watt(power_dBm)
-        results_path = '../results_'+str(length_setup)+'/'
-        retults_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
-        plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+        average_power = dBm2watt(power_dBm)
+        results_path = '../results_' + str(length_setup) + '/'
+        retults_path_bi = '../results_' + \
+            str(length_setup) + '/' + str(num_co) + '_co_' + str(num_cnt) + '_cnt/'
+        plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/' + \
+            str(length_setup) + 'km/' + str(num_co) + '_co_' + str(num_cnt) + '_cnt/'
         # SIMULATION DATA LOAD =================================
-        
-        pump_solution_co = np.load(results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
-        signal_solution_co = np.load(results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
-        ase_solution_co = np.load(results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
 
-        pump_solution_cnt =    np.load(results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
-        signal_solution_cnt =  np.load(results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
-        ase_solution_cnt = np.load(results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
-        
-        pump_solution_bi =    np.load(retults_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
-        signal_solution_bi =  np.load(retults_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
-        ase_solution_bi = np.load(retults_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
+        pump_solution_co = np.load(
+            results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
+        signal_solution_co = np.load(
+            results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
+        ase_solution_co = np.load(
+            results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
 
+        pump_solution_cnt = np.load(
+            results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
+        signal_solution_cnt = np.load(
+            results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
+        ase_solution_cnt = np.load(
+            results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
+
+        pump_solution_bi = np.load(
+            retults_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
+        signal_solution_bi = np.load(
+            retults_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+        ase_solution_bi = np.load(
+            retults_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
         # plt.figure()
         # plt.plot(signal_wavelengths, watt2dBm(signal_solution_co[-1]), color="k")
@@ -122,7 +134,7 @@ for config in configs:
         # plt.figure()
         # plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
 
-        x_annotation = 100 
+        x_annotation = 100
         #z_max = np.load(results_path + 'z_max.npy')
         #f = h5py.File(results_path + '0_9_results.h5', 'r')
         z_max = np.linspace(0, fiber_length, np.shape(pump_solution_bi)[0])
@@ -131,152 +143,176 @@ for config in configs:
                         Line2D([0], [0], color="b", lw=2)]
         if show_pumps:
             custom_lines.append(Line2D([0], [0], color="r", lw=2))
-       
+
         ########################################################################
         # SIGNALS AND ASE ONLY
         ########################################################################
         ##################
         plt.figure(figsize=(8, 6))
-        
-        plt.plot(z_max, np.transpose(watt2dBm([ase_solution_co[:, idx] for idx in [0, 24, 49]])), color="k")
-        plt.plot(z_max,  np.transpose(watt2dBm([signal_solution_co[:, idx] for idx in [0, 24, 49]])), color="b")
+
+        plt.plot(z_max, np.transpose(
+            watt2dBm([ase_solution_co[:, idx] for idx in [0, 24, 49]])), color="k")
+        plt.plot(z_max, np.transpose(
+            watt2dBm([signal_solution_co[:, idx] for idx in [0, 24, 49]])), color="b")
         if show_pumps:
-            plt.plot(z_max,watt2dBm(pump_solution_co), color="r")
+            plt.plot(z_max, watt2dBm(pump_solution_co), color="r")
 
         plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
-        x_annotation_ase = np.argmax(np.abs(ase_solution_co[:, 49]-ase_solution_co[:, 0]))
-        x_annotation =  np.argmax(np.abs(signal_solution_co[:, 49]-signal_solution_co[:, 0]))
+        x_annotation_ase = np.argmax(
+            np.abs(ase_solution_co[:, 49] - ase_solution_co[:, 0]))
+        x_annotation = np.argmax(
+            np.abs(signal_solution_co[:, 49] - signal_solution_co[:, 0]))
         for chan in [0, 49]:
-            plt.annotate("ch."+str(chan+1), (x_annotation_ase/len(z_max)*z_max[len(z_max)-1], watt2dBm(ase_solution_co[x_annotation_ase, chan]) -1 - 3*np.sign(25-chan)))
-            plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(signal_solution_co[x_annotation, chan]) -1 - 3*np.sign(25-chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation_ase / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(ase_solution_co[x_annotation_ase, chan]) - 1 - 3 * np.sign(25 - chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(signal_solution_co[x_annotation, chan]) - 1 - 3 * np.sign(25 - chan)))
 
         plt.xlabel("z [km]")
         plt.ylabel("Wave power [dBm]")
         plt.grid("on")
         plt.minorticks_on()
-        osnr = 10*np.log10(signal_solution_co[-1:, :]/ase_solution_co[-1:, :])
-        print(osnr)
+        osnr = 10 * np.log10(signal_solution_co[-1:, :] / ase_solution_co[-1:, :])
         # plt.figure()
         # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
         if show_plots:
             plt.show()
 
         plt.tight_layout()
-        plt.savefig(plot_save_path+"profile"+str(power_dBm)+ "_co.pdf")
-        
+        plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_co.pdf")
+
         ###############
         plt.figure()
-        plt.plot(z_max, np.transpose(watt2dBm([ase_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="k")
-        plt.plot(z_max,  np.transpose(watt2dBm([signal_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="b")
+        plt.plot(z_max, np.transpose(
+            watt2dBm([ase_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="k")
+        plt.plot(z_max, np.transpose(
+            watt2dBm([signal_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="b")
         if show_pumps:
-            plt.plot(z_max,watt2dBm(pump_solution_cnt), color="r")
+            plt.plot(z_max, watt2dBm(pump_solution_cnt), color="r")
 
         plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
-        x_annotation_ase = np.argmax(np.abs(ase_solution_cnt[:, 49]-ase_solution_cnt[:, 0]))
-        x_annotation =  np.argmax(np.abs(signal_solution_cnt[:, 49]-signal_solution_cnt[:, 0]))
+        x_annotation_ase = np.argmax(
+            np.abs(ase_solution_cnt[:, 49] - ase_solution_cnt[:, 0]))
+        x_annotation = np.argmax(
+            np.abs(signal_solution_cnt[:, 49] - signal_solution_cnt[:, 0]))
         for chan in [0, 49]:
-            plt.annotate("ch."+str(chan+1), (x_annotation_ase/len(z_max)*z_max[len(z_max)-1], watt2dBm(ase_solution_cnt[x_annotation_ase, chan]) -1 - 3*np.sign(25-chan)))
-            plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(signal_solution_cnt[x_annotation, chan]) -1 - 3*np.sign(25-chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation_ase / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(ase_solution_cnt[x_annotation_ase, chan]) - 1 - 3 * np.sign(25 - chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(z_max) - 1], watt2dBm(
+                signal_solution_cnt[x_annotation, chan]) - 1 - 3 * np.sign(25 - chan)))
 
         plt.xlabel("z [km]")
         plt.ylabel("Wave power [dBm]")
         plt.grid("on")
         plt.minorticks_on()
-        osnr = 10*np.log10(signal_solution_cnt[-1:, :]/ase_solution_cnt[-1:, :])
-        print(osnr)
+        osnr = 10 * np.log10(signal_solution_cnt[-1:, :] / ase_solution_cnt[-1:, :])
         # plt.figure()
         # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
         if show_plots:
             plt.show()
 
         plt.tight_layout()
-        plt.savefig(plot_save_path+"profile"+str(power_dBm)+ "_cnt.pdf")
-        
+        plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_cnt.pdf")
+
         #########
         plt.figure()
-        plt.plot(z_max, np.transpose(watt2dBm([ase_solution_bi[:, idx] for idx in [0, 24, 49]])), color="k")
-        plt.plot(z_max,  np.transpose(watt2dBm([signal_solution_bi[:, idx] for idx in [0, 24, 49]])), color="b")
+        plt.plot(z_max, np.transpose(
+            watt2dBm([ase_solution_bi[:, idx] for idx in [0, 24, 49]])), color="k")
+        plt.plot(z_max, np.transpose(
+            watt2dBm([signal_solution_bi[:, idx] for idx in [0, 24, 49]])), color="b")
         if show_pumps:
             plt.plot(z_max, watt2dBm(pump_solution_bi), color="r")
-        
 
         plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
-        x_annotation_ase = np.argmax(np.abs(ase_solution_bi[:, 49]-ase_solution_bi[:, 0]))
-        x_annotation =  np.argmax(np.abs(signal_solution_bi[:, 49]-signal_solution_bi[:, 0]))
+        x_annotation_ase = np.argmax(
+            np.abs(ase_solution_bi[:, 49] - ase_solution_bi[:, 0]))
+        x_annotation = np.argmax(
+            np.abs(signal_solution_bi[:, 49] - signal_solution_bi[:, 0]))
         for chan in [0, 49]:
-            plt.annotate("ch."+str(chan+1), (x_annotation_ase/len(z_max)*z_max[len(z_max)-1], watt2dBm(ase_solution_bi[x_annotation_ase, chan]) -1 - 3*np.sign(25-chan)))
-            plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(signal_solution_bi[x_annotation, chan]) -1 - 3*np.sign(25-chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation_ase / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(ase_solution_bi[x_annotation_ase, chan]) - 1 - 3 * np.sign(25 - chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(signal_solution_bi[x_annotation, chan]) - 1 - 3 * np.sign(25 - chan)))
 
         plt.xlabel("z [km]")
         plt.ylabel("Wave power [dBm]")
         plt.grid("on")
         plt.minorticks_on()
-        osnr = 10*np.log10(signal_solution_bi[-1:, :]/ase_solution_bi[-1:, :])
-        print(osnr)
+        osnr = 10 * np.log10(signal_solution_bi[-1:, :] / ase_solution_bi[-1:, :])
         # plt.figure()
         # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
         if show_plots:
             plt.show()
 
         plt.tight_layout()
-        plt.savefig(plot_save_path+"profile"+str(power_dBm)+ "_bi.pdf")
+        plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_bi.pdf")
 
         ########################################################################
         # SIGNALS ONLY
         ########################################################################
+        labels = ["ch.1", "ch.25", "ch.50"]
         plt.figure(figsize=(8, 6))
-        
-        plt.plot(z_max,  np.transpose(watt2dBm([signal_solution_co[:, idx] for idx in [0, 24, 49]])), color="b")
-        plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
-        x_annotation = np.argmax(np.abs(signal_solution_co[:, 49]-signal_solution_co[:, 0]))
+        for ii, idx in enumerate(coi_list):
+            plt.plot(z_max, np.transpose(watt2dBm(
+                signal_solution_co[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
+        x_annotation = np.argmax(
+            np.abs(signal_solution_co[:, 49] - signal_solution_co[:, 0]))
         for chan in [0, 49]:
             #plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(ase_solution_co[x_annotation, chan]) -1 - 3*np.sign(25-chan)))
-            plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(signal_solution_co[x_annotation, chan]) - 0.5 - 1.5*np.sign(25-chan)))
-
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(z_max) - 1], watt2dBm(
+                signal_solution_co[x_annotation, chan]) - 0.5 - 1.5 * np.sign(25 - chan)))
 
         plt.xlabel("z [km]")
         plt.ylabel("Wave power [dBm]")
         plt.grid("on")
+        plt.legend()
         plt.minorticks_on()
 
         if show_plots:
             plt.show()
 
         plt.tight_layout()
-        plt.savefig(plot_save_path+"signals"+str(power_dBm)+ "_co.pdf")
-        
-        ###############à
+        plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_co.pdf")
+
+        # à
         plt.figure()
-        plt.plot(z_max,  np.transpose(watt2dBm([signal_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="b")
-
-        plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
-        x_annotation = np.argmax(np.abs(signal_solution_cnt[:, 49]-signal_solution_cnt[:, 0]))
+        for ii, idx in enumerate(coi_list):
+            plt.plot(z_max, np.transpose(watt2dBm(
+                signal_solution_cnt[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
+        x_annotation = np.argmax(
+            np.abs(signal_solution_cnt[:, 49] - signal_solution_cnt[:, 0]))
         for chan in [0, 49]:
-            plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(signal_solution_cnt[x_annotation, chan])- 1.5*np.sign(25-chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(signal_solution_cnt[x_annotation, chan]) - 1.5 * np.sign(25 - chan)))
 
         plt.xlabel("z [km]")
         plt.ylabel("Wave power [dBm]")
         plt.grid("on")
+        plt.legend()
+
         plt.minorticks_on()
 
         if show_plots:
             plt.show()
 
         plt.tight_layout()
-        plt.savefig(plot_save_path+"signals"+str(power_dBm)+ "_cnt.pdf")
-        
+        plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_cnt.pdf")
+
         #########
         plt.figure()
-        plt.plot(z_max,  np.transpose(watt2dBm([signal_solution_bi[:, idx] for idx in [0, 24, 49]])), color="b")      
-
-        plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
-        x_annotation =  np.argmax(np.abs(signal_solution_bi[:, 49]-signal_solution_bi[:, 0]))
+        for ii, idx in enumerate(coi_list):
+            plt.plot(z_max, np.transpose(watt2dBm(
+                signal_solution_bi[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
+        x_annotation = np.argmax(
+            np.abs(signal_solution_bi[:, 49] - signal_solution_bi[:, 0]))
         for chan in [0, 49]:
-            plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(signal_solution_bi[x_annotation, chan]) - 1.5*np.sign(25-chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(signal_solution_bi[x_annotation, chan]) - 1.5 * np.sign(25 - chan)))
 
         plt.xlabel("z [km]")
         plt.ylabel("Wave power [dBm]")
         plt.grid("on")
+        plt.legend()
         plt.minorticks_on()
         # plt.figure()
         # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
@@ -284,14 +320,93 @@ for config in configs:
             plt.show()
 
         plt.tight_layout()
-        plt.savefig(plot_save_path+"signals"+str(power_dBm)+ "_bi.pdf")
+        plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_bi.pdf")
+
+        ########################################################################
+        # ASE ONLY
+        ########################################################################
+        plt.figure(figsize=(8, 6))
+
+        plt.plot(z_max, np.transpose(
+            watt2dBm([ase_solution_co[:, idx] for idx in [0, 24, 49]])), color="black")
+        plt.legend(custom_lines, ['ASE', 'ase', 'Pump'])
+        x_annotation = np.argmax(np.abs(ase_solution_co[:, 49] - ase_solution_co[:, 0]))
+        for chan in [0, 49]:
+            #plt.annotate("ch."+str(chan+1), (x_annotation/len(z_max)*z_max[len(z_max)-1], watt2dBm(ase_solution_co[x_annotation, chan]) -1 - 3*np.sign(25-chan)))
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(z_max) - 1], watt2dBm(
+                ase_solution_co[x_annotation, chan]) - 0.5 - 1.5 * np.sign(25 - chan)))
+
+        plt.xlabel("z [km]")
+        plt.ylabel("Wave power [dBm]")
+        plt.grid("on")
+        plt.minorticks_on()
+
+        if show_plots:
+            plt.show()
+
+        plt.tight_layout()
+        plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_co.pdf")
+
+        # à
+        plt.figure()
+        plt.plot(z_max, np.transpose(
+            watt2dBm([ase_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="black")
+
+        plt.legend(custom_lines, ['ASE', 'ase', 'Pump'])
+        x_annotation = np.argmax(
+            np.abs(ase_solution_cnt[:, 49] - ase_solution_cnt[:, 0]))
+        for chan in [0, 49]:
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(ase_solution_cnt[x_annotation, chan]) - 1.5 * np.sign(25 - chan)))
+
+        plt.xlabel("z [km]")
+        plt.ylabel("Wave power [dBm]")
+        plt.grid("on")
+        plt.minorticks_on()
+
+        if show_plots:
+            plt.show()
+
+        plt.tight_layout()
+        plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_cnt.pdf")
+
+        #########
+        plt.figure()
+        plt.plot(z_max, np.transpose(
+            watt2dBm([ase_solution_bi[:, idx] for idx in [0, 24, 49]])), color="black")
+
+        plt.legend(custom_lines, ['ASE', 'ase', 'Pump'])
+        x_annotation = np.argmax(np.abs(ase_solution_bi[:, 49] - ase_solution_bi[:, 0]))
+        for chan in [0, 49]:
+            plt.annotate("ch." + str(chan + 1), (x_annotation / len(z_max) * z_max[len(
+                z_max) - 1], watt2dBm(ase_solution_bi[x_annotation, chan]) - 1.5 * np.sign(25 - chan)))
+
+        plt.xlabel("z [km]")
+        plt.ylabel("Wave power [dBm]")
+        plt.grid("on")
+        plt.minorticks_on()
+        # plt.figure()
+        # plt.plot(ase_wavelengths, watt2dBm(ase_solution[-1]), color="k")
+        if show_plots:
+            plt.show()
+
+        plt.tight_layout()
+        plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_bi.pdf")
 
         ########################################################################
         # PUMPS ONLY
         ########################################################################
         # pumps co
-        plt.figure(figsize=(8, 6))
-        plt.plot(z_max, watt2dBm(pump_solution_co), color="r")
+        # color=cm.viridis(i/(len(m)-10)/3*2)
+        print(np.shape(pump_solution_bi))
+        fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
+        num_CO = len(pump_solution_co[0, :])
+        num_CNT = len(pump_solution_cnt[0, :])
+        num_bi = len(pump_solution_bi[0, :])
+
+        for pp in range(num_CO):
+            print(cm.viridis(pp/(len(pump_solution_co))))
+            ax.plot(z_max, watt2dBm(pump_solution_co[:, pp]), color=cm.inferno(pp/(num_CO)))
         plt.xlabel("z [km]")
         plt.ylabel("Pump power [dBm]")
         plt.grid("on")
@@ -299,10 +414,13 @@ for config in configs:
         if show_plots:
             plt.show()
         plt.tight_layout()
-        plt.savefig(plot_save_path+"pumps"+str(power_dBm)+ "_co.pdf")
+        cbar = plt.colorbar(fig1)
+        cbar.set_label('X+Y')
+        plt.savefig(plot_save_path + "pumps" + str(power_dBm) + "_co.pdf")
         # pumps cnt
         plt.figure(figsize=(8, 6))
-        plt.plot(z_max, watt2dBm(pump_solution_cnt), color="r")
+        for pp in range(num_CNT):
+            plt.plot(z_max, watt2dBm(pump_solution_cnt[:, pp]), color=cm.inferno(pp/num_CNT))
         plt.xlabel("z [km]")
         plt.ylabel("Pump power [dBm]")
         plt.grid("on")
@@ -310,11 +428,12 @@ for config in configs:
         if show_plots:
             plt.show()
         plt.tight_layout()
-        plt.savefig(plot_save_path+"pumps"+str(power_dBm)+ "_cnt.pdf")
+        plt.savefig(plot_save_path + "pumps" + str(power_dBm) + "_cnt.pdf")
         # pumps bi
-        # 
+        #
         plt.figure(figsize=(8, 6))
-        plt.plot(z_max, watt2dBm(pump_solution_bi), color="r")
+        for pp in range(num_bi):
+            plt.plot(z_max, watt2dBm(pump_solution_bi[:, pp]), color=cm.inferno(pp/num_bi))
         plt.xlabel("z [km]")
         plt.ylabel("Pump power [dBm]")
         plt.grid("on")
@@ -322,8 +441,6 @@ for config in configs:
         if show_plots:
             plt.show()
         plt.tight_layout()
-        plt.savefig(plot_save_path+"pumps"+str(power_dBm)+ "_bi.pdf")
+        plt.savefig(plot_save_path + "pumps" + str(power_dBm) + "_bi.pdf")
 
-
-
-    # pump wavelengths and power 
+    # pump wavelengths and power
