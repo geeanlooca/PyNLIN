@@ -336,7 +336,7 @@ for idx, power_dBm in enumerate(power_dBm_list):
         ##########################
         #### COLLISION SHAPEs
         ##########################
-        fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(16,8))
+        fig1, (ax1) = plt.subplots(nrows=1,sharex=True, sharey=True, figsize=(15,5))
         plt.plot(show = show_flag)
 
         for i, m_ in enumerate(m[5:-5]):
@@ -347,36 +347,36 @@ for idx, power_dBm in enumerate(power_dBm_list):
             ax1.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
             ax1.axhline(0.5, color="grey", linestyle="dotted")
 
-            ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            ax2.plot(z*1e-3, fB_cnt(z), color="purple")
-            ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-            ax2.axhline(0.5, color="grey", linestyle="dotted")
+            # ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            # ax2.plot(z*1e-3, fB_cnt(z), color="purple")
+            # ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            # ax2.axhline(0.5, color="grey", linestyle="dotted")
 
-            ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
-            ax3.plot(z*1e-3, fB_bi(z), color="purple")
-            ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-            ax3.axhline(0.5, color="grey", linestyle="dotted")
+            # ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
+            # ax3.plot(z*1e-3, fB_bi(z), color="purple")
+            # ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            # ax3.axhline(0.5, color="grey", linestyle="dotted")
 
-            ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
-            ax4.plot(z*1e-3, np.ones_like(z), color="purple")
-            ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
+            # ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
+            # ax4.plot(z*1e-3, np.ones_like(z), color="purple")
+            # ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
-        ax4.set_xlabel("Position [km]")
-        ax3.set_xlabel("Position [km]")
+        # ax4.set_xlabel("Position [km]")
+        ax1.set_xlabel("Position [km]")
         ax1.set_ylabel(r"$s^{-1}$")
-        ax3.set_ylabel(r"$s^{-1}$")
-        ax1.text(70, 2, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-        ax2.text(70, 2, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
-        ax3.text(70, 2, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-        ax4.text(70, 2, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
+        # ax3.set_ylabel(r"$s^{-1}$")
+        # ax1.text(70, 2, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+        # ax2.text(70, 2, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+        # ax3.text(70, 2, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+        # ax4.text(70, 2, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
 
         plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0.0, right = 9.8/10, top=9.9/10)
-        fig1.savefig(plot_save_path+'collision_shape_'+str(power_dBm)+'.pdf')
+        fig1.savefig(plot_save_path+'collision_shape_single_'+str(power_dBm)+'.pdf')
 
         ##########################
         #### COLLISION SHAPEs 50
         ##########################
-        if True:
+        if False:
             f2 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
             interfering_grid_index = 10
 
@@ -435,16 +435,15 @@ for idx, power_dBm in enumerate(power_dBm_list):
             plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0.0, right = 9.8/10, top=9.9/10)
             fig1.savefig(plot_save_path+'collision_shape_last_'+str(power_dBm)+'.pdf')
 
-
         ##########################
         #### X0mm
         ##########################
         fig2 = plt.figure(figsize=(10, 6))
         plt.plot(show = show_flag)
 
-        plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="coprop.")
-        plt.semilogy(m, np.abs(X0mm_cnt), marker='x', markersize = 10, color='blue', label="counterprop.")
-        plt.semilogy(m, np.abs(X0mm_bi), marker='x', markersize = 10, color='orange', label="bidirection.")
+        plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="CO")
+        plt.semilogy(m, np.abs(X0mm_cnt), marker='x', markersize = 10, color='blue', label="CNT")
+        plt.semilogy(m, np.abs(X0mm_bi), marker='x', markersize = 10, color='orange', label="BI")
 
         # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
         # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
@@ -459,7 +458,55 @@ for idx, power_dBm in enumerate(power_dBm_list):
         fig2.tight_layout()
         fig2.savefig(plot_save_path+'X0mm_'+str(power_dBm)+'.pdf')
 
+        ##########################
+        #### X0mm channel 50
+        ##########################
+        if False:
+            f2 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
+            interfering_grid_index = 10
 
+            # compute the X0mm coefficients given the precompute time integrals
+            m = np.array(f['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
+            z = np.array(f['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
+            I = np.array(f['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
+            interfering_grid_index = 49
+            # interpolate the amplification function using optimization results
+            fB_co = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
+            fB_cnt = interp1d(z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
+            fB_bi = interp1d(z_max, signal_solution_bi[:, interfering_grid_index], kind='linear')
+            # upper cut z
+            z = np.array(list(filter(lambda x: x<=fiber_length, z)))
+            I = I[:int(len(m)*(fiber_length/80e3)), :len(z)]
+            m = m[:int(len(m)*(fiber_length/80e3))]
+            X0mm_co = pynlin.nlin.Xhkm_precomputed(
+                z, I, amplification_function=fB_co(z))
+            X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
+                z, I, amplification_function=fB_cnt(z))
+            X0mm_bi = pynlin.nlin.Xhkm_precomputed(
+                z, I, amplification_function=fB_bi(z))
+            X0mm_none = pynlin.nlin.Xhkm_precomputed(
+                z, I, amplification_function=None)
+
+            fig2 = plt.figure(figsize=(10, 6))
+            plt.plot(show = show_flag)
+
+            plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="CO")
+            plt.semilogy(m, np.abs(X0mm_cnt), marker='x', markersize = 10, color='blue', label="CNT")
+            plt.semilogy(m, np.abs(X0mm_bi), marker='x', markersize = 10, color='orange', label="BI")
+
+            # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
+            # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
+            plt.minorticks_on()
+            plt.grid(which="both")
+            plt.xlabel(r"Collision index $m$")
+            plt.ylabel(r"$X_{0,m,m}$ [m/s]")
+            # plt.title(
+            #     rf"$f_B(z)$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
+            # )
+            plt.legend()
+            fig2.tight_layout()
+            fig2.savefig(plot_save_path+'X0mm_last_'+str(power_dBm)+'.pdf')
+        
     # FULL X0mm EVALUATION FOR EVERY m and every channel =======================
     X_co = []
     X_co.append(0.0)
@@ -574,7 +621,7 @@ idx = 0
 # fig_arity.tight_layout()
 # fig_arity.savefig(plot_save_path+"arity_noise.pdf")
 
-fig_spacing, (ax1, ax2,ax3) = plt.subplots(nrows=3, sharex=True, figsize=(10,10))
+fig_spacing, (ax1, ax2,ax3) = plt.subplots(nrows=3, sharex=True, figsize=(9,5))
 interfering_list = range(1, 51)
 fB_co = [interp1d(z_max, signal_solution_co[:, intx-1], kind='linear') for intx in interfering_list]
 fB_cnt = [interp1d(z_max, signal_solution_cnt[:, intx-1], kind='linear')for intx in interfering_list]
@@ -597,5 +644,5 @@ ax3.text(3, 65, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
 ax3.set_xlabel("Channel index")
 ax2.set_xticks([1, 10, 20, 30, 40, 50])
 
-plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+plt.subplots_adjust(left = 0.15, wspace=0.0, hspace=0, right = 9.8/10, top=9.8/10, bottom=0.2)
 fig_spacing.savefig(plot_save_path+"spacing_noise.pdf")

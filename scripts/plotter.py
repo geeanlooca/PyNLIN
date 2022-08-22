@@ -16,6 +16,16 @@ from pynlin.fiber import Fiber
 from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
+from scipy import optimize
+def H(n):
+    s = 0
+    n = int(n)
+    for i in range(n):
+        s += 1/(i+1)
+    return s
+
+def NLIN(n, a, b):
+    return [a*(2*H(np.min([xxx, 50-xxx+1])-1)+H(50) - H(2*np.min([xxx, 50-xxx+1])))+b for xxx in n]
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -86,7 +96,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = True
+compute_X0mm_space_integrals = False
 
 if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(length_setup)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
     exit()
@@ -294,7 +304,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
     # print("delta none: ", Delta_theta_2_none)
 
 
-
+'''
 ##############################
 ## NOISE VS POWER
 ##############################
@@ -413,7 +423,7 @@ fig_ase.savefig(plot_save_path+"ase_noise_vs_power.pdf")
 ########################################################
 ##  NLIN AND ASE COMPARISON (average over the channels)
 ########################################################
-fig_comparison, (ax1, ax2, ax3, ax4) = plt.subplots(nrows= 4, sharex = True, figsize=(10, 10))
+fig_comparison, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 7))
 plt.plot(show=True)
 coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 4]
@@ -434,47 +444,55 @@ ax1.grid(which="both")
 #plt.annotate("ciao", (0, 0))
 ax2.grid(which="both")
 ax3.grid(which="both")
-ax4.grid(which="both")
 
 plt.xlabel(r"Power [dBm]")
-ax1.set_ylabel(r"$\Delta \theta^2$")
-ax2.set_ylabel(r"$\Delta \theta^2$")
-ax3.set_ylabel(r"$\Delta \theta^2$")
-ax4.set_ylabel(r"$\Delta \theta^2$")
-ax4.legend()
 plt.minorticks_on()
+ax2.set_ylabel(r"Noise power [dBm]")
+ax1.minorticks_on()
+ax2.minorticks_on()
+ax3.minorticks_on()
+ax1.text(-20, -20, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax2.text(-20, -55, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax3.text(-20, -55, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+
+ax3.legend()
+leg = ax3.get_legend()
+leg.legendHandles[0].set_color('grey')
+leg.legendHandles[1].set_color('grey')
 plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 fig_comparison.savefig(plot_save_path+"comparison.pdf")
 
-
+'''
 #####################################
 ## CHANNEL POWER AND OSNR
 #####################################
+
+
 selected_power = -10
 pow_idx = np.where(power_dBm_list==selected_power)[0]
 P_B = 10**(selected_power/10) # average power of the constellation in mW
 T = (1/10e9)
 # Delta_theta is the average 
-
+xdata = [1, 10, 20, 30, 40, 50]
+ydata= Delta_theta_2_none[:, pow_idx, ar_idx][:, 0]*P_B
+print(xdata)
+print(ydata)
+alpha, beta = optimize.curve_fit(NLIN, xdata=xdata , ydata=ydata)[0]
+print(f'alpha={alpha}, beta={beta}')
+full_coi = [i+1 for i in range(50)]
 fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
-ax1.plot(coi_list, 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='green', label="ch." + str(coi) + "CO")
+ax1.plot(coi_list, 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.plot(coi_list, 10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='blue', label="ch." + str(coi) + "CNT.")
+ax2.plot(coi_list, 10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
 plt.grid(which="both")
-ax3.plot(coi_list, 10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "BI")
+ax3.plot(coi_list, 10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
 plt.grid(which="both")
-ax4.plot(coi_list, 10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
+ax4.plot(coi_list, 10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
+ax4.plot(range(50), 10*np.log10(NLIN(full_coi, alpha, beta)), color='red', linestyle = "dashed", linewidth = 2)
 plt.grid(which="both")
 # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
-# ax2.yaxis.set_major_locator(plt.MaxNLocator(5))
-# ax3.yaxis.set_major_locator(plt.MaxNLocator(5))
-# ax4.yaxis.set_major_locator(plt.MaxNLocator(5))
 
-# ax1.yaxis.set_minor_locator(plt.MaxNLocator(2))
-# ax2.yaxis.set_minor_locator(plt.MaxNLocator(2))
-# ax3.yaxis.set_minor_locator(plt.MaxNLocator(2))
-# ax4.yaxis.set_minor_locator(plt.MaxNLocator(2))
 ax2.yaxis.set_label_position("right")
 ax2.yaxis.tick_right()
 ax4.yaxis.set_label_position("right")
@@ -485,8 +503,8 @@ ax2.grid(which="both")
 ax3.grid(which="both")
 plt.xlabel(r"Channel index")
 ax3.xaxis.set_label(r"Channel index")
-ax4.grid(which="both")
 plt.xlabel(r"Channel index")
+ax4.grid(which="both")
 
 ax1.set_ylabel(r"NLIN [dBm]")
 ax2.set_ylabel(r"NLIN [dBm]")
@@ -499,13 +517,14 @@ fig_channel.savefig(plot_save_path+"noise_channel.pdf")
 
 fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
-ax1.plot(coi_list, selected_power - 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='green', label="ch." + str(coi) + "CO")
+ax1.plot(coi_list, selected_power - 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='blue', label="ch." + str(coi) + "CNT.")
+ax2.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
 plt.grid(which="both")
-ax3.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "BI")
+ax3.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
 plt.grid(which="both")
-ax4.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='s', markersize=10, color='grey', label="ch." + str(coi) + "perf.")
+ax4.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='grey',  label="ch." + str(coi) + "perf.")
+ax4.plot(range(50), selected_power-10*np.log10(NLIN(full_coi, alpha, beta)), color='red', linestyle = "dashed", linewidth = 2)
 plt.grid(which="both")
 # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
 # ax2.yaxis.set_major_locator(plt.MaxNLocator(5))
@@ -524,10 +543,10 @@ plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
 ax1.grid(which="both")
 ax2.grid(which="both")
 ax3.grid(which="both")
-plt.xlabel(r"Channel index")
 ax3.xaxis.set_label(r"Channel index")
+ax4.xaxis.set_label(r"Channel index")
+
 ax4.grid(which="both")
-plt.xlabel(r"Channel index")
 
 ax1.set_ylabel(r"OSNR$_{NLIN}$ [dB]")
 ax2.set_ylabel(r"OSNR$_{NLIN}$ [dB]")
