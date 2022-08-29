@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument(
     "-L",
     "--fiber-length",
-    default=70,
+    default=100,
     type=float,
     help="The length of the fiber in kilometers.",
 )
@@ -150,7 +150,7 @@ pynlin.nlin.X0mm_time_integral_WDM_selection(
     fiber,
     fiber_length,
     "0_9_results.h5",
-    pulse_shape="Gaussian",
+    pulse_shape="Nyquist",
     rolloff_factor=0.1,
     samples_per_symbol=10,
     points_per_collision=points_per_collision,
