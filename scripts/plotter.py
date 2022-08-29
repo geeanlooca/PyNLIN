@@ -1,3 +1,12 @@
+# THIS SCRIPT PLOTS
+# NLIN vs Power
+# OSNR vs Power
+# ASE vs Power
+# NLIN ASE comparison
+# NLIN vs channel
+# OSNR vs channel
+# ASE vs channel
+
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -17,6 +26,7 @@ from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
 from scipy import optimize
+from scipy.special import erfc
 def H(n):
     s = 0
     n = int(n)
@@ -26,6 +36,24 @@ def H(n):
 
 def NLIN(n, a, b):
     return [a*(2*H(np.min([xxx, 50-xxx+1])-1)+H(50) - H(2*np.min([xxx, 50-xxx+1])))+b for xxx in n]
+
+def OSNR_to_EVM(osnr):
+    osnr = 10**(osnr/10)
+    M = 64
+    i_range = [1+item for item in range(int(np.floor(np.sqrt(M))))]
+    beta = [2*ii - 1 for ii in i_range]
+    alpha = [3*ii*osnr/(2*(M-1)) for ii in beta]
+    gamma = [1-ii/np.sqrt(M) for ii in i_range]
+    sum1 = np.sum(np.multiply(gamma, list(map(np.exp, [-1*aa for aa in alpha])))  )
+    sum2 = np.sum(np.multiply(np.multiply(gamma,beta), [erfc(np.sqrt(aa)) for aa in alpha]))
+    
+
+    return np.sqrt(np.divide(1, osnr) - np.sqrt(np.divide(96/np.pi/(M-1), osnr))*sum1 + sum2 )
+
+def EVM_to_BER(evm):
+    M = 64
+    L = 8
+    return (1-1/L)/np.log2(L) * erfc( np.sqrt((3*np.log2(L)*np.sqrt(2)) / ((L**2-1) * np.power(evm, 2) * np.log2(M))))
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -49,10 +77,10 @@ length_setup = int(args.fiber_length)
 fiber_length = length_setup * 1e3
 
 num_co  = 8
-num_cnt = 8
+num_cnt = 2
 results_path = '../results_'+str(length_setup)+'/'
 results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
-plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
+plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/64_QAM'
 time_integrals_results_path = '../results/'
 
 
@@ -60,7 +88,7 @@ time_integrals_results_path = '../results/'
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-arity_list = [16]
+arity_list = [64]
 coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
@@ -278,7 +306,7 @@ else:
     ase_cnt = np.load("ase_cnt.npy")
     ase_bi = np.load("ase_bi.npy")
 ar_idx = 0  # 16-QAM
-M = 16
+M = 64
 for pow_idx, power_dBm in enumerate(power_dBm_list):
     average_power = dBm2watt(power_dBm)
     qam = pynlin.constellations.QAM(M)
@@ -304,7 +332,7 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
     # print("delta none: ", Delta_theta_2_none)
 
 
-'''
+
 ##############################
 ## NOISE VS POWER
 ##############################
@@ -346,47 +374,8 @@ ax2.yaxis.set_label_position("right")
 ax2.yaxis.tick_right()
 ax4.yaxis.set_label_position("right")
 ax4.yaxis.tick_right()
-plt.minorticks_on()
 plt.subplots_adjust(wspace=0.0, hspace=0, right = 8.5/10, top=9.9/10)
 fig_power.savefig(plot_save_path+"noise_power.pdf")
-
-##############################
-## OSNR VS POWER
-##############################
-fig_OSNR, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
-
-plt.plot(show=True)
-coi_selection = [0, 19, 49]
-coi_selection_idx = [0, 2, 4]
-for scan in range(len(coi_selection)):
-    ax1.plot(power_dBm_list, 10* np.log10(Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]), marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]+1) + " co.")
-    ax2.plot(power_dBm_list, 10* np.log10(Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx]), marker=markers[scan],
-                markersize=10, color='blue', label="ch." + str(coi_selection[scan]+1) + " count.")
-    ax3.plot(power_dBm_list, 10* np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]), marker=markers[scan],
-                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
-    ax4.plot(power_dBm_list, 10* np.log10(Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]), marker=markers[scan],
-                markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
-ax1.grid(which="both")
-#plt.annotate("ciao", (0, 0))
-ax2.grid(which="both")
-ax3.grid(which="both")
-ax4.grid(which="both")
-
-ax1.set_ylabel(r"OSNR$_{NLIN}$ [dB]")
-ax2.set_ylabel(r"OSNR$_{NLIN}$ [dB]")
-ax3.set_ylabel(r"OSNR$_{NLIN}$ [dB]")
-ax4.set_ylabel(r"OSNR$_{NLIN}$ [dB]")
-ax3.set_xlabel(r"Power [dBm]")
-ax4.set_xlabel(r"Power [dBm]")
-ax4.legend()
-ax2.yaxis.set_label_position("right")
-ax2.yaxis.tick_right()
-ax4.yaxis.set_label_position("right")
-ax4.yaxis.tick_right()
-plt.minorticks_on()
-plt.subplots_adjust(wspace=0.0, hspace=0, right = 8.5/10, top=9.9/10)
-fig_OSNR.savefig(plot_save_path+"OSNR_power.pdf")
 
 #############################
 ##   ASE vd POWER
@@ -462,7 +451,7 @@ leg.legendHandles[1].set_color('grey')
 plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 fig_comparison.savefig(plot_save_path+"comparison.pdf")
 
-'''
+
 #####################################
 ## CHANNEL POWER AND OSNR
 #####################################
@@ -479,6 +468,7 @@ print(xdata)
 print(ydata)
 alpha, beta = optimize.curve_fit(NLIN, xdata=xdata , ydata=ydata)[0]
 print(f'alpha={alpha}, beta={beta}')
+print("1/beta_2 Omega_0", 1/beta2/(channel_spacing*1e9))
 full_coi = [i+1 for i in range(50)]
 fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
@@ -514,6 +504,7 @@ plt.autoscale(True)
 plt.subplots_adjust(left = 0.15, wspace=0.0, hspace=0, right = 8.5/10, top=9.5/10)
 
 fig_channel.savefig(plot_save_path+"noise_channel.pdf")
+
 
 fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
@@ -563,11 +554,11 @@ fig_channel.savefig(plot_save_path+"channel_osnr.pdf")
 fig_ase_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(10,6))
 
 plt.plot(show=True)
-ax1.plot(coi_list, 10* np.log10(ase_co[:, pow_idx]*P_B), marker='s', markersize=10, color='green', label="ch." + str(coi) + "CO")
+ax1.plot(coi_list, 10* np.log10(ase_co[:, pow_idx]), marker='s', markersize=10, color='green', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.plot(coi_list, 10* np.log10(ase_cnt[:, pow_idx]*P_B), marker='s', markersize=10, color='blue', label="ch." + str(coi) + "count.")
+ax2.plot(coi_list, 10* np.log10(ase_cnt[:, pow_idx]), marker='s', markersize=10, color='blue', label="ch." + str(coi) + "count.")
 plt.grid(which="both")
-ax3.plot(coi_list, 10* np.log10(ase_bi[:, pow_idx]*P_B), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "bi.")
+ax3.plot(coi_list, 10* np.log10(ase_bi[:, pow_idx]), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "bi.")
 plt.grid(which="both")
 # ax3.plot(coi_list, 10* np.log10(ase_none[:, pow_idx]*P_B), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "bi.")
 # plt.grid(which="both")
@@ -582,3 +573,141 @@ ax2.set_ylabel(r"$\Delta \theta^2$")
 ax3.set_ylabel(r"$\Delta \theta^2$")
 plt.subplots_adjust(left = 0.2, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 fig_ase_channel.savefig(plot_save_path+"ase_channel_noise.pdf")
+
+
+
+
+###################################
+## OSNR vs POWER
+###################################
+fig_powsnr, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
+
+plt.plot(show=True)
+coi_selection = [0, 19, 49]
+coi_selection_idx = [0, 2, 4]
+power_list = list(map(dBm2watt, power_dBm_list))
+
+for scan in range(len(coi_selection)):
+    osnr_co =   power_dBm_list -10*np.log10(power_list*Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]   + ase_co[coi_selection_idx[scan], :])-30
+    osnr_cnt =  power_dBm_list -10*np.log10(power_list*Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx]  + ase_cnt[coi_selection_idx[scan],:])-30
+    osnr_bi =   power_dBm_list -10*np.log10(power_list*Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]   + ase_bi[coi_selection_idx[scan], :])-30
+    osnr_none = power_dBm_list -10*np.log10(power_list*Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx])-30
+    ax1.plot(power_dBm_list, osnr_co, marker=markers[scan],
+                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+    ax2.plot(power_dBm_list,osnr_cnt, marker=markers[scan],
+                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+    ax3.plot(power_dBm_list, osnr_bi, marker=markers[scan],
+                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+    ax4.plot(power_dBm_list,osnr_none , marker=markers[scan],
+                markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
+ax1.grid(which="both")
+#plt.annotate("ciao", (0, 0))
+ax2.grid(which="both")
+ax3.grid(which="both")
+ax4.grid(which="both")
+
+ax1.set_ylabel(r"$OSNR$ [dB]")
+ax2.set_ylabel(r"$OSNR$ [dB]")
+ax3.set_ylabel(r"$OSNR$ [dB]")
+ax4.set_ylabel(r"$OSNR$ [dB]")
+ax3.set_xlabel(r"Power [dBm]")
+ax4.set_xlabel(r"Power [dBm]")
+
+ax1.text(-15, -20, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax2.text(-15, -40, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax3.text(-15, -40, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax4.text(-5, -80, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax4.legend()
+ax2.yaxis.set_label_position("right")
+ax2.yaxis.tick_right()
+ax4.yaxis.set_label_position("right")
+ax4.yaxis.tick_right()
+
+plt.subplots_adjust(wspace=0.0, hspace=0, right = 8.5/10, top=9.9/10)
+fig_powsnr.savefig(plot_save_path+"osnr_vs_power.pdf")
+
+####################################
+## EVM AND BER
+####################################
+
+
+fig_ber, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
+coi_selection = [0, 19, 49]
+coi_selection_idx = [0, 2, 4]
+power_list = list(map(dBm2watt, power_dBm_list))
+for scan in range(len(coi_selection)):
+    osnr_co =   power_dBm_list -10*np.log10(power_list*Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]   + ase_co[coi_selection_idx[scan], :])-30
+    osnr_cnt =  power_dBm_list -10*np.log10(power_list*Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx]  + ase_cnt[coi_selection_idx[scan],:])-30
+    osnr_bi =   power_dBm_list -10*np.log10(power_list*Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]   + ase_bi[coi_selection_idx[scan], :])-30
+    osnr_none = power_dBm_list -10*np.log10(power_list*Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx])-30
+    osnr_list = [osnr_co, osnr_cnt, osnr_bi, osnr_none]
+    evms = []
+    bers = []
+    for osnr in osnr_list:
+        evms.append(list(map(OSNR_to_EVM, osnr)))
+        bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
+    
+    ax1.semilogy(power_dBm_list, bers[0], marker=markers[scan],
+                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+    ax2.semilogy(power_dBm_list, bers[1], marker=markers[scan],
+                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+    ax3.semilogy(power_dBm_list, bers[2], marker=markers[scan],
+                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+    ax4.semilogy(power_dBm_list, bers[3], marker=markers[scan],
+                markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
+ax1.grid(which="both")
+#plt.annotate("ciao", (0, 0))
+ax2.grid(which="both")
+ax3.grid(which="both")
+ax4.grid(which="both")
+
+ax1.set_ylabel(r"BER")
+ax2.set_ylabel(r"BER")
+ax3.set_ylabel(r"BER")
+ax4.set_ylabel(r"BER")
+ax3.set_xlabel(r"Power [dBm]")
+ax4.set_xlabel(r"Power [dBm]")
+ax1.set_ylim([10**-50,1])
+ax2.set_ylim([10**-50,1])
+ax3.set_ylim([10**-50,1])
+ax4.set_ylim([10**-50,1])
+
+ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax2.text(-15, 10**(-6), 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax3.text(-15, 10**(-6), 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax4.text(-10, 10**(-6), 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
+ax4.legend()
+ax2.yaxis.set_label_position("right")
+ax2.yaxis.tick_right()
+ax4.yaxis.set_label_position("right")
+ax4.yaxis.tick_right()
+plt.subplots_adjust(wspace=0.0, hspace=0, right = 8.5/10, top=9.9/10)
+fig_ber.savefig(plot_save_path+"BER_power.pdf")
+
+
+
+fig_ber, ax1 = plt.subplots(nrows=1, sharex=True, figsize=(8,6))
+
+coi_selection = [0, 19, 49]
+coi_selection_idx = [0, 2, 4]
+power_list = list(map(dBm2watt, power_dBm_list))
+for scan in range(len(coi_selection)):
+    osnr_co =   power_dBm_list -10*np.log10(power_list*Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]   + ase_co[coi_selection_idx[scan], :])-30
+    osnr_list = [osnr_co]
+    evms = []
+    bers = []
+    for osnr in osnr_list:
+        evms.append(list(map(OSNR_to_EVM, osnr)))
+        bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
+    
+    ax1.semilogy(power_dBm_list[-3:], bers[0][-3:], marker=markers[scan],
+                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+ax1.grid(which="both")
+ax1.set_ylabel(r"BER")
+ax1.set_xlabel(r"Power [dBm]")
+
+
+ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+plt.subplots_adjust(left=0.2, bottom=0.15, wspace=0.0, hspace=0, right = 9.5/10, top=9.8/10)
+plt.tight_layout()
+fig_ber.savefig(plot_save_path+"BER_power_zoom.pdf")

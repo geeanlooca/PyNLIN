@@ -144,7 +144,7 @@ for config in configs:
                         Line2D([0], [0], color="b", lw=2)]
         if show_pumps:
             custom_lines.append(Line2D([0], [0], color="r", lw=2))
-
+       
         ########################################################################
         # SIGNALS AND ASE ONLY
         ########################################################################
@@ -221,7 +221,7 @@ for config in configs:
 
         plt.tight_layout()
         plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_bi.pdf")
-
+    
         ########################################################################
         # SIGNALS ONLY
         ########################################################################
@@ -347,7 +347,7 @@ for config in configs:
 
         plt.tight_layout()
         plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_bi.pdf")
-'''
+
         ########################################################################
         # PUMPS ONLY
         ########################################################################
@@ -530,4 +530,3 @@ for config in configs:
         plt.minorticks_on()
         plt.tight_layout()
         plt.savefig(plot_save_path + "oo_gain" + str(power_dBm) + "_bi.pdf")
-'''
