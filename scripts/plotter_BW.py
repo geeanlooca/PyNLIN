@@ -52,7 +52,7 @@ def OSNR_to_EVM(osnr):
 
 def EVM_to_BER(evm):
     M = 64
-    L = 8
+    L = np.sqrt(M)
     return (1-1/L)/np.log2(L) * erfc( np.sqrt((3*np.log2(L)*np.sqrt(2)) / ((L**2-1) * np.power(evm, 2) * np.log2(M))))
 
 parser = argparse.ArgumentParser()
@@ -88,7 +88,7 @@ time_integrals_results_path = '../results/'
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-arity_list =[64]
+arity_list = [64]
 coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
@@ -305,7 +305,7 @@ else:
     ase_co = np.load("ase_co.npy")
     ase_cnt = np.load("ase_cnt.npy")
     ase_bi = np.load("ase_bi.npy")
-ar_idx = 0  # 16-QAM
+ar_idx = 0  # QAM
 M = 64
 for pow_idx, power_dBm in enumerate(power_dBm_list):
     average_power = dBm2watt(power_dBm)
@@ -338,18 +338,18 @@ for pow_idx, power_dBm in enumerate(power_dBm_list):
 ##############################
 markers = ["x", "+", "o", "o", "x", "+"]
 
-fig_power, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(14,10))
+fig_power, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 
 plt.plot(show=True)
 coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 5]
 for scan in range(len(coi_selection)):
     ax1.plot(power_dBm_list, 10* np.log10(Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx])+power_dBm_list, marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+                markersize=10, color='black', linestyle='dashed', label="ch." + str(coi_selection[scan]) + " co.")
     ax2.plot(power_dBm_list, 10* np.log10(Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx])+power_dBm_list, marker=markers[scan],
-                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+                markersize=10, color='black', linestyle='dotted', label="ch." + str(coi_selection[scan]) + " count.")
     ax3.plot(power_dBm_list, 10* np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx])+power_dBm_list, marker=markers[scan],
-                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+                markersize=10, color='black', linestyle='dashdot', label="ch." + str(coi_selection[scan]+1))
     ax4.plot(power_dBm_list, 10* np.log10(Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx])+power_dBm_list, marker=markers[scan],
                 markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
 ax1.grid(which="both")
@@ -387,11 +387,11 @@ coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 5]
 for scan in range(len(coi_selection)):
     ax1.plot(power_dBm_list, 10*np.log10(ase_co[coi_selection_idx[scan], :])+30, marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+                markersize=10, color='black', linestyle='dashed', label="ch." + str(coi_selection[scan]) + " co.")
     ax2.plot(power_dBm_list, 10*np.log10(ase_cnt[coi_selection_idx[scan], :])+30, marker=markers[scan],
-                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+                markersize=10, color='black', linestyle='dotted', label="ch." + str(coi_selection[scan]) + " count.")
     ax3.plot(power_dBm_list,10*np.log10(ase_bi[coi_selection_idx[scan], :])+30, marker=markers[scan],
-                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+                markersize=10, color='black', linestyle='dashdot', label="ch." + str(coi_selection[scan]+1))
 ax1.grid(which="both")
 ax3.grid(which="both")
 ax3.grid(which="both")
@@ -418,17 +418,17 @@ coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 5]
 axis_num = 0
 ax1.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_co[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)) , marker=markers[0],
-            markersize=10, color='green', label="NLIN")
+            markersize=10, color='black', linestyle='dashed', label="NLIN")
 ax2.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_cnt[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-            markersize=10, color='blue', label="NLIN")
+            markersize=10, color='black', linestyle='dotted', label="NLIN")
 ax3.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_bi[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-            markersize=10, color='orange', label="NLIN")
+            markersize=10, color='black', linestyle='dashdot', label="NLIN")
 ax1.plot(power_dBm_list, 30+10*np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-            markersize=10, color='green', label="ASE")
+            markersize=10, color='black', linestyle='dashed', label="ASE")
 ax2.plot(power_dBm_list, 30+10*np.log10(np.average([ase_cnt[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-            markersize=10, color='blue', label="ASE")
+            markersize=10, color='black', linestyle='dotted', label="ASE")
 ax3.plot(power_dBm_list, 30+10*np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-            markersize=10, color='orange', label="ASE")
+            markersize=10, color='black', linestyle='dashdot', label="ASE")
 ax1.grid(which="both")
 #plt.annotate("ciao", (0, 0))
 ax2.grid(which="both")
@@ -470,16 +470,16 @@ alpha, beta = optimize.curve_fit(NLIN, xdata=xdata , ydata=ydata)[0]
 print(f'alpha={alpha}, beta={beta}')
 print("1/beta_2 Omega_0", 1/beta2/(channel_spacing*1e9))
 full_coi = [i+1 for i in range(50)]
-fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(14,10))
+fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
-ax1.plot(coi_list, 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
+ax1.plot(coi_list, 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='black', linestyle='dashed', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.plot(coi_list, 10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
+ax2.plot(coi_list, 10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='black', linestyle='dotted', label="ch." + str(coi) + "CNT.")
 plt.grid(which="both")
-ax3.plot(coi_list, 10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
+ax3.plot(coi_list, 10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='black', linestyle='dashdot', label="ch." + str(coi) + "BI")
 plt.grid(which="both")
 ax4.plot(coi_list, 10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
-ax4.plot(range(50), 10*np.log10(NLIN(full_coi, alpha, beta)), color='red', linestyle = "dashed", linewidth = 2)
+ax4.plot(range(50), 10*np.log10(NLIN(full_coi, alpha, beta)), color='grey', linestyle = "dashed", linewidth = 2)
 plt.grid(which="both")
 # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
 
@@ -491,16 +491,11 @@ plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
 ax1.grid(which="both")
 ax2.grid(which="both")
 ax3.grid(which="both")
-ax4.set_xlabel(r"Channel index")
-ax3.set_xlabel(r"Channel index")
-
+plt.xlabel(r"Channel index")
 ax3.xaxis.set_label(r"Channel index")
 plt.xlabel(r"Channel index")
 ax4.grid(which="both")
-ax1.text(30, -46, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-ax2.text(30, -59.5, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
-ax3.text(30, -56, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-ax4.text(30, -52, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
+
 ax1.set_ylabel(r"NLIN [dBm]")
 ax2.set_ylabel(r"NLIN [dBm]")
 ax4.set_ylabel(r"NLIN [dBm]")
@@ -511,16 +506,16 @@ plt.subplots_adjust(left = 0.15, wspace=0.0, hspace=0, right = 8.5/10, top=9.5/1
 fig_channel.savefig(plot_save_path+"noise_channel.pdf")
 
 
-fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(14,10))
+fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 plt.plot(show=True)
-ax1.plot(coi_list, selected_power - 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
+ax1.plot(coi_list, selected_power - 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='black', linestyle='dashed', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
+ax2.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='black', linestyle='dotted', label="ch." + str(coi) + "CNT.")
 plt.grid(which="both")
-ax3.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
+ax3.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='black', linestyle='dashdot', label="ch." + str(coi) + "BI")
 plt.grid(which="both")
 ax4.plot(coi_list, selected_power -10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='grey',  label="ch." + str(coi) + "perf.")
-ax4.plot(range(50), selected_power-10*np.log10(NLIN(full_coi, alpha, beta)), color='red', linestyle = "dashed", linewidth = 2)
+ax4.plot(range(50), selected_power-10*np.log10(NLIN(full_coi, alpha, beta)), color='grey', linestyle = "dashed", linewidth = 2)
 plt.grid(which="both")
 # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
 # ax2.yaxis.set_major_locator(plt.MaxNLocator(5))
@@ -552,7 +547,7 @@ ax1.text(30,  36, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
 ax2.text(30, 49.5, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
 ax3.text(30, 46, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
 ax4.text(30, 42, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
-plt.autoscale(True)
+
 plt.subplots_adjust(left = 0.15, wspace=0.0, hspace=0, right = 8.5/10, top=9.5/10)
 
 fig_channel.savefig(plot_save_path+"channel_osnr.pdf")
@@ -563,13 +558,13 @@ fig_channel.savefig(plot_save_path+"channel_osnr.pdf")
 fig_ase_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(10,6))
 
 plt.plot(show=True)
-ax1.plot(coi_list, 10* np.log10(ase_co[:, pow_idx]), marker='s', markersize=10, color='green', label="ch." + str(coi) + "CO")
+ax1.plot(coi_list, 10* np.log10(ase_co[:, pow_idx]), marker='s', markersize=10, color='black', linestyle='dashed', label="ch." + str(coi) + "CO")
 plt.grid(which="both")
-ax2.plot(coi_list, 10* np.log10(ase_cnt[:, pow_idx]), marker='s', markersize=10, color='blue', label="ch." + str(coi) + "count.")
+ax2.plot(coi_list, 10* np.log10(ase_cnt[:, pow_idx]), marker='s', markersize=10, color='black', linestyle='dotted', label="ch." + str(coi) + "count.")
 plt.grid(which="both")
-ax3.plot(coi_list, 10* np.log10(ase_bi[:, pow_idx]), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "bi.")
+ax3.plot(coi_list, 10* np.log10(ase_bi[:, pow_idx]), marker='s', markersize=10, color='black', linestyle='dashdot', label="ch." + str(coi) + "bi.")
 plt.grid(which="both")
-# ax3.plot(coi_list, 10* np.log10(ase_none[:, pow_idx]*P_B), marker='s', markersize=10, color='orange', label="ch." + str(coi) + "bi.")
+# ax3.plot(coi_list, 10* np.log10(ase_none[:, pow_idx]*P_B), marker='s', markersize=10, color='black', linestyle='dashdot', label="ch." + str(coi) + "bi.")
 # plt.grid(which="both")
 plt.xlabel(r"Channel index")
 plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
@@ -589,7 +584,7 @@ fig_ase_channel.savefig(plot_save_path+"ase_channel_noise.pdf")
 ###################################
 ## OSNR vs POWER
 ###################################
-fig_powsnr, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(14,10))
+fig_powsnr, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, figsize=(16,8))
 
 plt.plot(show=True)
 coi_selection = [0, 19, 49]
@@ -602,11 +597,11 @@ for scan in range(len(coi_selection)):
     osnr_bi =   power_dBm_list -10*np.log10(power_list*Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]   + ase_bi[coi_selection_idx[scan], :])-30
     osnr_none = power_dBm_list -10*np.log10(power_list*Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx])-30
     ax1.plot(power_dBm_list, osnr_co, marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+                markersize=10, color='black', linestyle='dashed', label="ch." + str(coi_selection[scan]) + " co.")
     ax2.plot(power_dBm_list,osnr_cnt, marker=markers[scan],
-                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+                markersize=10, color='black', linestyle='dotted', label="ch." + str(coi_selection[scan]) + " count.")
     ax3.plot(power_dBm_list, osnr_bi, marker=markers[scan],
-                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+                markersize=10, color='black', linestyle='dashdot', label="ch." + str(coi_selection[scan]+1))
     ax4.plot(power_dBm_list,osnr_none , marker=markers[scan],
                 markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
 ax1.grid(which="both")
@@ -657,11 +652,11 @@ for scan in range(len(coi_selection)):
         bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
     
     ax1.semilogy(power_dBm_list, bers[0], marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+                markersize=10, color='black', linestyle='dashed', label="ch." + str(coi_selection[scan]) + " co.")
     ax2.semilogy(power_dBm_list, bers[1], marker=markers[scan],
-                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+                markersize=10, color='black', linestyle='dotted', label="ch." + str(coi_selection[scan]) + " count.")
     ax3.semilogy(power_dBm_list, bers[2], marker=markers[scan],
-                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+                markersize=10, color='black', linestyle='dashdot', label="ch." + str(coi_selection[scan]+1))
     ax4.semilogy(power_dBm_list, bers[3], marker=markers[scan],
                 markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
 ax1.grid(which="both")
@@ -710,7 +705,7 @@ for scan in range(len(coi_selection)):
         bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
     
     ax1.semilogy(power_dBm_list[-3:], bers[0][-3:], marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]+1) + " co.")
+                markersize=10, color='black', linestyle='dashed', label="ch." + str(coi_selection[scan]+1) + " co.")
 ax1.grid(which="both")
 ax1.set_ylabel(r"BER")
 ax1.set_xlabel(r"Power [dBm]")
