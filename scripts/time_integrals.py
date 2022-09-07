@@ -141,7 +141,7 @@ m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate
 # partial_collision_margin = 5
 # points_per_collision = 10
 
-interfering_index = [0, 9]
+interfering_index = [19, 29]
 
 pynlin.nlin.X0mm_time_integral_WDM_selection(
     baud_rate,
@@ -149,7 +149,7 @@ pynlin.nlin.X0mm_time_integral_WDM_selection(
     interfering_index,
     fiber,
     fiber_length,
-    "0_9_results.h5",
+    "19_29_results.h5",
     pulse_shape="Nyquist",
     rolloff_factor=0.1,
     samples_per_symbol=10,
