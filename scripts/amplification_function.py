@@ -23,65 +23,51 @@ from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
 from random import shuffle
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-R", "--baud-rate", default=10, help="The baud rate of each WDM channel in GHz."
-)
-parser.add_argument(
-    "-D",
-    "--dispersion",
-    default=18,
-    type=float,
-    help="The dispersion coefficient of the fiber in ps/nm km.",
-)
-parser.add_argument(
-    "-L",
-    "--fiber-length",
-    default=80,
-    type=float,
-    help="The length of the fiber in kilometers.",
-)
-parser.add_argument(
-    "-c",
-    "--channel-spacing",
-    default=100,
-    type=float,
-    help="The spacing between neighboring WDM channels in GHz.",
-)
-parser.add_argument(
-    "-C",
-    "--channel-count",
-    default=50,
-    type=int,
-    help="The number of WDM channels in the grid.",
-)
-parser.add_argument(
-    "-M",
-    "--use-multiprocessing",
-    action="store_true",
-    default=True,
-    help="If passed, this flag enables multicore processing to compute the collisions in parallel.",
-)
-parser.add_argument(
-    "-W",
-    "--wavelength",
-    default=1550,
-    type=float,
-    help="The wavelength at which the dispersion coefficient is given (in nanometers).",
-)
-args = parser.parse_args()
+import json
 
-###############################
-#### fiber length setup #######
-###############################
-length_setup = int(args.fiber_length)
-fiber_length = length_setup * 1e3
-num_co = 16
-num_cnt = 4
+f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
+data = json.load(f)
+print(data)
+dispersion=data["dispersion"] 
+effective_area=data["effective_area"] 
+baud_rate=data["baud_rate"] 
+fiber_length=data["fiber_length"] 
+num_channels=data["num_channels"]
+interfering_grid_index=data["interfering_grid_index"]
+channel_spacing=data["channel_spacing"] 
+center_frequency=data["center_frequency"] 
+store_true=data["store_true"] 
+pulse_shape=data["pulse_shape"] 
+partial_collision_margin=data["partial_collision_margin"] 
+num_co= data["num_co"] 
+num_cnt=data["num_cnt"] 
+wavelength=data["wavelength"]
+
+fiber_length = 100e3 
+length_setup = int(fiber_length*1e-3) 
 optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
 
-results_path = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+results_path = '../results_'+str(length_setup)+'/'
+results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+#
+plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/results_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+
+if not os.path.exists(results_path):
+    os.makedirs(results_path)
+#
+if not os.path.exists(results_path_bi):
+    os.makedirs(results_path_bi)
+#
+if not os.path.exists(plot_save_path):
+    os.makedirs(results_path)
+#
+if not os.path.exists(optimization_result_path):
+    os.makedirs(optimization_result_path)
+#
+if not os.path.exists(optimization_result_path_cocnt):
+    os.makedirs(optimization_result_path_cocnt)
+time_integrals_results_path = '../results/'
 
 # Warning: manual selection of loading of previous data: be sure about previously used params
 # No sanity check is done
@@ -92,26 +78,22 @@ if input("\nAmplification function profiles: \n\t>"+str(length_setup)+"km \n\t>o
     exit()
 
 beta2 = pynlin.utils.dispersion_to_beta2(
-    args.dispersion * 1e-12 / (1e-9 * 1e3), args.wavelength * 1e-9
+    dispersion * 1e-12 / (1e-9 * 1e3), wavelength
 )
-channel_spacing = args.channel_spacing * 1e9
-num_channels = args.channel_count
-baud_rate = args.baud_rate * 1e9
-ref_bandwidth = baud_rate
 
+ref_bandwidth = baud_rate
 fiber = pynlin.fiber.Fiber(
     effective_area=80e-12,
     beta2=beta2
 )
 wdm = pynlin.wdm.WDM(
-    spacing=args.channel_spacing,
+    spacing=channel_spacing *1e-9,
     num_channels=num_channels,
     center_frequency=190
 )
 
 
-interfering_grid_index = 38
-# compute the collisions between the two furthest WDM channels
+# comute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
 interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
 channel_spacing = interfering_frequency - frequency_of_interest
@@ -164,7 +146,7 @@ for power_per_channel_dBm in pbar:
     power_per_channel = dBm2watt(power_per_channel_dBm)
     power_per_pump = dBm2watt(-10)
     signal_wavelengths = wdm.wavelength_grid()
-    pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    pump_wavelengths = nu2lambda(initial_pump_frequencies)*1e9 
     num_pumps = len(pump_wavelengths)
 
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
@@ -238,7 +220,6 @@ for power_per_channel_dBm in pbar:
     plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
     plt.savefig(results_path+"signal_profile_"+str(power_per_channel_dBm)+".pdf")
 
-'''
 for power_per_channel_dBm in pbar:
     #print("Power per channel: ", power_per_channel_dBm, "dBm")
 # OPTIMIZER CO =================================
@@ -250,7 +231,7 @@ for power_per_channel_dBm in pbar:
     power_per_channel = dBm2watt(power_per_channel_dBm)
     power_per_pump = dBm2watt(-10)
     signal_wavelengths = wdm.wavelength_grid()
-    pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    pump_wavelengths = nu2lambda(initial_pump_frequencies)*1e9
     num_pumps = len(pump_wavelengths)
 
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
@@ -312,7 +293,7 @@ for power_per_channel_dBm in pbar:
     power_per_channel = dBm2watt(power_per_channel_dBm)
     power_per_pump = dBm2watt(-45)
     signal_wavelengths = wdm.wavelength_grid()
-    pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    pump_wavelengths = nu2lambda(initial_pump_frequencies) *1e9
     num_pumps = len(pump_wavelengths)
 
 
@@ -367,4 +348,3 @@ for power_per_channel_dBm in pbar:
         np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
         np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
         np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-        '''

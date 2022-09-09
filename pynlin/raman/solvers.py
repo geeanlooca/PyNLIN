@@ -134,6 +134,7 @@ class RamanAmplifier:
         wavelengths = np.concatenate((self.pump_wavelengths, self.signal_wavelengths))
         frequencies = lambda2nu(wavelengths)
 
+        print("freq:", frequencies)
         num_ase = num_signals
 
         input_power = np.concatenate((self.pump_power, self.signal_power))

@@ -18,32 +18,39 @@ from pynlin.utils import dBm2watt, watt2dBm
 from pynlin.wdm import WDM
 import pynlin.constellations
 from matplotlib.patches import Arc
+import json
 
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-L",
-    "--fiber-length",
-    default=80,
-    type=float,
-    help="The length of the fiber in kilometers.",
-)
-args = parser.parse_args()
+f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
+data = json.load(f)
+print(data)
+dispersion=data["dispersion"] 
+effective_area=data["effective_area"] 
+baud_rate=data["baud_rate"] 
+fiber_length=data["fiber_length"] 
+channel_count=data["channel_count"] 
+channel_spacing=data["channel_spacing"] 
+center_frequency=data["center_frequency"] 
+store_true=data["store_true"] 
+pulse_shape=data["pulse_shape"] 
+partial_collision_margin=data["partial_collision_margin"] 
+num_co= data["num_co"] 
+num_cnt=data["num_cnt"]
+wavelength=data["wavelength"]
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
 
-###############################
-#### fiber length setup #######
-###############################
-length_setup = int(args.fiber_length)
-fiber_length = length_setup * 1e3
-num_co  = 8
-num_cnt = 2
-plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/'+str(length_setup)+'km/'
+length_setup = int(fiber_length*1e-3) 
+plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+#
+if not os.path.exists(plot_save_path):
+    os.makedirs(plot_save_path)
+#
 results_path = '../results_'+str(length_setup)+'/'
 results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+#
 time_integrals_results_path = '../results/'
 
 # PLOTTING PARAMETERS
@@ -69,11 +76,10 @@ fiber = pynlin.fiber.Fiber(
     beta2=beta2
 )
 wdm = pynlin.wdm.WDM(
-    spacing=channel_spacing,
+    spacing=channel_spacing *1e-9,
     num_channels=num_channels,
     center_frequency=190
 )
-partial_collision_margin = 5
 points_per_collision = 10 
 
 print("beta2: ", fiber.beta2)
