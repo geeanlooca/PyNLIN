@@ -32,7 +32,7 @@ class RamanAmplifier:
 
         super().__init__()
 
-    def _compute_gain_spectrum(self, bandwidth, spacing=50e9):
+    def _compute_gain_spectrum(self, bandwidth, spacing=100e9):
 
         fs = 2 * bandwidth
 
