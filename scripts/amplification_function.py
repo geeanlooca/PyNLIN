@@ -104,7 +104,7 @@ for fiber_length in fiber_lengths:
     power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
     power_per_channel_dBm_list = [0.0, -2.0, -4.0]
     power_per_channel_dBm_list = np.linspace(-20, 0, 11)
-
+    power_per_channel_dBm_list = [0.0]
     # PRECISION REQUIREMENTS ESTIMATION =================================
     max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -319,8 +319,8 @@ for fiber_length in fiber_lengths:
             target_spectrum = watt2dBm(0.5 * signal_powers)
             pump_wavelengths_cnt, pump_powers_cnt = optimizer.optimize(
                 target_spectrum=target_spectrum,
-                epochs=500,
-                learning_rate=1e-3,
+                epochs=600,
+                learning_rate=0.5e-3,
                 lock_wavelengths=150,
             )
             np.save(optimization_result_path_cocnt+"opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy", pump_wavelengths_cnt)

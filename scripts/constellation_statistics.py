@@ -42,18 +42,18 @@ for ar_idx, M in enumerate(arity_list):
             constellation_variance.append(
                 np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
 
-fig_arity = plt.figure(figsize=(10, 4))
+fig_arity = plt.figure(figsize=(8, 9))
 
 # normalized to 16-QAM variance
 plt.loglog(arity_list, constellation_variance/constellation_variance[0],
            marker='x', markersize=10, color='black')
 plt.minorticks_off()
 plt.grid()
-plt.xlabel("QAM modulation arity")
+plt.xlabel("Modulation order")
 plt.xticks(ticks=arity_list, labels=arity_list)
 plt.ylabel(r"variance scale factor")
 plt.yticks(ticks=constellation_variance/constellation_variance[0], labels=["1.0", "1.190", "1.235"])
 plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, bottom=-1)
 
 fig_arity.tight_layout()
-fig_arity.savefig("arity_noise.pdf")
+fig_arity.savefig("order_noise.pdf")
