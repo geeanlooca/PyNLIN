@@ -221,6 +221,7 @@ for fiber_length in fiber_lengths:
 
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
+        '''
     # OPTIMIZER CO =================================
         num_pumps = 8
         pump_band_b = lambda2nu(1510e-9)
@@ -347,3 +348,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
             np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
             np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
+            '''
