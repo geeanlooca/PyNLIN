@@ -45,7 +45,7 @@ partial_collision_margin=data["partial_collision_margin"]
 num_co= data["num_co"] 
 num_cnt=data["num_cnt"]
 wavelength=data["wavelength"]
-
+time_integral_length = data['time_integral_length']
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
@@ -124,7 +124,7 @@ time_integrals_results_path = '../results/'
 f_0_9 = h5py.File(time_integrals_results_path + '0_9_results.h5', 'r')
 f_19_29 = h5py.File(time_integrals_results_path + '19_29_results.h5', 'r')
 f_39_49 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
-file_length = 80e3
+file_length = time_integral_length
 # print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_2/m']))
 # print(np.array(f_19_29['/time_integrals/channel_1/interfering_channel_1/m']))
 # print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_1/integrals']))
@@ -292,22 +292,22 @@ for fiber_length in fiber_lengths:
 
 
         print(ase_co)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_co.npy', X_co)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_cnt.npy', X_cnt)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_bi.npy', X_bi)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_none.npy', X_none)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_co.npy', ase_co)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_cnt.npy', ase_cnt)
-        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_bi.npy', ase_bi)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_co.npy', X_co)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_cnt.npy', X_cnt)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_bi.npy', X_bi)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_none.npy', X_none)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_ase_co.npy', ase_co)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_ase_cnt.npy', ase_cnt)
+        np.save(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_ase_bi.npy', ase_bi)
 
     else:
-        X_co = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_co.npy', X_co)
-        X_cnt = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_cnt.npy', X_cnt)
-        X_bi = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_bi.npy', X_bi)
-        X_none = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_none.npy', X_none)
-        ase_co = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_co.npy', ase_co)
-        ase_cnt = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_cnt.npy', ase_cnt)
-        ase_bi = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_bi.npy', ase_bi)
+        X_co = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_co.npy')
+        X_cnt = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_cnt.npy')
+        X_bi = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_bi.npy')
+        X_none = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_X_none.npy')
+        ase_co = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_ase_co.npy')
+        ase_cnt = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_ase_cnt.npy')
+        ase_bi = np.load(str(length_setup)+'_'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_ase_bi.npy')
     ar_idx = 0  # 16-QAM
     M =16
     for pow_idx, power_dBm in enumerate(power_dBm_list):
