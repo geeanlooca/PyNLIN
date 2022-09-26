@@ -308,6 +308,13 @@ for fiber_length in fiber_lengths:
         ase_co = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_co.npy', ase_co)
         ase_cnt = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_cnt.npy', ase_cnt)
         ase_bi = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_bi.npy', ase_bi)
+        X_co = np.load("X_co.npy")
+        X_cnt = np.load("X_cnt.npy")
+        X_bi = np.load("X_bi.npy")
+        X_none = np.load("X_none.npy")
+        ase_co = np.load("ase_co.npy")
+        ase_cnt = np.load("ase_cnt.npy")
+        ase_bi = np.load("ase_bi.npy")
     ar_idx = 0  # 16-QAM
     M =16
     for pow_idx, power_dBm in enumerate(power_dBm_list):
@@ -333,9 +340,7 @@ for fiber_length in fiber_lengths:
         # print("delta co: ", Delta_theta_2_co)
         # print("delta cnt: ", Delta_theta_2_cnt)
         # print("delta none: ", Delta_theta_2_none)
-
-
-
+    
     ##############################
     ## NOISE VS POWER
     ##############################
@@ -488,7 +493,6 @@ for fiber_length in fiber_lengths:
     plt.tight_layout()
     fig_channel.savefig(plot_save_path+"noise_channel_together.pdf")
 
-
     #####################################
     ## CHANNEL POWER AND OSNR
     #####################################
@@ -620,9 +624,6 @@ for fiber_length in fiber_lengths:
     plt.subplots_adjust(left = 0.2, wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
     fig_ase_channel.savefig(plot_save_path+"ase_channel_noise.pdf")
 
-
-
-
     ###################################
     ## OSNR vs POWER
     ###################################
@@ -672,6 +673,44 @@ for fiber_length in fiber_lengths:
     plt.subplots_adjust(wspace=0.0, hspace=0, right = 8.5/10, top=9.9/10)
     fig_powsnr.savefig(plot_save_path+"osnr_vs_power.pdf")
 
+
+    ###################################
+    ## OSNR ALTOGETHER
+    ###################################
+    fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14,10))
+
+    plt.plot(show=True)
+    coi_selection = [0, 9, 19, 29, 39, 49]
+    coi_selection_idx = [0, 1, 2, 3, 4, 5]
+    power_list = list(map(dBm2watt, power_dBm_list))
+
+    for scan in range(len(coi_selection)):
+        osnr_co +=   power_dBm_list -10*np.log10(power_list*Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]   + ase_co[coi_selection_idx[scan], :])-30
+        osnr_cnt +=  power_dBm_list -10*np.log10(power_list*Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx]  + ase_cnt[coi_selection_idx[scan],:])-30
+        osnr_bi +=   power_dBm_list -10*np.log10(power_list*Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]   + ase_bi[coi_selection_idx[scan], :])-30
+        osnr_none += power_dBm_list -10*np.log10(power_list*Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx])-30
+    osnr_co/= len(coi_selection_idx)
+    osnr_cnt/= len(coi_selection_idx)
+    osnr_bi /= len(coi_selection_idx)
+    osnr_none /= len(coi_selection_idx)
+    plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
+                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+    plt.plot(power_dBm_list,osnr_cnt, marker=markers[scan],
+                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+    plt.plot(power_dBm_list, osnr_bi, marker=markers[scan],
+                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
+    plt.plot(power_dBm_list,osnr_none , marker=markers[scan],
+                markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
+    plt.grid(which="both")
+
+
+    plt.ylabel(r"$OSNR$ [dB]")
+    plt.xlabel(r"Power [dBm]")
+
+    plt.legend()
+
+    plt.subplots_adjust(wspace=0.0, hspace=0, right = 8.5/10, top=9.9/10)
+    fig_powsnr.savefig(plot_save_path+"osnr_altogether.pdf")
     ####################################
     ## EVM AND BER
     ####################################
