@@ -85,7 +85,7 @@ def EVM_to_BER(evm):
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-arity_list =[16]
+arity_list = [16]
 coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
@@ -115,7 +115,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = False
+compute_X0mm_space_integrals = True
 
 #if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
  #   exit()
@@ -292,22 +292,22 @@ for fiber_length in fiber_lengths:
 
 
         print(ase_co)
-        np.save("X_co.npy", X_co)
-        np.save("X_cnt.npy", X_cnt)
-        np.save("X_bi.npy", X_bi)
-        np.save("X_none.npy", X_none)
-        np.save("ase_co.npy", ase_co)
-        np.save("ase_cnt.npy", ase_cnt)
-        np.save("ase_bi.npy", ase_bi)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_co.npy', X_co)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_cnt.npy', X_cnt)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_bi.npy', X_bi)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_none.npy', X_none)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_co.npy', ase_co)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_cnt.npy', ase_cnt)
+        np.save(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_bi.npy', ase_bi)
 
     else:
-        X_co = np.load("X_co.npy")
-        X_cnt = np.load("X_cnt.npy")
-        X_bi = np.load("X_bi.npy")
-        X_none = np.load("X_none.npy")
-        ase_co = np.load("ase_co.npy")
-        ase_cnt = np.load("ase_cnt.npy")
-        ase_bi = np.load("ase_bi.npy")
+        X_co = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_co.npy', X_co)
+        X_cnt = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_cnt.npy', X_cnt)
+        X_bi = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_bi.npy', X_bi)
+        X_none = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/X_none.npy', X_none)
+        ase_co = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_co.npy', ase_co)
+        ase_cnt = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_cnt.npy', ase_cnt)
+        ase_bi = np.load(str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/ase_bi.npy', ase_bi)
     ar_idx = 0  # 16-QAM
     M =16
     for pow_idx, power_dBm in enumerate(power_dBm_list):
