@@ -254,9 +254,9 @@ for fiber_length in fiber_lengths:
 
                     # upper cut z
                     z = np.array(list(filter(lambda x: x<=fiber_length, z)))
-                    I = I[:int(len(m)*(fiber_length/file_length)), :len(z)]
-                    m = m[:int(len(m)*(fiber_length/file_length))]
-
+                    net_m = m[partial_collision_margin:len(m)-partial_collision_margin]
+                    I = I[:, :len(z)]
+                    m = m[:int((len(net_m))*(fiber_length/file_length))+2*partial_collision_margin]
                     fB_co = interp1d(
                         z_max, signal_solution_co[:, incremental], kind='linear')
                     X0mm_co = pynlin.nlin.Xhkm_precomputed(
@@ -687,13 +687,11 @@ for fiber_length in fiber_lengths:
     osnr_bi /= len(coi_selection_idx)
     osnr_none /= len(coi_selection_idx)
     plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
-                markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+                markersize=10, color='green')
     plt.plot(power_dBm_list,osnr_cnt, marker=markers[scan],
-                markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+                markersize=10, color='blue')
     plt.plot(power_dBm_list, osnr_bi, marker=markers[scan],
-                markersize=10, color='orange', label="ch." + str(coi_selection[scan]+1))
-    plt.plot(power_dBm_list,osnr_none , marker=markers[scan],
-                markersize=10, color='grey', label="ch." + str(coi_selection[scan]+1))
+                markersize=10, color='orange')
     plt.grid(which="both")
 
 
