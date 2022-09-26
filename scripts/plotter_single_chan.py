@@ -45,14 +45,14 @@ plt.rcParams['font.size'] = '24'
 # PLOTTING PARAMETERS1
 #power_dBm_list = [-20, -10, -5, 0]
 #power_dBm_list = np.linspace(-20, 0, 3)
-power_dBm_list = [-20.0]
+power_dBm_list = [0.0]
 
 if input("\nSingle channel collision plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>interfering_grid_index= "+str(interfering_grid_index)+"\nAre you sure? (y/[n])") != "y":
         exit()
 
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length*1e-3) 
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/power/'
     #
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
@@ -141,8 +141,8 @@ for fiber_length in fiber_lengths:
         # upper cut z
         z = np.array(list(filter(lambda x: x<=fiber_length, z)))
         print(z)
-        I = I[:int(len(m)*(fiber_length/100e3)), :len(z)]
-        m = m[:int(len(m)*(fiber_length/100e3))]
+        I = I[:int(len(m)*(fiber_length/80e3)), :len(z)]
+        m = m[:int(len(m)*(fiber_length/80e3))]
 
         # PLOT A COUPLE OF CHANNEL fB
         select_idx = [0, 49]
@@ -377,7 +377,7 @@ for fiber_length in fiber_lengths:
             ##########################
             #### COLLISION SHAPEs 50
             ##########################
-            if False:
+            if True:
                 f2 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
                 interfering_grid_index = 10
 
@@ -388,8 +388,8 @@ for fiber_length in fiber_lengths:
 
                 # upper cut z
                 z = np.array(list(filter(lambda x: x<=fiber_length, z)))
-                I = I[:int(len(m)*(fiber_length/100e3)), :len(z)]
-                m = m[:int(len(m)*(fiber_length/100e3))]
+                I = I[:int(len(m)*(fiber_length/80e3)), :len(z)]
+                m = m[:int(len(m)*(fiber_length/80e3))]
                 print("m=", m)
                 #
                 locs = pynlin.nlin.get_collision_location(m, fiber, 100e9, 1 / baud_rate)
@@ -399,7 +399,7 @@ for fiber_length in fiber_lengths:
                 fB_cnt = interp1d(z_max, signal_solution_cnt[:, interfering_grid_index], kind='linear')
                 fB_bi = interp1d(z_max, signal_solution_bi[:, interfering_grid_index], kind='linear')
             
-                fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(16,8))
+                fig1, ((ax1, ax2), (ax3, ax4)) = plt.subplots(nrows=2, ncols=2, sharex=True, sharey=True, figsize=(10,8))
                 plt.plot(show = show_flag)
 
                 for i, m_ in enumerate(m[5:-5]):
@@ -408,17 +408,17 @@ for fiber_length in fiber_lengths:
                     ax1.plot(z*1e-3, np.abs(I[i])/max_I * fB_co(z), color=cm.viridis(i/(len(m)-10)/3*2))
                     ax1.plot(z*1e-3, fB_co(z), color="purple")
                     ax1.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-                    ax1.axhline(0.5, color="grey", linestyle="dotted")
+                    #ax1.axhline(0.5, color="grey", linestyle="dotted")
 
                     ax2.plot(z*1e-3, np.abs(I[i])/max_I * fB_cnt(z), color=cm.viridis(i/(len(m)-10)/3*2))
                     ax2.plot(z*1e-3, fB_cnt(z), color="purple")
                     ax2.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-                    ax2.axhline(0.5, color="grey", linestyle="dotted")
+                    #ax2.axhline(0.5, color="grey", linestyle="dotted")
 
                     ax3.plot(z*1e-3, np.abs(I[i])/max_I * fB_bi(z), color=cm.viridis(i/(len(m)-10)/3*2))
                     ax3.plot(z*1e-3, fB_bi(z), color="purple")
                     ax3.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
-                    ax3.axhline(0.5, color="grey", linestyle="dotted")
+                    #ax3.axhline(0.5, color="grey", linestyle="dotted")
 
                     ax4.plot(z*1e-3, np.abs(I[i])/max_I, color=cm.viridis(i/(len(m)-10)/3*2))
                     ax4.plot(z*1e-3, np.ones_like(z), color="purple")
@@ -462,7 +462,7 @@ for fiber_length in fiber_lengths:
             ##########################
             #### X0mm channel 50
             ##########################
-            if False:
+            if True:
                 f2 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
                 interfering_grid_index = 10
 
@@ -477,8 +477,8 @@ for fiber_length in fiber_lengths:
                 fB_bi = interp1d(z_max, signal_solution_bi[:, interfering_grid_index], kind='linear')
                 # upper cut z
                 z = np.array(list(filter(lambda x: x<=fiber_length, z)))
-                I = I[:int(len(m)*(fiber_length/100e3)), :len(z)]
-                m = m[:int(len(m)*(fiber_length/100e3))]
+                I = I[:int(len(m)*(fiber_length/80e3)), :len(z)]
+                m = m[:int(len(m)*(fiber_length/80e3))]
                 X0mm_co = pynlin.nlin.Xhkm_precomputed(
                     z, I, amplification_function=fB_co(z))
                 X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
@@ -488,7 +488,7 @@ for fiber_length in fiber_lengths:
                 X0mm_none = pynlin.nlin.Xhkm_precomputed(
                     z, I, amplification_function=None)
 
-                fig2 = plt.figure(figsize=(10, 6))
+                fig2 = plt.figure(figsize=(10, 8))
                 plt.plot(show = show_flag)
 
                 plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="CO")

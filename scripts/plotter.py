@@ -65,7 +65,7 @@ def NLIN(n, a, b):
 
 def OSNR_to_EVM(osnr):
     osnr = 10**(osnr/10)
-    M =64
+    M =16
     i_range = [1+item for item in range(int(np.floor(np.sqrt(M))))]
     beta = [2*ii - 1 for ii in i_range]
     alpha = [3*ii*osnr/(2*(M-1)) for ii in beta]
@@ -77,15 +77,15 @@ def OSNR_to_EVM(osnr):
     return np.sqrt(np.divide(1, osnr) - np.sqrt(np.divide(96/np.pi/(M-1), osnr))*sum1 + sum2 )
 
 def EVM_to_BER(evm):
-    M = 64
-    L = 8
+    M = 16
+    L = 4
     return (1-1/L)/np.log2(L) * erfc( np.sqrt((3*np.log2(L)*np.sqrt(2)) / ((L**2-1) * np.power(evm, 2) * np.log2(M))))
 
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
 #power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-arity_list =[64]
+arity_list =[16]
 coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
@@ -115,15 +115,16 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = True
+compute_X0mm_space_integrals = False
 
-if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
-    exit()
+#if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
+ #   exit()
 time_integrals_results_path = '../results/'
 
 f_0_9 = h5py.File(time_integrals_results_path + '0_9_results.h5', 'r')
 f_19_29 = h5py.File(time_integrals_results_path + '19_29_results.h5', 'r')
 f_39_49 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
+file_length = 80e3
 # print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_2/m']))
 # print(np.array(f_19_29['/time_integrals/channel_1/interfering_channel_1/m']))
 # print(np.array(f_39_49['/time_integrals/channel_1/interfering_channel_1/integrals']))
@@ -253,8 +254,8 @@ for fiber_length in fiber_lengths:
 
                     # upper cut z
                     z = np.array(list(filter(lambda x: x<=fiber_length, z)))
-                    I = I[:int(len(m)*(fiber_length/100e3)), :len(z)]
-                    m = m[:int(len(m)*(fiber_length/100e3))]
+                    I = I[:int(len(m)*(fiber_length/file_length)), :len(z)]
+                    m = m[:int(len(m)*(fiber_length/file_length))]
 
                     fB_co = interp1d(
                         z_max, signal_solution_co[:, incremental], kind='linear')
@@ -308,7 +309,7 @@ for fiber_length in fiber_lengths:
         ase_cnt = np.load("ase_cnt.npy")
         ase_bi = np.load("ase_bi.npy")
     ar_idx = 0  # 16-QAM
-    M = 64
+    M =16
     for pow_idx, power_dBm in enumerate(power_dBm_list):
         average_power = dBm2watt(power_dBm)
         qam = pynlin.constellations.QAM(M)
@@ -414,44 +415,78 @@ for fiber_length in fiber_lengths:
     ########################################################
     ##  NLIN AND ASE COMPARISON (average over the channels)
     ########################################################
-    fig_comparison, (ax1, ax2, ax3) = plt.subplots(nrows= 3, sharex = True, figsize=(10, 7))
+    fig_comparison, ((ax1)) = plt.subplots(nrows= 1, sharex = True, figsize=(10, 7))
     plt.plot(show=True)
-    coi_selection = [0, 19, 49]
-    coi_selection_idx = [0, 2, 5]
+    coi_selection = [0, 9, 19, 29, 39, 49]
+    coi_selection_idx = [0, 1, 2, 3, 4, 5]
     axis_num = 0
-    ax1.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_co[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)) , marker=markers[0],
+    plt.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_co[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)) , marker=markers[0],
                 markersize=10, color='green', label="NLIN")
-    ax2.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_cnt[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-                markersize=10, color='blue', label="NLIN")
-    ax3.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_bi[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-                markersize=10, color='orange', label="NLIN")
-    ax1.plot(power_dBm_list, 30+10*np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
+    plt.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_cnt[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
+                markersize=10, color='blue')
+    plt.plot(power_dBm_list, power_dBm_list+10*np.log10(np.average([Delta_theta_2_bi[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
+                markersize=10, color='orange')
+    plt.plot(power_dBm_list, 30+10*np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
                 markersize=10, color='green', label="ASE")
-    ax2.plot(power_dBm_list, 30+10*np.log10(np.average([ase_cnt[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-                markersize=10, color='blue', label="ASE")
-    ax3.plot(power_dBm_list, 30+10*np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-                markersize=10, color='orange', label="ASE")
+    plt.plot(power_dBm_list, 30+10*np.log10(np.average([ase_cnt[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
+                markersize=10, color='blue')
+    plt.plot(power_dBm_list, 30+10*np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
+                markersize=10, color='orange')
     ax1.grid(which="both")
     #plt.annotate("ciao", (0, 0))
-    ax2.grid(which="both")
-    ax3.grid(which="both")
+    plt.grid(which="both")
+    plt.grid(which="both")
 
-    plt.xlabel(r"Power [dBm]")
+    plt.xlabel(r"Input power [dBm]")
     plt.minorticks_on()
-    ax2.set_ylabel(r"Noise power [dBm]")
-    ax1.minorticks_on()
-    ax2.minorticks_on()
-    ax3.minorticks_on()
-    ax1.text(-20, -20, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    ax2.text(-20, -55, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
-    ax3.text(-20, -55, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+    plt.ylabel(r"Noise power [dBm]")
+    plt.minorticks_on()
 
-    ax3.legend()
-    leg = ax3.get_legend()
+    plt.legend()
+    leg = ax1.get_legend()
     leg.legendHandles[0].set_color('grey')
     leg.legendHandles[1].set_color('grey')
-    plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
-    fig_comparison.savefig(plot_save_path+"comparison.pdf")
+    #plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+    #plt.axis([-13, -5, -60, -45])
+    plt.tight_layout()
+    fig_comparison.savefig(plot_save_path+"comparison_full.pdf")
+
+    #####################################
+    ## CHANNEL POWER AND OSNR
+    #####################################
+
+    selected_power = -10
+    pow_idx = np.where(power_dBm_list==selected_power)[0]
+    P_B = 10**(selected_power/10) # average power of the constellation in mW
+    T = (1/10e9)
+    # Delta_theta is the average 
+    xdata = [1, 10, 20, 30, 40, 50]
+    ydata= Delta_theta_2_none[:, pow_idx, ar_idx][:, 0]*P_B
+    print(xdata)
+    print(ydata)
+    alpha, beta = optimize.curve_fit(NLIN, xdata=xdata , ydata=ydata)[0]
+    print(f'alpha={alpha}, beta={beta}')
+    print("1/beta_2 Omega_0", 1/beta2/(channel_spacing*1e9))
+    full_coi = [i+1 for i in range(50)]
+    fig_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8,8))
+    plt.plot(show=True)
+    plt.plot(coi_list, 10* np.log10(Delta_theta_2_co[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
+    plt.grid(which="both")
+    plt.plot(coi_list, 10*np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
+    plt.grid(which="both")
+    plt.plot(coi_list, 10*np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
+    plt.grid(which="both")
+    plt.grid(which="both")
+    plt.plot(coi_list, 10*np.log10(Delta_theta_2_none[:, pow_idx, ar_idx]*P_B), marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
+    plt.plot(range(50), 10*np.log10(NLIN(full_coi, alpha, beta)), color='red', linestyle = "dashed", linewidth = 2)
+    plt.grid(which="both")
+    # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+    plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
+    plt.xlabel(r"Channel index")
+    plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
+    plt.ylabel(r"NLIN [dBm]")
+    plt.tight_layout()
+    fig_channel.savefig(plot_save_path+"noise_channel_together.pdf")
 
 
     #####################################

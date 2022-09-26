@@ -58,7 +58,7 @@ plt.annotate("{:1.3f}".format(var_QAM[4]/var_16_QAM), (1024-390, var_QAM[4]/var_
 plt.grid()
 plt.xlabel("Modulation order")
 plt.xticks(ticks=arity_list, labels=arity_list)
-plt.ylabel(r"$\mu$")
+plt.ylabel(r"$\mu$ normalized to 16-QAM")
 #plt.yticks(ticks=constellation_variance, labels=["1.0", "1.190", "1.235"])
 plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, bottom=-1)
 plt.legend(loc="center right")
