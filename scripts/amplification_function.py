@@ -47,8 +47,8 @@ for fiber_length in fiber_lengths:
     optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
     optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
 
-    results_path = '../results_'+str(length_setup)+'/'
-    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+    results_path = '../-10dBm_target/results_'+str(length_setup)+'/'
+    results_path_bi = '../-10dBm_target/results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
     #
     plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/results_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 
@@ -72,9 +72,6 @@ for fiber_length in fiber_lengths:
     # No sanity check is done
     optimize = True
     profiles = True
-
-    if input("\nAmplification function profiles: \n\t>"+str(length_setup)+"km \n\t>optimize="+str(optimize)+" \n\t>profiles="+str(profiles)+" \n\t>bi setup= ("+str(num_co)+"_co, "+str(num_cnt)+"_cnt) \nAre you sure? (y/[n])") != "y":
-        exit()
 
     beta2 = pynlin.utils.dispersion_to_beta2(
         dispersion * 1e-12 / (1e-9 * 1e3), wavelength
@@ -104,7 +101,6 @@ for fiber_length in fiber_lengths:
     power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
     power_per_channel_dBm_list = [0.0, -2.0, -4.0]
     power_per_channel_dBm_list = np.linspace(-20, 0, 11)
-    power_per_channel_dBm_list = [0.0]
     # PRECISION REQUIREMENTS ESTIMATION =================================
     max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -181,7 +177,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = watt2dBm(0.5 * signal_powers)
+            target_spectrum = -10.0 * np.ones_like(signal_powers)
             if power_per_channel>-6.0:
                 learning_rate=3e-4
             else:
@@ -221,7 +217,6 @@ for fiber_length in fiber_lengths:
 
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
-        '''
     # OPTIMIZER CO =================================
         num_pumps = 8
         pump_band_b = lambda2nu(1510e-9)
@@ -252,7 +247,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = watt2dBm(0.5 * signal_powers)
+            target_spectrum = -10.0 * np.ones_like(signal_powers)
 
             pump_wavelengths_co, pump_powers_co = optimizer.optimize(
                 target_spectrum=target_spectrum,
@@ -317,7 +312,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = watt2dBm(0.5 * signal_powers)
+            target_spectrum = -10.0 * np.ones_like(signal_powers)
             pump_wavelengths_cnt, pump_powers_cnt = optimizer.optimize(
                 target_spectrum=target_spectrum,
                 epochs=600,
@@ -348,4 +343,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
             np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
             np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-            '''
+            
