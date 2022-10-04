@@ -51,8 +51,6 @@ plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
 
-
-
 def H(n):
     s = 0
     n = int(n)
@@ -115,7 +113,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = True
+compute_X0mm_space_integrals = False
 
 #if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
  #   exit()
@@ -439,6 +437,7 @@ for fiber_length in fiber_lengths:
     plt.minorticks_on()
     plt.ylabel(r"Noise power [dBm]")
     plt.minorticks_on()
+    plt.ylim([-90,0])
 
     plt.legend()
     leg = ax1.get_legend()
@@ -483,6 +482,8 @@ for fiber_length in fiber_lengths:
     plt.xlabel(r"Channel index")
     plt.xticks(ticks=coi_list, labels=[k+1 for k in coi_list])
     plt.ylabel(r"NLIN [dBm]")
+    plt.ylim([-65,-35])
+
     plt.tight_layout()
     fig_channel.savefig(plot_save_path+"noise_channel_together.pdf")
 
@@ -694,7 +695,7 @@ for fiber_length in fiber_lengths:
                 markersize=10, color='orange')
     plt.grid(which="both")
 
-
+    plt.ylim([20,50])
     plt.ylabel(r"$OSNR$ [dB]")
     plt.xlabel(r"Power [dBm]")
 
