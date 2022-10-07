@@ -113,7 +113,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none =  np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = False
+compute_X0mm_space_integrals = True
 
 #if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
  #   exit()
