@@ -139,8 +139,8 @@ for fiber_length in fiber_lengths:
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
     #
-    results_path = '../-10dBm_target/results_'+str(length_setup)+'/'
-    results_path_bi = '../-10dBm_target/results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+    results_path = '../results_'+str(length_setup)+'/'
+    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_reversed/'
     #
     if compute_X0mm_space_integrals:
         # sum of all the varianced (variances are the sum of all the X0mm over m)

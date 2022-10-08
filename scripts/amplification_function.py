@@ -47,8 +47,8 @@ for fiber_length in fiber_lengths:
     optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
     optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
 
-    results_path = '../-10dBm_target/results_'+str(length_setup)+'/'
-    results_path_bi = '../-10dBm_target/results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_reversed/'
+    results_path = '../results_'+str(length_setup)+'/'
+    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_reversed/'
     #
     plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/results_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 
@@ -180,7 +180,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = -10.0 * np.ones_like(signal_powers)
+            target_spectrum = watt2dBm(0.5*signal_powers)
             if power_per_channel>-6.0:
                 learning_rate=3e-4
             else:
