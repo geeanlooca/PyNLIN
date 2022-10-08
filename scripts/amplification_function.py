@@ -48,7 +48,7 @@ for fiber_length in fiber_lengths:
     optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
 
     results_path = '../-10dBm_target/results_'+str(length_setup)+'/'
-    results_path_bi = '../-10dBm_target/results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+    results_path_bi = '../-10dBm_target/results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_reversed/'
     #
     plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/results_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
 
@@ -149,7 +149,7 @@ for fiber_length in fiber_lengths:
         initial_power_co = dBm2watt(-10)
         initial_power_cnt = dBm2watt(-30)
         # pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
-        pump_directions = np.hstack(-np.ones(num_cnt), np.ones(num_co))
+        pump_directions = np.hstack((-np.ones(num_cnt), np.ones(num_co)))
         # pump_directions = [-1, 1, -1, 1, -1, 1, -1, 1]
 
         print(pump_directions)
