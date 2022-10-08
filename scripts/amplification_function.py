@@ -125,7 +125,7 @@ for fiber_length in fiber_lengths:
     pbar_description = "Optimizing vs signal power"
     pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
     pbar.set_description(pbar_description)
-    '''
+    
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
     # OPTIMIZER BIDIRECTIONAL =================================
@@ -148,8 +148,9 @@ for fiber_length in fiber_lengths:
         
         initial_power_co = dBm2watt(-10)
         initial_power_cnt = dBm2watt(-30)
-        pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
-        #pump_directions = [-1, 1, -1, 1, -1, 1, -1, 1]
+        # pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
+        pump_directions = np.hstack(-np.ones(num_cnt), np.ones(num_co))
+        # pump_directions = [-1, 1, -1, 1, -1, 1, -1, 1]
 
         print(pump_directions)
 
@@ -346,4 +347,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
             np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
             np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-            
+            '''
