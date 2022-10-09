@@ -134,7 +134,7 @@ file_length = time_integral_length
 # h5py.copy(f_39_49['time_integrals'], f)
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length*1e-3) 
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/-10dBm_target/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_reversed/'
     #
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)

@@ -101,6 +101,8 @@ for fiber_length in fiber_lengths:
     power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
     power_per_channel_dBm_list = [0.0, -2.0, -4.0]
     power_per_channel_dBm_list = np.linspace(-20, 0, 11)
+    power_per_channel_dBm_list = [-2.0, -4.0]
+
     # PRECISION REQUIREMENTS ESTIMATION =================================
     max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
 
@@ -182,7 +184,7 @@ for fiber_length in fiber_lengths:
 
             target_spectrum = watt2dBm(0.5*signal_powers)
             if power_per_channel>-6.0:
-                learning_rate=3e-4
+                learning_rate=1e-4
             else:
                 learning_rate=5e-3
 
