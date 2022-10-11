@@ -43,15 +43,14 @@ num_co= data["num_co"]
 num_cnt=data["num_cnt"] 
 wavelength=data["wavelength"]
 for fiber_length in fiber_lengths:
+    special = ""
     length_setup = int(fiber_length*1e-3) 
     optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
-    optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'
+    optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'+special
 
     results_path = '../results_'+str(length_setup)+'/'
-    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_reversed/'
+    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'+special
     #
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/results_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
-
     if not os.path.exists(results_path):
         os.makedirs(results_path)
     #
@@ -149,9 +148,9 @@ for fiber_length in fiber_lengths:
         signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
         
         initial_power_co = dBm2watt(-10)
-        initial_power_cnt = dBm2watt(-30)
+        initial_power_cnt = dBm2watt(-50)
         # pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
-        pump_directions = np.hstack((-np.ones(num_cnt), np.ones(num_co)))
+        pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
         # pump_directions = [-1, 1, -1, 1, -1, 1, -1, 1]
 
         print(pump_directions)
