@@ -42,14 +42,15 @@ partial_collision_margin=data["partial_collision_margin"]
 num_co= data["num_co"] 
 num_cnt=data["num_cnt"] 
 wavelength=data["wavelength"]
+
 for fiber_length in fiber_lengths:
-    special = ""
+    special = "interleaved"
     length_setup = int(fiber_length*1e-3) 
-    optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
-    optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization/'+special
+    optimization_result_path = '../results_'+str(length_setup)+'/optimization/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
+    optimization_result_path_cocnt = '../results_'+str(length_setup)+'/optimization'
 
     results_path = '../results_'+str(length_setup)+'/'
-    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'+special
+    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
     #
     if not os.path.exists(results_path):
         os.makedirs(results_path)
@@ -96,11 +97,10 @@ for fiber_length in fiber_lengths:
     points_per_collision = 10
 
 
-    power_per_channel_dBm_list = [-8.0, -6.0, -4.0, -2.0, 0.0]
-    power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0, -10.0]
-    power_per_channel_dBm_list = [0.0, -2.0, -4.0]
-    power_per_channel_dBm_list = np.linspace(-20, 0, 11)
-    power_per_channel_dBm_list = [-2.0, -4.0]
+    power_per_channel_dBm_list = [-10.0, -8.0, -6.0, -4.0, -2.0, 0.0]
+    #power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0]
+    #power_per_channel_dBm_list = [0.0, -2.0, -4.0]
+    #power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 
     # PRECISION REQUIREMENTS ESTIMATION =================================
     max_channel_spacing = wdm.frequency_grid()[num_channels - 1] - wdm.frequency_grid()[0]
@@ -147,11 +147,11 @@ for fiber_length in fiber_lengths:
 
         signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
         
-        initial_power_co = dBm2watt(-10)
-        initial_power_cnt = dBm2watt(-50)
+        initial_power_co = dBm2watt(0)
+        initial_power_cnt = dBm2watt(-30)
         # pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
         pump_directions = np.hstack((np.ones(num_co), -np.ones(num_cnt)))
-        # pump_directions = [-1, 1, -1, 1, -1, 1, -1, 1]
+        pump_directions = [-1, 1, -1, 1, -1, 1, -1, 1]
 
         print(pump_directions)
 
@@ -221,7 +221,7 @@ for fiber_length in fiber_lengths:
     '''
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
-        
+      
     # OPTIMIZER CO =================================
         num_pumps = 8
         pump_band_b = lambda2nu(1510e-9)
@@ -252,7 +252,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = -10.0 * np.ones_like(signal_powers)
+            target_spectrum = watt2dBm(0.5*signal_powers)
 
             pump_wavelengths_co, pump_powers_co = optimizer.optimize(
                 target_spectrum=target_spectrum,
@@ -317,7 +317,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = -10.0 * np.ones_like(signal_powers)
+            target_spectrum = watt2dBm(0.5*signal_powers)
             pump_wavelengths_cnt, pump_powers_cnt = optimizer.optimize(
                 target_spectrum=target_spectrum,
                 epochs=500,
@@ -348,4 +348,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
             np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
             np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-            '''
+'''

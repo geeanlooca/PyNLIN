@@ -49,16 +49,17 @@ power_dBm_list = [0.0]
 
 if input("\nSingle channel collision plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>interfering_grid_index= "+str(interfering_grid_index)+"\nAre you sure? (y/[n])") != "y":
         exit()
+special = "interleaved"
 
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length*1e-3) 
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/power/'
+    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
     #
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
     #
     results_path = '../results_'+str(length_setup)+'/'
-    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
     #
     time_integrals_results_path = '../results/'
 

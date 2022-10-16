@@ -6,7 +6,7 @@ import tqdm
 from torch import nn
 from torch.nn import MSELoss
 from torch.optim.adam import Adam
-
+from pynlin.utils import dBm2watt
 from pynlin.raman.pytorch.solvers import RamanAmplifier
 
 
@@ -77,7 +77,7 @@ class CopropagatingOptimizer(nn.Module):
 
         # do not optimize wavelengths for the first `lock_wavelengths` epochs
         self.pump_wavelengths.requires_grad = False
-        reg_lambda = 0.0
+        reg_lambda = 10.0
         # pbar = tqdm.trange(epochs)
         pbar = tqdm.trange(epochs)
         for epoch in pbar:
@@ -88,7 +88,7 @@ class CopropagatingOptimizer(nn.Module):
                 self.pump_wavelengths, *self.wavelength_scaling
             )
             signal_spectrum = self.forward(pump_wavelengths * 1e-9, self.pump_powers)
-            loss = loss_function(signal_spectrum, _target_spectrum) + reg_lambda * torch.sum(self.pump_powers)
+            loss = loss_function(signal_spectrum, _target_spectrum) #+ reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
             loss.backward()
             torch_optimizer.step()
             torch_optimizer.zero_grad()

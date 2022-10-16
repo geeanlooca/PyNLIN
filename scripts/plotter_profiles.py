@@ -42,15 +42,16 @@ plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
+special = "interleaved"
 
 length_setup = int(fiber_length*1e-3) 
-plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
 #
 if not os.path.exists(plot_save_path):
     os.makedirs(plot_save_path)
 #
 results_path = '../results_'+str(length_setup)+'/'
-results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt/'
+results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
 #
 time_integrals_results_path = '../results/'
 
@@ -100,7 +101,7 @@ linestyles = ["solid", "dashed", "dotted"]
 coi_list = [0, 24, 49]
 #if input("\nASE-Signal_pump profile plotter: \n\t>Length= " + str(length_setup) + "km \n\t>power list= " + str(power_dBm_list) + "\nAre you sure? (y/[n])") != "y":
  #   exit()
-configs = [[8, 2]]
+configs = [[4, 4]]
 for config in configs:
     num_co = config[0]
     num_cnt = config[1]
@@ -110,9 +111,9 @@ for config in configs:
         optimized_result_path = '../results_' + str(length_setup) + '/optimization/'
         optimized_result_path_bi =  '../results_' + str(length_setup) + '/optimization/'+ str(num_co) + '_co_' + str(num_cnt) + '_cnt/'
         results_path_bi = '../results_' + \
-            str(length_setup) + '/' + str(num_co) + '_co_' + str(num_cnt) + '_cnt/'
-        plot_save_path = '/home/lorenzi/Scrivania/tesi/tex/images/classical/' + \
-            str(length_setup) + 'km/' + str(num_co) + '_co_' + str(num_cnt) + '_cnt/'
+            str(length_setup) + '/' + str(num_co) + '_co_' + str(num_cnt) + '_cnt_'+special+'/'
+        plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
+
         # SIMULATION DATA LOAD =================================
 
         pump_solution_co = np.load(
