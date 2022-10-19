@@ -9,9 +9,12 @@
   "store_true": 1,
   "pulse_shape":"Nyquist",
   "partial_collision_margin":5,
-  "num_co": 4, 
-  "num_cnt":4,
+  "num_co": 6, 
+  "num_cnt":2,
   "interfering_grid_index":1,
   "wavelength":1550e-9,
-  "time_integral_length":100e3
+  "time_integral_length":100e3,
+  "special":"reversed",
+  "pump_direction":"reversed"
+
 } 

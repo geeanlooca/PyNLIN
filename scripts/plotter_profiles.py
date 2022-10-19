@@ -37,12 +37,13 @@ partial_collision_margin=data["partial_collision_margin"]
 num_co= data["num_co"] 
 num_cnt=data["num_cnt"]
 wavelength=data["wavelength"]
+special=data["special"]
+pump_direction=data["pump_direction"]
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
-special = "interleaved"
 
 length_setup = int(fiber_length*1e-3) 
 plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
@@ -101,7 +102,7 @@ linestyles = ["solid", "dashed", "dotted"]
 coi_list = [0, 24, 49]
 #if input("\nASE-Signal_pump profile plotter: \n\t>Length= " + str(length_setup) + "km \n\t>power list= " + str(power_dBm_list) + "\nAre you sure? (y/[n])") != "y":
  #   exit()
-configs = [[4, 4]]
+configs = [[num_co, num_cnt]]
 for config in configs:
     num_co = config[0]
     num_cnt = config[1]

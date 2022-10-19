@@ -77,7 +77,7 @@ class CopropagatingOptimizer(nn.Module):
 
         # do not optimize wavelengths for the first `lock_wavelengths` epochs
         self.pump_wavelengths.requires_grad = False
-        reg_lambda = 10.0
+        reg_lambda = 0.0
         # pbar = tqdm.trange(epochs)
         pbar = tqdm.trange(epochs)
         for epoch in pbar:
