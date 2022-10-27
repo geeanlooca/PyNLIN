@@ -205,7 +205,6 @@ class RamanAmplifier(torch.nn.Module):
         torch.Tensor
             Propagated power values
         """
-
         batch_size = P.shape[0]
         dPdz = (
             (

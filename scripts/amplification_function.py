@@ -2,6 +2,7 @@
 import argparse
 import math
 import os
+import wave
 import tqdm
 import pynlin
 import pynlin.wdm
@@ -45,10 +46,15 @@ wavelength = data["wavelength"]
 special = data["special"]
 pump_direction = data["pump_direction"]
 
+#power_per_channel_dBm_list = [-20.0, -18.0, -16.0]
+#power_per_channel_dBm_list = [-14.0, -12.0, -10.0]
+#power_per_channel_dBm_list = [-8.0, -6.0, -4.0]
+#power_per_channel_dBm_list = [-2.0, 0.0]
+
 #power_per_channel_dBm_list = [-10.0, -8.0, -6.0, -4.0, -2.0, 0.0]
-power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0]
+#power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0]
 #power_per_channel_dBm_list = [0.0, -2.0, -4.0]
-#power_per_channel_dBm_list = np.linspace(-20, 0, 11)
+power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length * 1e-3)
@@ -125,7 +131,7 @@ for fiber_length in fiber_lengths:
     pbar_description = "Optimizing vs signal power"
     pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
     pbar.set_description(pbar_description)
-
+    
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
         # OPTIMIZER BIDIRECTIONAL =================================
@@ -140,7 +146,20 @@ for fiber_length in fiber_lengths:
 
         power_per_channel = dBm2watt(power_per_channel_dBm)
         power_per_pump = dBm2watt(-10)
+        # signal carriers: 1.558 -> 1.599
         signal_wavelengths = wdm.wavelength_grid()
+        print(signal_wavelengths)
+        # amplification window (center to center): 1.494 -> 1.607
+
+        # [1.4942772361169988e-06,
+        # 1.5094109168336737e-06,
+        # 1.5248542744457354e-06,
+        # 1.5406169124770569e-06,
+        # 1.5567088356912139e-06,
+        # 1.5731404712676535e-06,
+        # 1.589922691333296e-06,
+        # 1.6070668369518944e-06]
+
         pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
         num_pumps = len(pump_wavelengths)
 
@@ -267,7 +286,8 @@ for fiber_length in fiber_lengths:
 
             pump_wavelengths_co, pump_powers_co = optimizer.optimize(
                 target_spectrum=target_spectrum,
-                epochs=500
+                epochs=500,
+                learning_rate=1e-3,
             )
 
             np.save(optimization_result_path_cocnt+"opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
@@ -291,12 +311,12 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
             np.save(results_path+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
             np.save(results_path+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
-
+    
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
     # OPTIMIZER COUNTER =================================
 
-        num_pumps = 10
+        num_pumps = 4
         pump_band_b = lambda2nu(1480e-9)
         pump_band_a = lambda2nu(1400e-9)
         initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
@@ -332,7 +352,7 @@ for fiber_length in fiber_lengths:
             pump_wavelengths_cnt, pump_powers_cnt = optimizer.optimize(
                 target_spectrum=target_spectrum,
                 epochs=500,
-                learning_rate=1e-3,
+                learning_rate=0.2e-3,
                 lock_wavelengths=150,
             )
             np.save(optimization_result_path_cocnt+"opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy", pump_wavelengths_cnt)
@@ -359,4 +379,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
             np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
             np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
-'''
+ '''
