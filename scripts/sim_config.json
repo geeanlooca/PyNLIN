@@ -2,7 +2,7 @@
   "dispersion":18, 
   "effective_area":80e-12,
   "baud_rate":10e9,
-  "fiber_length": [60e3, 100e3],
+  "fiber_length": [100e3],
   "num_channels": 50,
   "channel_spacing":100e9,
   "center_frequency":190e12,

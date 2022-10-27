@@ -56,7 +56,7 @@ class CopropagatingOptimizer(nn.Module):
         target_spectrum: np.ndarray = None,
         epochs: int = 100,
         learning_rate: float = 2e-2,
-        lock_wavelengths: int = 100,
+        lock_wavelengths: int = 20,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Run the optimization algorithm."""
 
@@ -76,7 +76,7 @@ class CopropagatingOptimizer(nn.Module):
         best_powers = torch.clone(self.pump_powers)
 
         # do not optimize wavelengths for the first `lock_wavelengths` epochs
-        self.pump_wavelengths.requires_grad = False
+        self.pump_wavelengths.requires_grad = True
         reg_lambda = 0.0
         # pbar = tqdm.trange(epochs)
         pbar = tqdm.trange(epochs)
@@ -102,6 +102,7 @@ class CopropagatingOptimizer(nn.Module):
                 + f"\tBest Loss: {best_loss:.4f}"
                 + f"\tFlatness: {flatness:.2f} dB"
             )
+            print(f"\nWavel. : {pump_wavelengths}"+f"\nPow. : {self.pump_powers}")
             # pbar.set_description(
             #     f"Loss: {loss.item():.4f}"
             #     + f"\tBest Loss: {best_loss:.4f}"
@@ -115,6 +116,7 @@ class CopropagatingOptimizer(nn.Module):
                 best_wavelengths = torch.clone(pump_wavelengths)
                 best_powers = torch.clone(self.pump_powers)
                 best_loss = loss.item()
+
         print(f"\nFlatness: {flatness:.2f} dB")
         return (
             best_wavelengths.detach().numpy().squeeze() * 1e-9,

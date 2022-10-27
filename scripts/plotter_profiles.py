@@ -157,7 +157,7 @@ for fiber_length in fiber_lengths:
             ########################################################################
             # SIGNALS AND ASE ONLY
             ########################################################################
-            ##################
+            
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
 
             plt.plot(z_max, np.transpose(

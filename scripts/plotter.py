@@ -22,7 +22,7 @@ import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
 from pynlin.fiber import Fiber
-from pynlin.utils import dBm2watt, watt2dBm
+from pynlin.utils import dBm2watt, watt2dBm, nu2lambda
 from pynlin.wdm import WDM
 import pynlin.constellations
 from scipy import optimize
@@ -117,7 +117,7 @@ Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none = np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
-compute_X0mm_space_integrals = False
+compute_X0mm_space_integrals = True
 
 # if input("\nX0mm and noise variance plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>coi_list= "+str(coi_list)+"\n\t>compute_X0mm_space_integrals= "+str(compute_X0mm_space_integrals)+"\nAre you sure? (y/[n])") != "y":
 #   exit()
@@ -153,6 +153,9 @@ for fiber_length in fiber_lengths:
         ase_co = np.zeros_like(X_co)
         ase_cnt = np.zeros_like(X_co)
         ase_bi = np.zeros_like(X_co)
+        power_at_receiver_co = np.zeros_like(X_co)
+        power_at_receiver_cnt = np.zeros_like(X_co)
+        power_at_receiver_bi = np.zeros_like(X_co)
 
         for pow_idx, power_dBm in enumerate(power_dBm_list):
             print("Computing power ", power_dBm)
@@ -182,13 +185,17 @@ for fiber_length in fiber_lengths:
 
             # compute fB squaring
             pump_solution_co = np.divide(pump_solution_co, pump_solution_co[0, :])
-            signal_solution_co = np.divide(signal_solution_co, signal_solution_co[0, :])
             pump_solution_cnt = np.divide(pump_solution_cnt, pump_solution_cnt[0, :])
+            pump_solution_bi = np.divide(pump_solution_bi, pump_solution_bi[0, :])
+
+            physical_signal_solution_co = signal_solution_co
+            physical_signal_solution_cnt = signal_solution_cnt
+            physical_signal_solution_bi = signal_solution_bi
+
+            signal_solution_co = np.divide(signal_solution_co, signal_solution_co[0, :])
             signal_solution_cnt = np.divide(
                 signal_solution_cnt, signal_solution_cnt[0, :])
-            pump_solution_bi = np.divide(pump_solution_bi, pump_solution_bi[0, :])
             signal_solution_bi = np.divide(signal_solution_bi, signal_solution_bi[0, :])
-
             #z_max = np.load(results_path + 'z_max.npy')
             #f = h5py.File(results_path + 'results_multi.h5', 'r')
             z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
@@ -196,107 +203,113 @@ for fiber_length in fiber_lengths:
             # compute the X0mm coefficients given the precompute time integrals
             # FULL X0mm EVALUATION FOR EVERY m =======================
             for coi_idx, coi in enumerate(coi_list):
-
+                power_at_receiver_co[coi_idx,
+                                     pow_idx] = physical_signal_solution_co[-1, coi_idx]
+                power_at_receiver_cnt[coi_idx,
+                                      pow_idx] = physical_signal_solution_cnt[-1, coi_idx]
+                power_at_receiver_bi[coi_idx,
+                                     pow_idx] = physical_signal_solution_bi[-1, coi_idx]
                 print("Computing Channel Of Interest ", coi + 1)
 
-                # compute the first num_channels interferents (assume the WDM grid is identical)
-                interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
-                    coi, wdm.frequency_grid())
-                pbar_description = "Computing space integrals"
-                collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
-                                            0:num_channels - 1], leave=False)
-                collisions_pbar.set_description(pbar_description)
-                for incremental, interf_index in enumerate(collisions_pbar):
-                    if coi == 0:
-                        m = np.array(
-                            f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 9:
-                        m = np.array(
-                            f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 19:
-                        m = np.array(
-                            f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 29:
-                        m = np.array(
-                            f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 39:
-                        m = np.array(
-                            f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 49:
-                        m = np.array(
-                            f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+                # # compute the first num_channels interferents (assume the WDM grid is identical)
+                # interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
+                #     coi, wdm.frequency_grid())
+                # pbar_description = "Computing space integrals"
+                # collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
+                #                             0:num_channels - 1], leave=False)
+                # collisions_pbar.set_description(pbar_description)
+                # for incremental, interf_index in enumerate(collisions_pbar):
+                #     if coi == 0:
+                #         m = np.array(
+                #             f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+                #         z = np.array(
+                #             f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+                #         I = np.array(
+                #             f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+                #     elif coi == 9:
+                #         m = np.array(
+                #             f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+                #         z = np.array(
+                #             f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+                #         I = np.array(
+                #             f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+                #     elif coi == 19:
+                #         m = np.array(
+                #             f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+                #         z = np.array(
+                #             f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+                #         I = np.array(
+                #             f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+                #     elif coi == 29:
+                #         m = np.array(
+                #             f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+                #         z = np.array(
+                #             f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+                #         I = np.array(
+                #             f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+                #     elif coi == 39:
+                #         m = np.array(
+                #             f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+                #         z = np.array(
+                #             f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+                #         I = np.array(
+                #             f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+                #     elif coi == 49:
+                #         m = np.array(
+                #             f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+                #         z = np.array(
+                #             f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+                #         I = np.array(
+                #             f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
 
-                    # upper cut z
-                    z = np.array(list(filter(lambda x: x <= fiber_length, z)))
-                    net_m = m[partial_collision_margin:len(
-                        m) - partial_collision_margin]
-                    I = I[:, :len(z)]
-                    m = m[:int((len(net_m)) * (fiber_length / file_length)) +
-                          2 * partial_collision_margin]
-                    fB_co = interp1d(
-                        z_max, signal_solution_co[:, incremental], kind='linear')
-                    X0mm_co = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=fB_co(z))
-                    X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
+                #     # upper cut z
+                #     z = np.array(list(filter(lambda x: x <= fiber_length, z)))
+                #     net_m = m[partial_collision_margin:len(
+                #         m) - partial_collision_margin]
+                #     I = I[:, :len(z)]
+                #     m = m[:int((len(net_m)) * (fiber_length / file_length)) +
+                #           2 * partial_collision_margin]
+                #     fB_co = interp1d(
+                #         z_max, signal_solution_co[:, incremental], kind='linear')
+                #     X0mm_co = pynlin.nlin.Xhkm_precomputed(
+                #         z, I, amplification_function=fB_co(z))
+                #     X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
 
-                    fB_cnt = interp1d(
-                        z_max, signal_solution_cnt[:, incremental], kind='linear')
-                    X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=fB_cnt(z))
-                    X_cnt[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
+                #     fB_cnt = interp1d(
+                #         z_max, signal_solution_cnt[:, incremental], kind='linear')
+                #     X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
+                #         z, I, amplification_function=fB_cnt(z))
+                #     X_cnt[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
 
-                    fB_bi = interp1d(
-                        z_max, signal_solution_bi[:, incremental], kind='linear')
-                    X0mm_bi = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=fB_bi(z))
-                    X_bi[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_bi)**2))
+                #     fB_bi = interp1d(
+                #         z_max, signal_solution_bi[:, incremental], kind='linear')
+                #     X0mm_bi = pynlin.nlin.Xhkm_precomputed(
+                #         z, I, amplification_function=fB_bi(z))
+                #     X_bi[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_bi)**2))
 
-                    X0mm_none = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=None)
-                    X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
+                #     X0mm_none = pynlin.nlin.Xhkm_precomputed(
+                #         z, I, amplification_function=None)
+                #     X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
 
                 ase_co[coi_idx, pow_idx] = ase_solution_co[-1, coi_idx]
                 ase_cnt[coi_idx, pow_idx] = ase_solution_cnt[-1, coi_idx]
                 ase_bi[coi_idx, pow_idx] = ase_solution_bi[-1, coi_idx]
-
-        np.save(str(length_setup) + '_' + str(num_co) +
-                '_co_' + str(num_cnt) + '_cnt_X_co.npy', X_co)
-        np.save(str(length_setup) + '_' + str(num_co) +
-                '_co_' + str(num_cnt) + '_cnt_X_cnt.npy', X_cnt)
-        np.save(str(length_setup) + '_' + str(num_co) +
-                '_co_' + str(num_cnt) + '_cnt_X_bi.npy', X_bi)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_cnt) + '_cnt_X_none.npy', X_none)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_cnt) + '_cnt_ase_co.npy', ase_co)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_cnt) + '_cnt_ase_cnt.npy', ase_cnt)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_cnt) + '_cnt_ase_bi.npy', ase_bi)
+        print(ase_co)
+        print(power_at_receiver_co)
+        # np.save(str(length_setup) + '_' + str(num_co) +
+        #         '_co_' + str(num_cnt) + '_cnt_X_co.npy', X_co)
+        # np.save(str(length_setup) + '_' + str(num_co) +
+        #         '_co_' + str(num_cnt) + '_cnt_X_cnt.npy', X_cnt)
+        # np.save(str(length_setup) + '_' + str(num_co) +
+        #         '_co_' + str(num_cnt) + '_cnt_X_bi.npy', X_bi)
+        # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
+        #         str(num_cnt) + '_cnt_X_none.npy', X_none)
+        # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
+        #         str(num_cnt) + '_cnt_ase_co.npy', ase_co)
+        # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
+        #         str(num_cnt) + '_cnt_ase_cnt.npy', ase_cnt)
+        # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
+        #         str(num_cnt) + '_cnt_ase_bi.npy', ase_bi)
 
     else:
         X_co = np.load(str(length_setup) + '_' + str(num_co) +
@@ -455,6 +468,7 @@ for fiber_length in fiber_lengths:
     #####################################
     # CHANNEL position AND OSNR
     #####################################
+    wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e-12 for _ in coi_list]
 
     selected_power = -10
     pow_idx = np.where(power_dBm_list == selected_power)[0]
@@ -467,17 +481,17 @@ for fiber_length in fiber_lengths:
     full_coi = [i + 1 for i in range(50)]
     fig_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 8))
     plt.plot(show=True)
-    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * P_B),
+    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * power_at_receiver_co[:, pow_idx]),
              marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
     plt.grid(which="both")
-    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx] * P_B),
+    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx] * power_at_receiver_cnt[:, pow_idx]),
              marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
     plt.grid(which="both")
-    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * P_B),
+    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * power_at_receiver_bi[:, pow_idx]),
              marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
     plt.grid(which="both")
     plt.grid(which="both")
-    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_none[:, pow_idx, ar_idx] * P_B),
+    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_none[:, pow_idx, ar_idx] * P_B / 2),
              marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
     plt.plot(range(50), 10 * np.log10(NLIN(full_coi, alpha, beta)),
              color='red', linestyle="dashed", linewidth=2)
@@ -491,30 +505,30 @@ for fiber_length in fiber_lengths:
 
     plt.tight_layout()
     fig_channel.savefig(plot_save_path + "noise_channel_together.pdf")
-    
+
     #####################################
     # OSNR_ase VS CHANNEL WAVELENGTH
     #####################################
 
-    selected_power =0.0
+    selected_power = 0.0
     pow_idx = np.where(power_dBm_list == selected_power)[0]
     P_B = 10**(selected_power / 10)  # average power of the constellation in mW
     T = (1 / 10e9)
 
     full_coi = [i + 1 for i in range(50)]
-    wavelength_list = [wdm.frequency_grid()[_]*1e6 for _ in coi_list]
     fig_ASE_channel, ((ax1)) = plt.subplots(
         nrows=1, ncols=1, sharex=True, figsize=(10, 6))
     plt.plot(show=True)
-    plt.plot(wavelength_list, 10 * np.log10(ase_cnt[:, pow_idx]) + 30,
+    plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_cnt[:, pow_idx]),
              marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
-    plt.plot(wavelength_list, 10 * np.log10(ase_bi[:, pow_idx]) + 30,
+    plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]),
              marker='x', markersize=15, color='orange', label="ch." + str(coi) + "CNT.")
     # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
-    plt.xlabel(r"Channel wavelength")
-    plt.xticks(ticks=[wavelength_list[0],wavelength_list[-1]], labels=[wavelength_list[0],wavelength_list[-1]])
+    plt.xlabel(r"Channel wavelength [THz]")
+    plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
+               labels=[wavelength_list[0], wavelength_list[-1]])
     plt.ylabel(r"$OSNR_{ASE}$ [dB]")
-    plt.ylim([-50, -45])
+    #plt.ylim([-50, -45])
     plt.grid(which="both")
 
     plt.tight_layout()
@@ -530,22 +544,22 @@ for fiber_length in fiber_lengths:
     T = (1 / 10e9)
     # Delta_theta is the average
     xdata = [1, 10, 20, 30, 40, 50]
-    ydata = Delta_theta_2_none[:, pow_idx, ar_idx][:, 0] * P_B
+    ydata = Delta_theta_2_none[:, pow_idx, ar_idx][:, 0] * P_B / 2
     alpha, beta = optimize.curve_fit(NLIN, xdata=xdata, ydata=ydata)[0]
     full_coi = [i + 1 for i in range(50)]
     fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
         nrows=2, ncols=2, sharex=True, figsize=(14, 10))
     plt.plot(show=True)
-    ax1.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * P_B),
+    ax1.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * power_at_receiver_co[:, pow_idx]),
              marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
     plt.grid(which="both")
-    ax2.plot(coi_list, 10 * np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx] * P_B),
+    ax2.plot(coi_list, 10 * np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx] * power_at_receiver_cnt[:, pow_idx]),
              marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
     plt.grid(which="both")
-    ax3.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * P_B),
+    ax3.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * power_at_receiver_bi[:, pow_idx]),
              marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
     plt.grid(which="both")
-    ax4.plot(coi_list, 10 * np.log10(Delta_theta_2_none[:, pow_idx, ar_idx] * P_B),
+    ax4.plot(coi_list, 10 * np.log10(Delta_theta_2_none[:, pow_idx, ar_idx] * P_B / 2),
              marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
     ax4.plot(range(50), 10 * np.log10(NLIN(full_coi, alpha, beta)),
              color='red', linestyle="dashed", linewidth=2)
@@ -556,7 +570,8 @@ for fiber_length in fiber_lengths:
     ax2.yaxis.tick_right()
     ax4.yaxis.set_label_position("right")
     ax4.yaxis.tick_right()
-    plt.xticks(ticks=coi_list, labels=[k + 1 for k in coi_list])
+    plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
+               labels=[wavelength_list[0], wavelength_list[-1]])
     ax1.grid(which="both")
     ax2.grid(which="both")
     ax3.grid(which="both")
@@ -588,20 +603,20 @@ for fiber_length in fiber_lengths:
     plt.plot(show=True)
     coi_selection = [0, 19, 49]
     coi_selection_idx = [0, 2, 5]
-    power_list = list(map(dBm2watt, power_dBm_list))
+    power_list = np.array(list(map(dBm2watt, power_dBm_list)))
 
     for scan in range(len(coi_selection)):
-        osnr_co = power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
+        osnr_co = power_at_receiver_co[coi_selection_idx[scan], :] - 10 * \
+            np.log10(power_at_receiver_co[coi_selection_idx[scan], :] * Delta_theta_2_co[coi_selection_idx[scan],
                      :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-        osnr_cnt = power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_cnt[coi_selection_idx[scan],
+        osnr_cnt = power_at_receiver_cnt[coi_selection_idx[scan], :] - 10 * \
+            np.log10(power_at_receiver_cnt[coi_selection_idx[scan], :] * Delta_theta_2_cnt[coi_selection_idx[scan],
                      :, ar_idx] + ase_cnt[coi_selection_idx[scan], :]) - 30
-        osnr_bi = power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_bi[coi_selection_idx[scan],
+        osnr_bi = power_at_receiver_bi[coi_selection_idx[scan], :] - 10 * \
+            np.log10(power_at_receiver_bi[coi_selection_idx[scan], :] * Delta_theta_2_bi[coi_selection_idx[scan],
                      :, ar_idx] + ase_bi[coi_selection_idx[scan], :]) - 30
-        osnr_none = power_dBm_list - 10 * \
-            np.log10(power_list *
+        osnr_none = power_dBm_list -3 - 10 * \
+            np.log10(power_list * 0.5 *
                      Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
         ax1.plot(power_dBm_list, osnr_co, marker=markers[scan],
                  markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
@@ -645,21 +660,12 @@ for fiber_length in fiber_lengths:
     plt.plot(show=True)
     coi_selection = [0, 9, 19, 29, 39, 49]
     coi_selection_idx = [0, 1, 2, 3, 4, 5]
-    power_list = list(map(dBm2watt, power_dBm_list))
-
+    print(power_at_receiver_co[coi_selection_idx[0], :])
     for scan in range(len(coi_selection)):
-        osnr_co += power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
-                     :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-        osnr_cnt += power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_cnt[coi_selection_idx[scan],
-                     :, ar_idx] + ase_cnt[coi_selection_idx[scan], :]) - 30
-        osnr_bi += power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_bi[coi_selection_idx[scan],
-                     :, ar_idx] + ase_bi[coi_selection_idx[scan], :]) - 30
-        osnr_none += power_dBm_list - 10 * \
-            np.log10(power_list *
-                     Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
+        osnr_co += 10 * np.log10(power_at_receiver_co[coi_selection_idx[scan], :]/   (power_at_receiver_co[coi_selection_idx[scan], :] * Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx] + ase_co[coi_selection_idx[scan], :]))
+        osnr_cnt += 10 * np.log10(power_at_receiver_cnt[coi_selection_idx[scan], :]/ (power_at_receiver_cnt[coi_selection_idx[scan], :] * Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx] + ase_cnt[coi_selection_idx[scan], :]))
+        osnr_bi += 10 * np.log10(power_at_receiver_bi[coi_selection_idx[scan], :]/   (power_at_receiver_bi[coi_selection_idx[scan], :] * Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx] + ase_bi[coi_selection_idx[scan], :]))
+        osnr_none += power_dBm_list - 3 - 10 * np.log10(power_list * 0.5 * Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
     osnr_co /= len(coi_selection_idx)
     osnr_cnt /= len(coi_selection_idx)
     osnr_bi /= len(coi_selection_idx)
@@ -672,7 +678,7 @@ for fiber_length in fiber_lengths:
              markersize=10, color='orange')
     plt.grid(which="both")
 
-    plt.ylim([20, 50])
+    #plt.ylim([20, 50])
     plt.ylabel(r"$OSNR$ [dB]")
     plt.xlabel(r"Power [dBm]")
 

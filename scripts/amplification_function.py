@@ -53,8 +53,8 @@ pump_direction = data["pump_direction"]
 
 #power_per_channel_dBm_list = [-10.0, -8.0, -6.0, -4.0, -2.0, 0.0]
 #power_per_channel_dBm_list = [-20.0, -18.0, -16.0, -14.0, -12.0]
-#power_per_channel_dBm_list = [0.0, -2.0, -4.0]
-power_per_channel_dBm_list = np.linspace(-20, 0, 11)
+power_per_channel_dBm_list = [-2.0, -4.0]
+#power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length * 1e-3)
@@ -131,7 +131,7 @@ for fiber_length in fiber_lengths:
     pbar_description = "Optimizing vs signal power"
     pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
     pbar.set_description(pbar_description)
-    
+    '''
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
         # OPTIMIZER BIDIRECTIONAL =================================
@@ -248,7 +248,7 @@ for fiber_length in fiber_lengths:
         plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
         plt.savefig(results_path + "signal_profile_" +
                     str(power_per_channel_dBm) + ".pdf")
-    '''
+    
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
       
@@ -311,7 +311,7 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
             np.save(results_path+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
             np.save(results_path+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
-    
+    '''
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
     # OPTIMIZER COUNTER =================================
@@ -319,18 +319,17 @@ for fiber_length in fiber_lengths:
         num_pumps = 4
         pump_band_b = lambda2nu(1480e-9)
         pump_band_a = lambda2nu(1400e-9)
-        initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
-
+        #initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
+        # BROMAGE
+        initial_pump_frequencies = np.array(lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
         power_per_channel = dBm2watt(power_per_channel_dBm)
-        power_per_pump = dBm2watt(-45)
+        power_per_pump = dBm2watt(0)
         signal_wavelengths = wdm.wavelength_grid()
         pump_wavelengths = nu2lambda(initial_pump_frequencies) *1e9
         num_pumps = len(pump_wavelengths)
-
-
         signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
         pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-
+        print(pump_powers)
         if optimize:    
             torch_amplifier_cnt = RamanAmplifier(
                 fiber_length,
@@ -348,12 +347,12 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = watt2dBm(0.5*signal_powers)
+            target_spectrum = watt2dBm(10*signal_powers)
             pump_wavelengths_cnt, pump_powers_cnt = optimizer.optimize(
                 target_spectrum=target_spectrum,
                 epochs=500,
-                learning_rate=0.2e-3,
-                lock_wavelengths=150,
+                learning_rate=1e-3,
+                #lock_wavelengths=150,
             )
             np.save(optimization_result_path_cocnt+"opt_wavelengths_cnt"+str(power_per_channel_dBm)+".npy", pump_wavelengths_cnt)
             np.save(optimization_result_path_cocnt+"opt_powers_cnt"+str(power_per_channel_dBm)+".npy", pump_powers_cnt)
@@ -379,4 +378,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_cnt_"+str(power_per_channel_dBm)+".npy", pump_solution_cnt)
             np.save(results_path+"signal_solution_cnt_"+str(power_per_channel_dBm)+".npy", signal_solution_cnt)
             np.save(results_path+"ase_solution_cnt_"+str(power_per_channel_dBm)+".npy", ase_solution_cnt)
- '''
+ 
