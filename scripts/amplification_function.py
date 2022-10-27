@@ -1,4 +1,3 @@
-
 import argparse
 import math
 import os
@@ -132,9 +131,9 @@ for fiber_length in fiber_lengths:
     pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
     pbar.set_description(pbar_description)
     
+    # OPTIMIZER BIDIRECTIONAL =================================
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
-        # OPTIMIZER BIDIRECTIONAL =================================
         num_pumps = num_co + num_ct
         pump_band_b = lambda2nu(1510e-9)
         pump_band_a = lambda2nu(1410e-9)
@@ -206,7 +205,7 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = watt2dBm(10*signal_powers)
+            target_spectrum = watt2dBm(0.5*signal_powers)
             if power_per_channel > -6.0:
                 learning_rate = 1e-4
             else:
@@ -252,10 +251,9 @@ for fiber_length in fiber_lengths:
         plt.savefig(results_path + "signal_profile_" +
                     str(power_per_channel_dBm) + ".pdf")
     '''
+    # OPTIMIZER CO =================================
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
-      
-    # OPTIMIZER CO =================================
         num_pumps = 8
         pump_band_b = lambda2nu(1510e-9)
         pump_band_a = lambda2nu(1410e-9)
@@ -314,11 +312,10 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
             np.save(results_path+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
             np.save(results_path+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
-    
+    '''
+    # OPTIMIZER COUNTER =================================
     for power_per_channel_dBm in pbar:
         #print("Power per channel: ", power_per_channel_dBm, "dBm")
-    # OPTIMIZER COUNTER =================================
-
         num_pumps = 4
         pump_band_b = lambda2nu(1480e-9)
         pump_band_a = lambda2nu(1400e-9)
@@ -350,11 +347,16 @@ for fiber_length in fiber_lengths:
                 torch.from_numpy(pump_powers),
             )
 
-            target_spectrum = watt2dBm(10*signal_powers)
+            target_spectrum = watt2dBm(0.5*signal_powers)
+            if power_per_channel > -6.0:
+                learning_rate = 0.7e-4
+            else:
+                learning_rate = 2e-3
+
             pump_wavelengths_ct, pump_powers_ct = optimizer.optimize(
                 target_spectrum=target_spectrum,
                 epochs=500,
-                learning_rate=1e-3,
+                learning_rate=learning_rate,
                 #lock_wavelengths=150,
             )
             np.save(optimization_result_path_coct+"opt_wavelengths_ct"+str(power_per_channel_dBm)+".npy", pump_wavelengths_ct)
@@ -381,4 +383,4 @@ for fiber_length in fiber_lengths:
             np.save(results_path+"pump_solution_ct_"+str(power_per_channel_dBm)+".npy", pump_solution_ct)
             np.save(results_path+"signal_solution_ct_"+str(power_per_channel_dBm)+".npy", signal_solution_ct)
             np.save(results_path+"ase_solution_ct_"+str(power_per_channel_dBm)+".npy", ase_solution_ct)
- '''
+ 
