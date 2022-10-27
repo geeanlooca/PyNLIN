@@ -42,7 +42,7 @@ store_true = data["store_true"]
 pulse_shape = data["pulse_shape"]
 partial_collision_margin = data["partial_collision_margin"]
 num_co = data["num_co"]
-num_cnt = data["num_cnt"]
+num_ct = data["num_ct"]
 wavelength = data["wavelength"]
 time_integral_length = data['time_integral_length']
 special = data['special']
@@ -112,7 +112,7 @@ print("gamma: ", fiber.gamma)
 Delta_theta_2_co = np.zeros_like(
     np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(arity_list)))
 )
-Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
+Delta_theta_2_ct = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none = np.zeros_like(Delta_theta_2_co)
 
@@ -132,7 +132,7 @@ for fiber_length in fiber_lengths:
     length_setup = int(fiber_length * 1e-3)
     plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_" + \
         str(length_setup) + '/' + str(num_co) + '_co_' + \
-        str(num_cnt) + '_cnt_' + special + '/'
+        str(num_ct) + '_ct_' + special + '/'
     #
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
@@ -140,21 +140,21 @@ for fiber_length in fiber_lengths:
     results_path = '../results_' + str(length_setup) + '/'
     results_path_bi = '../results_' + \
         str(length_setup) + '/' + str(num_co) + '_co_' + \
-        str(num_cnt) + '_cnt_' + special + '/'
+        str(num_ct) + '_ct_' + special + '/'
     #
     if compute_X0mm_space_integrals:
         # sum of all the varianced (variances are the sum of all the X0mm over m)
         X_co = np.zeros_like(
             np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
         )
-        X_cnt = np.zeros_like(X_co)
+        X_ct = np.zeros_like(X_co)
         X_bi = np.zeros_like(X_co)
         X_none = np.zeros_like(X_co)
         ase_co = np.zeros_like(X_co)
-        ase_cnt = np.zeros_like(X_co)
+        ase_ct = np.zeros_like(X_co)
         ase_bi = np.zeros_like(X_co)
         power_at_receiver_co = np.zeros_like(X_co)
-        power_at_receiver_cnt = np.zeros_like(X_co)
+        power_at_receiver_ct = np.zeros_like(X_co)
         power_at_receiver_bi = np.zeros_like(X_co)
 
         for pow_idx, power_dBm in enumerate(power_dBm_list):
@@ -166,10 +166,10 @@ for fiber_length in fiber_lengths:
                 results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
             signal_solution_co = np.load(
                 results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
-            pump_solution_cnt = np.load(
-                results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
-            signal_solution_cnt = np.load(
-                results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
+            pump_solution_ct = np.load(
+                results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
+            signal_solution_ct = np.load(
+                results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
             pump_solution_bi = np.load(
                 results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
             signal_solution_bi = np.load(
@@ -178,35 +178,35 @@ for fiber_length in fiber_lengths:
             # ASE power evolution
             ase_solution_co = np.load(
                 results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
-            ase_solution_cnt = np.load(
-                results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
+            ase_solution_ct = np.load(
+                results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
             ase_solution_bi = np.load(
                 results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
             # compute fB squaring
             pump_solution_co = np.divide(pump_solution_co, pump_solution_co[0, :])
-            pump_solution_cnt = np.divide(pump_solution_cnt, pump_solution_cnt[0, :])
+            pump_solution_ct = np.divide(pump_solution_ct, pump_solution_ct[0, :])
             pump_solution_bi = np.divide(pump_solution_bi, pump_solution_bi[0, :])
 
             physical_signal_solution_co = signal_solution_co
-            physical_signal_solution_cnt = signal_solution_cnt
+            physical_signal_solution_ct = signal_solution_ct
             physical_signal_solution_bi = signal_solution_bi
 
             signal_solution_co = np.divide(signal_solution_co, signal_solution_co[0, :])
-            signal_solution_cnt = np.divide(
-                signal_solution_cnt, signal_solution_cnt[0, :])
+            signal_solution_ct = np.divide(
+                signal_solution_ct, signal_solution_ct[0, :])
             signal_solution_bi = np.divide(signal_solution_bi, signal_solution_bi[0, :])
             #z_max = np.load(results_path + 'z_max.npy')
             #f = h5py.File(results_path + 'results_multi.h5', 'r')
-            z_max = np.linspace(0, fiber_length, np.shape(pump_solution_cnt)[0])
+            z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
             # compute the X0mm coefficients given the precompute time integrals
             # FULL X0mm EVALUATION FOR EVERY m =======================
             for coi_idx, coi in enumerate(coi_list):
                 power_at_receiver_co[coi_idx,
                                      pow_idx] = physical_signal_solution_co[-1, coi_idx]
-                power_at_receiver_cnt[coi_idx,
-                                      pow_idx] = physical_signal_solution_cnt[-1, coi_idx]
+                power_at_receiver_ct[coi_idx,
+                                      pow_idx] = physical_signal_solution_ct[-1, coi_idx]
                 power_at_receiver_bi[coi_idx,
                                      pow_idx] = physical_signal_solution_bi[-1, coi_idx]
                 print("Computing Channel Of Interest ", coi + 1)
@@ -275,11 +275,11 @@ for fiber_length in fiber_lengths:
                 #         z, I, amplification_function=fB_co(z))
                 #     X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
 
-                #     fB_cnt = interp1d(
-                #         z_max, signal_solution_cnt[:, incremental], kind='linear')
-                #     X0mm_cnt = pynlin.nlin.Xhkm_precomputed(
-                #         z, I, amplification_function=fB_cnt(z))
-                #     X_cnt[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_cnt)**2))
+                #     fB_ct = interp1d(
+                #         z_max, signal_solution_ct[:, incremental], kind='linear')
+                #     X0mm_ct = pynlin.nlin.Xhkm_precomputed(
+                #         z, I, amplification_function=fB_ct(z))
+                #     X_ct[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_ct)**2))
 
                 #     fB_bi = interp1d(
                 #         z_max, signal_solution_bi[:, incremental], kind='linear')
@@ -292,40 +292,40 @@ for fiber_length in fiber_lengths:
                 #     X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
 
                 ase_co[coi_idx, pow_idx] = ase_solution_co[-1, coi_idx]
-                ase_cnt[coi_idx, pow_idx] = ase_solution_cnt[-1, coi_idx]
+                ase_ct[coi_idx, pow_idx] = ase_solution_ct[-1, coi_idx]
                 ase_bi[coi_idx, pow_idx] = ase_solution_bi[-1, coi_idx]
         print(ase_co)
         print(power_at_receiver_co)
         # np.save(str(length_setup) + '_' + str(num_co) +
-        #         '_co_' + str(num_cnt) + '_cnt_X_co.npy', X_co)
+        #         '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
         # np.save(str(length_setup) + '_' + str(num_co) +
-        #         '_co_' + str(num_cnt) + '_cnt_X_cnt.npy', X_cnt)
+        #         '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
         # np.save(str(length_setup) + '_' + str(num_co) +
-        #         '_co_' + str(num_cnt) + '_cnt_X_bi.npy', X_bi)
+        #         '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
         # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-        #         str(num_cnt) + '_cnt_X_none.npy', X_none)
+        #         str(num_ct) + '_ct_X_none.npy', X_none)
         # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-        #         str(num_cnt) + '_cnt_ase_co.npy', ase_co)
+        #         str(num_ct) + '_ct_ase_co.npy', ase_co)
         # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-        #         str(num_cnt) + '_cnt_ase_cnt.npy', ase_cnt)
+        #         str(num_ct) + '_ct_ase_ct.npy', ase_ct)
         # np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-        #         str(num_cnt) + '_cnt_ase_bi.npy', ase_bi)
+        #         str(num_ct) + '_ct_ase_bi.npy', ase_bi)
 
     else:
         X_co = np.load(str(length_setup) + '_' + str(num_co) +
-                       '_co_' + str(num_cnt) + '_cnt_X_co.npy')
-        X_cnt = np.load(str(length_setup) + '_' + str(num_co) +
-                        '_co_' + str(num_cnt) + '_cnt_X_cnt.npy')
+                       '_co_' + str(num_ct) + '_ct_X_co.npy')
+        X_ct = np.load(str(length_setup) + '_' + str(num_co) +
+                        '_co_' + str(num_ct) + '_ct_X_ct.npy')
         X_bi = np.load(str(length_setup) + '_' + str(num_co) +
-                       '_co_' + str(num_cnt) + '_cnt_X_bi.npy')
+                       '_co_' + str(num_ct) + '_ct_X_bi.npy')
         X_none = np.load(str(length_setup) + '_' + str(num_co) +
-                         '_co_' + str(num_cnt) + '_cnt_X_none.npy')
+                         '_co_' + str(num_ct) + '_ct_X_none.npy')
         ase_co = np.load(str(length_setup) + '_' + str(num_co) +
-                         '_co_' + str(num_cnt) + '_cnt_ase_co.npy')
-        ase_cnt = np.load(str(length_setup) + '_' + str(num_co) +
-                          '_co_' + str(num_cnt) + '_cnt_ase_cnt.npy')
+                         '_co_' + str(num_ct) + '_ct_ase_co.npy')
+        ase_ct = np.load(str(length_setup) + '_' + str(num_co) +
+                          '_co_' + str(num_ct) + '_ct_ase_ct.npy')
         ase_bi = np.load(str(length_setup) + '_' + str(num_co) +
-                         '_co_' + str(num_cnt) + '_cnt_ase_bi.npy')
+                         '_co_' + str(num_ct) + '_ct_ase_bi.npy')
     ar_idx = 0  # 16-QAM
     M = 16
     for pow_idx, power_dBm in enumerate(power_dBm_list):
@@ -343,8 +343,8 @@ for fiber_length in fiber_lengths:
         for coi_idx, coi in enumerate(coi_list):
             Delta_theta_2_co[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
                 constellation_variance * np.abs(X_co[coi_idx, pow_idx])
-            Delta_theta_2_cnt[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
-                constellation_variance * np.abs(X_cnt[coi_idx, pow_idx])
+            Delta_theta_2_ct[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
+                constellation_variance * np.abs(X_ct[coi_idx, pow_idx])
             Delta_theta_2_bi[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
                 constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
             Delta_theta_2_none[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
@@ -364,7 +364,7 @@ for fiber_length in fiber_lengths:
     for scan in range(len(coi_selection)):
         ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
                  markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-        ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
+        ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
                  markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
         ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
                  markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
@@ -384,7 +384,7 @@ for fiber_length in fiber_lengths:
     ax4.set_xlabel(r"Power [dBm]")
 
     ax1.text(-15, -20, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    ax2.text(-15, -40, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+    ax2.text(-15, -40, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax3.text(-15, -40, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.text(-5, -80, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.legend()
@@ -405,7 +405,7 @@ for fiber_length in fiber_lengths:
     for scan in range(len(coi_selection)):
         ax1.plot(power_dBm_list, 10 * np.log10(ase_co[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
                  markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-        ax2.plot(power_dBm_list, 10 * np.log10(ase_cnt[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
+        ax2.plot(power_dBm_list, 10 * np.log10(ase_ct[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
                  markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
         ax3.plot(power_dBm_list, 10 * np.log10(ase_bi[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
                  markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
@@ -435,13 +435,13 @@ for fiber_length in fiber_lengths:
     axis_num = 0
     plt.plot(power_dBm_list, power_dBm_list + 10 * np.log10(np.average([Delta_theta_2_co[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
              markersize=10, color='green', label="NLIN")
-    plt.plot(power_dBm_list, power_dBm_list + 10 * np.log10(np.average([Delta_theta_2_cnt[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
+    plt.plot(power_dBm_list, power_dBm_list + 10 * np.log10(np.average([Delta_theta_2_ct[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
              markersize=10, color='blue')
     plt.plot(power_dBm_list, power_dBm_list + 10 * np.log10(np.average([Delta_theta_2_bi[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
              markersize=10, color='orange')
     plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
              markersize=10, color='green', label="ASE")
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_cnt[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
+    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
              markersize=10, color='blue')
     plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
              markersize=10, color='orange')
@@ -484,8 +484,8 @@ for fiber_length in fiber_lengths:
     plt.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * power_at_receiver_co[:, pow_idx]),
              marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
     plt.grid(which="both")
-    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx] * power_at_receiver_cnt[:, pow_idx]),
-             marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
+    plt.plot(coi_list, 10 * np.log10(Delta_theta_2_ct[:, pow_idx, ar_idx] * power_at_receiver_ct[:, pow_idx]),
+             marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct.")
     plt.grid(which="both")
     plt.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * power_at_receiver_bi[:, pow_idx]),
              marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
@@ -519,10 +519,10 @@ for fiber_length in fiber_lengths:
     fig_ASE_channel, ((ax1)) = plt.subplots(
         nrows=1, ncols=1, sharex=True, figsize=(10, 6))
     plt.plot(show=True)
-    plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_cnt[:, pow_idx]),
+    plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]),
              marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
     plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]),
-             marker='x', markersize=15, color='orange', label="ch." + str(coi) + "CNT.")
+             marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
     # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
     plt.xlabel(r"Channel wavelength [THz]")
     plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
@@ -553,8 +553,8 @@ for fiber_length in fiber_lengths:
     ax1.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * power_at_receiver_co[:, pow_idx]),
              marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
     plt.grid(which="both")
-    ax2.plot(coi_list, 10 * np.log10(Delta_theta_2_cnt[:, pow_idx, ar_idx] * power_at_receiver_cnt[:, pow_idx]),
-             marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CNT.")
+    ax2.plot(coi_list, 10 * np.log10(Delta_theta_2_ct[:, pow_idx, ar_idx] * power_at_receiver_ct[:, pow_idx]),
+             marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct.")
     plt.grid(which="both")
     ax3.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * power_at_receiver_bi[:, pow_idx]),
              marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
@@ -582,7 +582,7 @@ for fiber_length in fiber_lengths:
     plt.xlabel(r"Channel index")
     ax4.grid(which="both")
     ax1.text(30, -46, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    ax2.text(30, -59.5, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+    ax2.text(30, -59.5, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax3.text(30, -56, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.text(30, -52, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax1.set_ylabel(r"NLIN [dBm]")
@@ -609,9 +609,9 @@ for fiber_length in fiber_lengths:
         osnr_co = power_at_receiver_co[coi_selection_idx[scan], :] - 10 * \
             np.log10(power_at_receiver_co[coi_selection_idx[scan], :] * Delta_theta_2_co[coi_selection_idx[scan],
                      :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-        osnr_cnt = power_at_receiver_cnt[coi_selection_idx[scan], :] - 10 * \
-            np.log10(power_at_receiver_cnt[coi_selection_idx[scan], :] * Delta_theta_2_cnt[coi_selection_idx[scan],
-                     :, ar_idx] + ase_cnt[coi_selection_idx[scan], :]) - 30
+        osnr_ct = power_at_receiver_ct[coi_selection_idx[scan], :] - 10 * \
+            np.log10(power_at_receiver_ct[coi_selection_idx[scan], :] * Delta_theta_2_ct[coi_selection_idx[scan],
+                     :, ar_idx] + ase_ct[coi_selection_idx[scan], :]) - 30
         osnr_bi = power_at_receiver_bi[coi_selection_idx[scan], :] - 10 * \
             np.log10(power_at_receiver_bi[coi_selection_idx[scan], :] * Delta_theta_2_bi[coi_selection_idx[scan],
                      :, ar_idx] + ase_bi[coi_selection_idx[scan], :]) - 30
@@ -620,7 +620,7 @@ for fiber_length in fiber_lengths:
                      Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
         ax1.plot(power_dBm_list, osnr_co, marker=markers[scan],
                  markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-        ax2.plot(power_dBm_list, osnr_cnt, marker=markers[scan],
+        ax2.plot(power_dBm_list, osnr_ct, marker=markers[scan],
                  markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
         ax3.plot(power_dBm_list, osnr_bi, marker=markers[scan],
                  markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
@@ -640,7 +640,7 @@ for fiber_length in fiber_lengths:
     ax4.set_xlabel(r"Power [dBm]")
 
     ax1.text(-15, 25, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    ax2.text(-15, 30, 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+    ax2.text(-15, 30, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax3.text(-15, 25, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.text(-15, 25, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.legend()
@@ -663,16 +663,16 @@ for fiber_length in fiber_lengths:
     print(power_at_receiver_co[coi_selection_idx[0], :])
     for scan in range(len(coi_selection)):
         osnr_co += 10 * np.log10(power_at_receiver_co[coi_selection_idx[scan], :]/   (power_at_receiver_co[coi_selection_idx[scan], :] * Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx] + ase_co[coi_selection_idx[scan], :]))
-        osnr_cnt += 10 * np.log10(power_at_receiver_cnt[coi_selection_idx[scan], :]/ (power_at_receiver_cnt[coi_selection_idx[scan], :] * Delta_theta_2_cnt[coi_selection_idx[scan], :, ar_idx] + ase_cnt[coi_selection_idx[scan], :]))
+        osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx[scan], :]/ (power_at_receiver_ct[coi_selection_idx[scan], :] * Delta_theta_2_ct[coi_selection_idx[scan], :, ar_idx] + ase_ct[coi_selection_idx[scan], :]))
         osnr_bi += 10 * np.log10(power_at_receiver_bi[coi_selection_idx[scan], :]/   (power_at_receiver_bi[coi_selection_idx[scan], :] * Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx] + ase_bi[coi_selection_idx[scan], :]))
         osnr_none += power_dBm_list - 3 - 10 * np.log10(power_list * 0.5 * Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
     osnr_co /= len(coi_selection_idx)
-    osnr_cnt /= len(coi_selection_idx)
+    osnr_ct /= len(coi_selection_idx)
     osnr_bi /= len(coi_selection_idx)
     osnr_none /= len(coi_selection_idx)
     plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
              markersize=10, color='green')
-    plt.plot(power_dBm_list, osnr_cnt, marker=markers[scan],
+    plt.plot(power_dBm_list, osnr_ct, marker=markers[scan],
              markersize=10, color='blue')
     plt.plot(power_dBm_list, osnr_bi, marker=markers[scan],
              markersize=10, color='orange')
@@ -700,16 +700,16 @@ for fiber_length in fiber_lengths:
         osnr_co = power_dBm_list - 10 * \
             np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
                      :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-        osnr_cnt = power_dBm_list - 10 * \
-            np.log10(power_list * Delta_theta_2_cnt[coi_selection_idx[scan],
-                     :, ar_idx] + ase_cnt[coi_selection_idx[scan], :]) - 30
+        osnr_ct = power_dBm_list - 10 * \
+            np.log10(power_list * Delta_theta_2_ct[coi_selection_idx[scan],
+                     :, ar_idx] + ase_ct[coi_selection_idx[scan], :]) - 30
         osnr_bi = power_dBm_list - 10 * \
             np.log10(power_list * Delta_theta_2_bi[coi_selection_idx[scan],
                      :, ar_idx] + ase_bi[coi_selection_idx[scan], :]) - 30
         osnr_none = power_dBm_list - 10 * \
             np.log10(power_list *
                      Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
-        osnr_list = [osnr_co, osnr_cnt, osnr_bi, osnr_none]
+        osnr_list = [osnr_co, osnr_ct, osnr_bi, osnr_none]
         evms = []
         bers = []
         for osnr in osnr_list:
@@ -742,7 +742,7 @@ for fiber_length in fiber_lengths:
     ax4.set_ylim([10**-50, 1])
 
     ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    ax2.text(-15, 10**(-6), 'CNT', bbox={'facecolor': 'white', 'alpha': 0.8})
+    ax2.text(-15, 10**(-6), 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax3.text(-15, 10**(-6), 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.text(-10, 10**(-6), 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
     ax4.legend()

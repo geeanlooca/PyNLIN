@@ -10,7 +10,7 @@
   "pulse_shape":"Nyquist",
   "partial_collision_margin":5,
   "num_co": 2, 
-  "num_cnt":4,
+  "num_ct":4,
   "interfering_grid_index":1,
   "wavelength":1550e-9,
   "time_integral_length":100e3,

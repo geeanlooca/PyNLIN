@@ -35,7 +35,7 @@ store_true=data["store_true"]
 pulse_shape=data["pulse_shape"] 
 partial_collision_margin=data["partial_collision_margin"] 
 num_co= data["num_co"] 
-num_cnt=data["num_cnt"]
+num_ct=data["num_ct"]
 wavelength=data["wavelength"]
 special=data["special"]
 pump_direction=data["pump_direction"]
@@ -46,13 +46,13 @@ plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length*1e-3) 
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
+    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/'
     #
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
     #
     results_path = '../results_'+str(length_setup)+'/'
-    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
+    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/'
     #
     time_integrals_results_path = '../results/'
 
@@ -94,7 +94,7 @@ for fiber_length in fiber_lengths:
     Delta_theta_2_co = np.zeros_like(
         np.ndarray(shape=(len(power_dBm_list), len(arity_list)))
     )
-    Delta_theta_2_cnt = np.zeros_like(Delta_theta_2_co)
+    Delta_theta_2_ct = np.zeros_like(Delta_theta_2_co)
 
     show_plots = False
     show_pumps = False
@@ -102,18 +102,18 @@ for fiber_length in fiber_lengths:
     coi_list = [0, 24, 49]
     #if input("\nASE-Signal_pump profile plotter: \n\t>Length= " + str(length_setup) + "km \n\t>power list= " + str(power_dBm_list) + "\nAre you sure? (y/[n])") != "y":
     #   exit()
-    configs = [[num_co, num_cnt]]
+    configs = [[num_co, num_ct]]
     for config in configs:
         num_co = config[0]
-        num_cnt = config[1]
+        num_ct = config[1]
         for idx, power_dBm in enumerate(power_dBm_list):
             average_power = dBm2watt(power_dBm)
             results_path = '../results_' + str(length_setup) + '/'
             optimized_result_path = '../results_' + str(length_setup) + '/optimization/'
-            optimized_result_path_bi =  '../results_' + str(length_setup) + '/optimization/'+ str(num_co) + '_co_' + str(num_cnt) + '_cnt_'+special+"/"
+            optimized_result_path_bi =  '../results_' + str(length_setup) + '/optimization/'+ str(num_co) + '_co_' + str(num_ct) + '_ct_'+special+"/"
             results_path_bi = '../results_' + \
-                str(length_setup) + '/' + str(num_co) + '_co_' + str(num_cnt) + '_cnt_'+special+'/'
-            plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_cnt)+'_cnt_'+special+'/'
+                str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_'+special+'/'
+            plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/'
 
             # SIMULATION DATA LOAD =================================
 
@@ -124,12 +124,12 @@ for fiber_length in fiber_lengths:
             ase_solution_co = np.load(
                 results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
 
-            pump_solution_cnt = np.load(
-                results_path + 'pump_solution_cnt_' + str(power_dBm) + '.npy')
-            signal_solution_cnt = np.load(
-                results_path + 'signal_solution_cnt_' + str(power_dBm) + '.npy')
-            ase_solution_cnt = np.load(
-                results_path + 'ase_solution_cnt_' + str(power_dBm) + '.npy')
+            pump_solution_ct = np.load(
+                results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
+            signal_solution_ct = np.load(
+                results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
+            ase_solution_ct = np.load(
+                results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
 
             pump_solution_bi = np.load(
                 results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
@@ -141,7 +141,7 @@ for fiber_length in fiber_lengths:
             # plt.figure()
             # plt.plot(signal_wavelengths, watt2dBm(signal_solution_co[-1]), color="k")
             # plt.figure()
-            # plt.plot(signal_wavelengths, watt2dBm(signal_solution_cnt[-1]), color="k")
+            # plt.plot(signal_wavelengths, watt2dBm(signal_solution_ct[-1]), color="k")
             # plt.figure()
             # plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
 
@@ -185,11 +185,11 @@ for fiber_length in fiber_lengths:
             ###############
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             plt.plot(z_max, np.transpose(
-                watt2dBm([ase_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="k")
+                watt2dBm([ase_solution_ct[:, idx] for idx in [0, 24, 49]])), color="k")
             plt.plot(z_max, np.transpose(
-                watt2dBm([signal_solution_cnt[:, idx] for idx in [0, 24, 49]])), color="b")
+                watt2dBm([signal_solution_ct[:, idx] for idx in [0, 24, 49]])), color="b")
             if show_pumps:
-                plt.plot(z_max, watt2dBm(pump_solution_cnt), color="r")
+                plt.plot(z_max, watt2dBm(pump_solution_ct), color="r")
 
             plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
@@ -198,14 +198,14 @@ for fiber_length in fiber_lengths:
             plt.ylabel("Wave power [dBm]")
             plt.grid("on")
             plt.minorticks_on()
-            osnr = 10 * np.log10(signal_solution_cnt[-1:, :] / ase_solution_cnt[-1:, :])
+            osnr = 10 * np.log10(signal_solution_ct[-1:, :] / ase_solution_ct[-1:, :])
             # plt.figure()
             # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
             if show_plots:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_cnt.pdf")
+            plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_ct.pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
@@ -257,7 +257,7 @@ for fiber_length in fiber_lengths:
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             for ii, idx in enumerate(coi_list):
                 plt.plot(z_max, np.transpose(watt2dBm(
-                    signal_solution_cnt[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
+                    signal_solution_ct[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
 
             plt.xlabel("z [km]")
             plt.ylabel("Signal power [dBm]")
@@ -270,7 +270,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_cnt.pdf")
+            plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_ct.pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
@@ -320,11 +320,11 @@ for fiber_length in fiber_lengths:
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 8))
             for ii, idx in enumerate(coi_list):
                 plt.plot(z_max, np.transpose(watt2dBm(
-                    ase_solution_cnt[:, idx])), color="black", linestyle=linestyles[ii], label=labels[ii])
+                    ase_solution_ct[:, idx])), color="black", linestyle=linestyles[ii], label=labels[ii])
             plt.legend()   
             plt.xlabel("z [km]")
             plt.ylabel("ASE power [dBm]")
-            #plt.annotate("CNT", (60, -70))
+            #plt.annotate("ct", (60, -70))
             plt.xticks([0, 40, 80], [0, 40,80])
             plt.yticks([-80, -70, -60,  -50, -40], [-80, -70, -60,  -50, -40])
             plt.grid("on")
@@ -334,7 +334,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_cnt.pdf")
+            plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_ct.pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 8))
@@ -366,7 +366,7 @@ for fiber_length in fiber_lengths:
             # color=cm.viridis(i/(len(m)-10)/3*2)
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             num_CO = len(pump_solution_co[0, :])
-            num_CNT = len(pump_solution_cnt[0, :])
+            num_ct = len(pump_solution_ct[0, :])
             num_bi = len(pump_solution_bi[0, :])
 
             pump_wavelengths_CO = 1e6*np.load(optimized_result_path+'opt_wavelengths_co' + str(power_dBm) + '.npy')
@@ -401,12 +401,12 @@ for fiber_length in fiber_lengths:
 
             plt.savefig(plot_save_path + "../pumps" + str(power_dBm) + "_co.pdf")
             
-            ######### pumps cnt
+            ######### pumps ct
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
-            pump_wavelengths_cnt = 1e6*np.load(optimized_result_path+'opt_wavelengths_cnt' + str(power_dBm) + '.npy')
+            pump_wavelengths_ct = 1e6*np.load(optimized_result_path+'opt_wavelengths_ct' + str(power_dBm) + '.npy')
 
-            for pp in range(num_CNT):
-                ax_= ax.plot(z_max, watt2dBm(pump_solution_cnt[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_CNT))))
+            for pp in range(num_ct):
+                ax_= ax.plot(z_max, watt2dBm(pump_solution_ct[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_ct))))
             plt.xlabel("z [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
@@ -416,24 +416,24 @@ for fiber_length in fiber_lengths:
             plt.tight_layout()
 
             #Get cmap values
-            cmap_vals = cm.gist_rainbow([item/num_CNT for item in range(num_CNT)])
+            cmap_vals = cm.gist_rainbow([item/num_ct for item in range(num_ct)])
             
             # Define new cmap
             cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
-            #norm = mpl.colors.BoundaryNorm(pump_wavelengths_cnt, num_CNT)
-            norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_cnt), vmax=np.max(pump_wavelengths_cnt)) 
+            #norm = mpl.colors.BoundaryNorm(pump_wavelengths_ct, num_ct)
+            norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_ct), vmax=np.max(pump_wavelengths_ct)) 
             # Define SM
             sm = plt.cm.ScalarMappable(cmap=cmap_new, norm=norm)
             sm.set_array([])
 
             # Plot colorbar
             clb = plt.colorbar(sm, pad=0.01)
-            clb.ax.set_xticks(pump_wavelengths_cnt)
-            clb.ax.set_xticklabels(["{:1.4f}".format(pmp) for pmp in pump_wavelengths_cnt])
-            # print(pump_wavelengths_cnt)
+            clb.ax.set_xticks(pump_wavelengths_ct)
+            clb.ax.set_xticklabels(["{:1.4f}".format(pmp) for pmp in pump_wavelengths_ct])
+            # print(pump_wavelengths_ct)
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
-            plt.savefig(plot_save_path + "../pumps" + str(power_dBm) + "_cnt.pdf")
+            plt.savefig(plot_save_path + "../pumps" + str(power_dBm) + "_ct.pdf")
             
             ######### pumps bi
             #
