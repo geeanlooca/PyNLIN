@@ -51,7 +51,6 @@ plt.rcParams['font.family'] = 'STIXGeneral'
 plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
 
-
 def H(n):
     s = 0
     n = int(n)
@@ -86,9 +85,8 @@ def EVM_to_BER(evm):
 
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
-#power_dBm_list = [-20, -10, -5, 0]
 power_dBm_list = np.linspace(-20, 0, 11)
-arity_list = [16]
+power_list = dBm2watt(power_dBm_list)
 coi_list = [0, 9, 19, 29, 39, 49]
 
 wavelength = 1550
@@ -110,7 +108,7 @@ points_per_collision = 10
 print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
 Delta_theta_2_co = np.zeros_like(
-    np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(arity_list)))
+    np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
 )
 Delta_theta_2_ct = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
@@ -141,190 +139,70 @@ for fiber_length in fiber_lengths:
     results_path_bi = '../results_' + \
         str(length_setup) + '/' + str(num_co) + '_co_' + \
         str(num_ct) + '_ct_' + special + '/'
-    #
-    if compute_X0mm_space_integrals:
-        # sum of all the varianced (variances are the sum of all the X0mm over m)
-        X_co = np.zeros_like(
-            np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
-        )
-        X_ct = np.zeros_like(X_co)
-        X_bi = np.zeros_like(X_co)
-        X_none = np.zeros_like(X_co)
-        ase_co = np.zeros_like(X_co)
-        ase_ct = np.zeros_like(X_co)
-        ase_bi = np.zeros_like(X_co)
-        power_at_receiver_co = np.zeros_like(X_co)
-        power_at_receiver_ct = np.zeros_like(X_co)
-        power_at_receiver_bi = np.zeros_like(X_co)
+    noise_path = '../noises/'
 
-        for pow_idx, power_dBm in enumerate(power_dBm_list):
-            print("Computing power ", power_dBm)
-            average_power = dBm2watt(power_dBm)
-            # SIMULATION DATA LOAD =================================
+    # retrieve ASE and SIGNAL power at receiver
+    X_co = np.zeros_like(
+        np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
+    )
+    X_ct = np.zeros_like(X_co)
+    X_bi = np.zeros_like(X_co)
+    X_none = np.zeros_like(X_co)
+    ase_co = np.zeros_like(X_co)
+    ase_ct = np.zeros_like(X_co)
+    ase_bi = np.zeros_like(X_co)
+    power_at_receiver_co = np.zeros_like(X_co)
+    power_at_receiver_ct = np.zeros_like(X_co)
+    power_at_receiver_bi = np.zeros_like(X_co)
 
-            pump_solution_co = np.load(
-                results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
-            signal_solution_co = np.load(
-                results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
-            pump_solution_ct = np.load(
-                results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
-            signal_solution_ct = np.load(
-                results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
-            pump_solution_bi = np.load(
-                results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
-            signal_solution_bi = np.load(
-                results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+    for pow_idx, power_dBm in enumerate(power_dBm_list):
+        # PUMP power evolution
+        pump_solution_co = np.load(
+            results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
+        pump_solution_ct = np.load(
+            results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
+        pump_solution_bi = np.load(
+            results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
 
-            # ASE power evolution
-            ase_solution_co = np.load(
-                results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
-            ase_solution_ct = np.load(
-                results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
-            ase_solution_bi = np.load(
-                results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
+        # SIGNAL power evolution
+        signal_solution_co = np.load(
+            results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
+        signal_solution_ct = np.load(
+            results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
+        signal_solution_bi = np.load(
+            results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
 
-            # compute fB squaring
-            pump_solution_co = np.divide(pump_solution_co, pump_solution_co[0, :])
-            pump_solution_ct = np.divide(pump_solution_ct, pump_solution_ct[0, :])
-            pump_solution_bi = np.divide(pump_solution_bi, pump_solution_bi[0, :])
+        # ASE power evolution
+        ase_solution_co = np.load(
+            results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
+        ase_solution_ct = np.load(
+            results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
+        ase_solution_bi = np.load(
+            results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
-            physical_signal_solution_co = signal_solution_co
-            physical_signal_solution_ct = signal_solution_ct
-            physical_signal_solution_bi = signal_solution_bi
+        z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
-            signal_solution_co = np.divide(signal_solution_co, signal_solution_co[0, :])
-            signal_solution_ct = np.divide(
-                signal_solution_ct, signal_solution_ct[0, :])
-            signal_solution_bi = np.divide(signal_solution_bi, signal_solution_bi[0, :])
-            #z_max = np.load(results_path + 'z_max.npy')
-            #f = h5py.File(results_path + 'results_multi.h5', 'r')
-            z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
+        # compute the X0mm coefficients given the precompute time integrals
+        # FULL X0mm EVALUATION FOR EVERY m =======================
+        for coi_idx, coi in enumerate(coi_list):
+            power_at_receiver_co[coi_idx,pow_idx] = signal_solution_co[-1, coi_idx]
+            power_at_receiver_ct[coi_idx,pow_idx] = signal_solution_ct[-1, coi_idx]
+            power_at_receiver_bi[coi_idx,pow_idx] = signal_solution_bi[-1, coi_idx]
+            ase_co[coi_idx, pow_idx] = ase_solution_co[-1, coi_idx]
+            ase_ct[coi_idx, pow_idx] = ase_solution_ct[-1, coi_idx]
+            ase_bi[coi_idx, pow_idx] = ase_solution_bi[-1, coi_idx]
 
-            # compute the X0mm coefficients given the precompute time integrals
-            # FULL X0mm EVALUATION FOR EVERY m =======================
-            for coi_idx, coi in enumerate(coi_list):
-                power_at_receiver_co[coi_idx,
-                                     pow_idx] = physical_signal_solution_co[-1, coi_idx]
-                power_at_receiver_ct[coi_idx,
-                                      pow_idx] = physical_signal_solution_ct[-1, coi_idx]
-                power_at_receiver_bi[coi_idx,
-                                     pow_idx] = physical_signal_solution_bi[-1, coi_idx]
-                print("Computing Channel Of Interest ", coi + 1)
+    # Retrieve sum of X0mm^2: noises
+    X_co = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
+                    '_co_' + str(num_ct) + '_ct_X_co.npy')
+    X_ct = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
+                    '_co_' + str(num_ct) + '_ct_X_ct.npy')
+    X_bi = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
+                    '_co_' + str(num_ct) + '_ct_X_bi.npy')
+    X_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
+                        '_co_' + str(num_ct) + '_ct_X_none.npy')
 
-                # compute the first num_channels interferents (assume the WDM grid is identical)
-                interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
-                    coi, wdm.frequency_grid())
-                pbar_description = "Computing space integrals"
-                collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
-                                            0:num_channels - 1], leave=False)
-                collisions_pbar.set_description(pbar_description)
-                for incremental, interf_index in enumerate(collisions_pbar):
-                    if coi == 0:
-                        m = np.array(
-                            f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 9:
-                        m = np.array(
-                            f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 19:
-                        m = np.array(
-                            f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 29:
-                        m = np.array(
-                            f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 39:
-                        m = np.array(
-                            f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                    elif coi == 49:
-                        m = np.array(
-                            f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                        z = np.array(
-                            f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                        I = np.array(
-                            f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-
-                    # upper cut z
-                    z = np.array(list(filter(lambda x: x <= fiber_length, z)))
-                    net_m = m[partial_collision_margin:len(
-                        m) - partial_collision_margin]
-                    I = I[:, :len(z)]
-                    m = m[:int((len(net_m)) * (fiber_length / file_length)) +
-                          2 * partial_collision_margin]
-                    fB_co = interp1d(
-                        z_max, signal_solution_co[:, incremental], kind='linear')
-                    X0mm_co = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=fB_co(z))
-                    X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
-
-                    fB_ct = interp1d(
-                        z_max, signal_solution_ct[:, incremental], kind='linear')
-                    X0mm_ct = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=fB_ct(z))
-                    X_ct[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_ct)**2))
-
-                    fB_bi = interp1d(
-                        z_max, signal_solution_bi[:, incremental], kind='linear')
-                    X0mm_bi = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=fB_bi(z))
-                    X_bi[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_bi)**2))
-
-                    X0mm_none = pynlin.nlin.Xhkm_precomputed(
-                        z, I, amplification_function=None)
-                    X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
-
-                ase_co[coi_idx, pow_idx] = ase_solution_co[-1, coi_idx]
-                ase_ct[coi_idx, pow_idx] = ase_solution_ct[-1, coi_idx]
-                ase_bi[coi_idx, pow_idx] = ase_solution_bi[-1, coi_idx]
-        np.save(str(length_setup) + '_' + str(num_co) +
-                '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
-        np.save(str(length_setup) + '_' + str(num_co) +
-                '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
-        np.save(str(length_setup) + '_' + str(num_co) +
-                '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_ct) + '_ct_X_none.npy', X_none)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_ct) + '_ct_ase_co.npy', ase_co)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_ct) + '_ct_ase_ct.npy', ase_ct)
-        np.save(str(length_setup) + '_' + str(num_co) + '_co_' +
-                str(num_ct) + '_ct_ase_bi.npy', ase_bi)
-
-    if True:
-        X_co = np.load(str(length_setup) + '_' + str(num_co) +
-                       '_co_' + str(num_ct) + '_ct_X_co.npy')
-        X_ct = np.load(str(length_setup) + '_' + str(num_co) +
-                        '_co_' + str(num_ct) + '_ct_X_ct.npy')
-        X_bi = np.load(str(length_setup) + '_' + str(num_co) +
-                       '_co_' + str(num_ct) + '_ct_X_bi.npy')
-        X_none = np.load(str(length_setup) + '_' + str(num_co) +
-                         '_co_' + str(num_ct) + '_ct_X_none.npy')
-        ase_co = np.load(str(length_setup) + '_' + str(num_co) +
-                         '_co_' + str(num_ct) + '_ct_ase_co.npy')
-        ase_ct = np.load(str(length_setup) + '_' + str(num_co) +
-                          '_co_' + str(num_ct) + '_ct_ase_ct.npy')
-        ase_bi = np.load(str(length_setup) + '_' + str(num_co) +
-                         '_co_' + str(num_ct) + '_ct_ase_bi.npy')
-    ar_idx = 0  # 16-QAM
+    # choose modulation format and compute phase noise
     M = 16
     for pow_idx, power_dBm in enumerate(power_dBm_list):
         average_power = dBm2watt(power_dBm)
@@ -339,445 +217,284 @@ for fiber_length in fiber_lengths:
             np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
 
         for coi_idx, coi in enumerate(coi_list):
-            Delta_theta_2_co[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
+            Delta_theta_2_co[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
                 constellation_variance * np.abs(X_co[coi_idx, pow_idx])
-            Delta_theta_2_ct[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
+            Delta_theta_2_ct[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
                 constellation_variance * np.abs(X_ct[coi_idx, pow_idx])
-            Delta_theta_2_bi[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
+            Delta_theta_2_bi[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
                 constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
-            Delta_theta_2_none[coi_idx, pow_idx, ar_idx] = 4 * fiber.gamma**2 * \
+            Delta_theta_2_none[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
                 constellation_variance * np.abs(X_none[coi_idx, pow_idx])
 
-    ##############################
-    # NOISE VS POWER
-    ##############################
-    # markers = ["x", "+", "o", "o", "x", "+"]
 
-    # fig_power, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
-    #     nrows=2, ncols=2, sharex=True, figsize=(14, 10))
-
-    # plt.plot(show=True)
-    # coi_selection = [0, 19, 49]
-    # coi_selection_idx = [0, 2, 5]
-    # for scan in range(len(coi_selection)):
-    #     ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
-    #              markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-    #     ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
-    #              markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
-    #     ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
-    #              markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
-    #     ax4.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) + power_dBm_list, marker=markers[scan],
-    #              markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
-    # ax1.grid(which="both")
-    # #plt.annotate("ciao", (0, 0))
-    # ax2.grid(which="both")
-    # ax3.grid(which="both")
-    # ax4.grid(which="both")
-
-    # ax1.set_ylabel(r"NLIN [dBm]")
-    # ax2.set_ylabel(r"NLIN [dBm]")
-    # ax3.set_ylabel(r"NLIN [dBm]")
-    # ax4.set_ylabel(r"NLIN [dBm]")
-    # ax3.set_xlabel(r"Power [dBm]")
-    # ax4.set_xlabel(r"Power [dBm]")
-
-    # ax1.text(-15, -20, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax2.text(-15, -40, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax3.text(-15, -40, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.text(-5, -80, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.legend()
-    # ax2.yaxis.set_label_position("right")
-    # ax2.yaxis.tick_right()
-    # ax4.yaxis.set_label_position("right")
-    # ax4.yaxis.tick_right()
-    # plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
-    # fig_power.savefig(plot_save_path + "noise_power.pdf")
-
-    #############################
-    # ASE vd POWER
-    #############################
-    fig_ase, (ax1, ax2, ax3) = plt.subplots(nrows=3, sharex=True, figsize=(10, 10))
-    plt.plot(show=True)
+## PLOTTING
+   
+    markers = ["x", "+", "o", "o", "x", "+"]
+    wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e-12 for _ in coi_list]
     coi_selection = [0, 19, 49]
     coi_selection_idx = [0, 2, 5]
-    for scan in range(len(coi_selection)):
-        ax1.plot(power_dBm_list, 10 * np.log10(ase_co[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
-                 markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-        ax2.plot(power_dBm_list, 10 * np.log10(ase_ct[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
-                 markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
-        ax3.plot(power_dBm_list, 10 * np.log10(ase_bi[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
-                 markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
-    ax1.grid(which="both")
-    ax3.grid(which="both")
-    ax3.grid(which="both")
-    ax4.grid(which="both")
-
-    ax3.set_xlabel(r"Power [dBm]")
-    ax4.set_xlabel(r"Power [dBm]")
-
-    ax1.set_ylabel(r"ASE noise [dBm]")
-    ax2.set_ylabel(r"ASE noise [dBm]")
-    ax3.set_ylabel(r"ASE noise [dBm]")
-    ax3.legend()
-    plt.minorticks_on()
-    plt.subplots_adjust(wspace=0.0, hspace=0, right=9.8 / 10, top=9.9 / 10)
-    fig_ase.savefig(plot_save_path + "ase_noise_vs_power.pdf")
-
-    ########################################################
-    # NLIN AND ASE COMPARISON (average over the channels)
-    ########################################################
-    fig_comparison, ((ax1)) = plt.subplots(nrows=1, sharex=True, figsize=(10, 7))
-    plt.plot(show=True)
-    coi_selection = [0, 9, 19, 29, 39, 49]
-    coi_selection_idx = [0, 1, 2, 3, 4, 5]
-    axis_num = 0
-    print("\n\n\nNLIN noise in dBm")
-    print(Delta_theta_2_ct[coi_idx, :, ar_idx])
-    print("\n\n\n\n")
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * Delta_theta_2_co[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-             markersize=10, color='green', label="NLIN")
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :]*Delta_theta_2_ct[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-             markersize=10, color='blue')
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :]*Delta_theta_2_bi[coi_idx, :, ar_idx] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[0],
-             markersize=10, color='orange')
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-             markersize=10, color='green', label="ASE")
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-             markersize=10, color='blue')
-    plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx], axis=axis_num)), marker=markers[2],
-             markersize=10, color='orange')
-    ax1.grid(which="both")
-    #plt.annotate("ciao", (0, 0))
-    plt.grid(which="both")
-
-    plt.xlabel(r"Input power [dBm]")
-    plt.minorticks_on()
-    plt.ylabel(r"Noise power [dBm]")
-    plt.minorticks_on()
-    plt.ylim([-90, 0])
-
-    plt.legend()
-    leg = ax1.get_legend()
-    leg.legendHandles[0].set_color('grey')
-    leg.legendHandles[1].set_color('grey')
-    #plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
-    #plt.axis([-13, -5, -60, -45])
-    plt.tight_layout()
-    fig_comparison.savefig(plot_save_path + "comparison_full.pdf")
-
-    #####################################
-    # CHANNEL position AND OSNR
-    #####################################
-    # wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e-12 for _ in coi_list]
-
-    # selected_power = -10
-    # pow_idx = np.where(power_dBm_list == selected_power)[0]
-    # P_B = 10**(selected_power / 10)  # average power of the constellation in mW
-    # T = (1 / 10e9)
-    # # Delta_theta is the average
-    # xdata = [1, 10, 20, 30, 40, 50]
-    # ydata = Delta_theta_2_none[:, pow_idx, ar_idx][:, 0] * P_B
-    # alpha, beta = optimize.curve_fit(NLIN, xdata=xdata, ydata=ydata)[0]
-    # full_coi = [i + 1 for i in range(50)]
-    # fig_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 8))
-    # plt.plot(show=True)
-    # plt.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * power_at_receiver_co[:, pow_idx]),
-    #          marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
-    # plt.grid(which="both")
-    # plt.plot(coi_list, 10 * np.log10(Delta_theta_2_ct[:, pow_idx, ar_idx] * power_at_receiver_ct[:, pow_idx]),
-    #          marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct.")
-    # plt.grid(which="both")
-    # plt.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * power_at_receiver_bi[:, pow_idx]),
-    #          marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
-    # plt.grid(which="both")
-    # plt.grid(which="both")
-    # plt.plot(coi_list, 10 * np.log10(Delta_theta_2_none[:, pow_idx, ar_idx] * P_B / 2),
-    #          marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
-    # plt.plot(range(50), 10 * np.log10(NLIN(full_coi, alpha, beta)),
-    #          color='red', linestyle="dashed", linewidth=2)
-    # plt.grid(which="both")
-    # # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
-    # plt.xticks(ticks=coi_list, labels=[k + 1 for k in coi_list])
-    # plt.xlabel(r"Channel index")
-    # plt.xticks(ticks=coi_list, labels=[k + 1 for k in coi_list])
-    # plt.ylabel(r"NLIN [dBm]")
-    # plt.ylim([-65, -35])
-
-    # plt.tight_layout()
-    # fig_channel.savefig(plot_save_path + "noise_channel_together.pdf")
-
-    #####################################
-    # OSNR_ase VS CHANNEL WAVELENGTH
-    #####################################
-
-    selected_power = -10.0
+    coi_selection_average = [0, 9, 19, 29, 39, 49]
+    coi_selection_idx_average = [0, 1, 2, 3, 4, 5]
+    selected_power = -12.0
     pow_idx = np.where(power_dBm_list == selected_power)[0]
     P_B = 10**(selected_power / 10)  # average power of the constellation in mW
-    T = (1 / 10e9)
+    T = (1 / baud_rate)
 
     full_coi = [i + 1 for i in range(50)]
-    fig_ASE_channel, ((ax1)) = plt.subplots(
-        nrows=1, ncols=1, sharex=True, figsize=(10, 6))
-    plt.plot(show=True)
-    plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]),
-             marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
-    plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]),
-             marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
-    # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
-    plt.xlabel(r"Channel wavelength [THz]")
-    plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
-               labels=[wavelength_list[0], wavelength_list[-1]])
-    plt.ylabel(r"$OSNR_{ASE}$ [dB]")
-    #plt.ylim([-50, -45])
-    plt.grid(which="both")
+    # selection between 'NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'EVM_BER_vs_power'
+    plot_selection = ['NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength']
+    # evaluation of metrics
+    # Average OSNR vs power
+    osnr_co = np.ndarray(shape=(len(power_dBm_list)))
+    osnr_ct = np.zeros_like(osnr_co)
+    osnr_bi = np.zeros_like(osnr_co)
+    osnr_none = np.zeros_like(osnr_co)
+    for scan in range(len(coi_selection_average)):
+        osnr_co += 10 * np.log10(power_at_receiver_co[coi_selection_idx_average[scan], :]/   (power_at_receiver_co[coi_selection_idx_average[scan], :] * Delta_theta_2_co[coi_selection_idx_average[scan], :] + ase_co[coi_selection_idx_average[scan], :]))
+        osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :]/ (power_at_receiver_ct[coi_selection_idx_average[scan], :] * Delta_theta_2_ct[coi_selection_idx_average[scan], :] + ase_ct[coi_selection_idx_average[scan], :]))
+        osnr_bi += 10 * np.log10(power_at_receiver_bi[coi_selection_idx_average[scan], :]/   (power_at_receiver_bi[coi_selection_idx_average[scan], :] * Delta_theta_2_bi[coi_selection_idx_average[scan], :] + ase_bi[coi_selection_idx_average[scan], :]))
+        osnr_none += power_dBm_list - 3 - 10 * np.log10(power_list * 0.5 * Delta_theta_2_none[coi_selection_idx_average[scan], :]) - 30
+    osnr_co /= len(coi_selection_idx_average)
+    osnr_ct /= len(coi_selection_idx_average)
+    osnr_bi /= len(coi_selection_idx_average)
+    osnr_none /= len(coi_selection_idx_average)
 
-    plt.tight_layout()
-    fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE.pdf")
+    ##############################
+    # power plots
+    ##############################
+    if 'NLIN_vs_power' in plot_selection:
+        fig_power, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
+            nrows=2, ncols=2, sharex=True, figsize=(14, 10))
+
+        plt.plot(show=True)
+        for scan in range(len(coi_selection)):
+            ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+                    markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+            ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+                    markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+            ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+                    markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
+            ax4.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_none[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+                    markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
+        ax1.grid(which="both")
+        #plt.annotate("ciao", (0, 0))
+        ax2.grid(which="both")
+        ax3.grid(which="both")
+        ax4.grid(which="both")
+
+        ax1.set_ylabel(r"NLIN [dBm]")
+        ax2.set_ylabel(r"NLIN [dBm]")
+        ax3.set_ylabel(r"NLIN [dBm]")
+        ax4.set_ylabel(r"NLIN [dBm]")
+        ax3.set_xlabel(r"Power [dBm]")
+        ax4.set_xlabel(r"Power [dBm]")
+
+        ax1.text(-15, -20, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax2.text(-15, -40, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax3.text(-15, -40, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax4.text(-5, -80, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax4.legend()
+        ax2.yaxis.set_label_position("right")
+        ax2.yaxis.tick_right()
+        ax4.yaxis.set_label_position("right")
+        ax4.yaxis.tick_right()
+        plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
+        fig_power.savefig(plot_save_path + "NLIN_vs_power.pdf")
+
+
+    if 'ASE_vs_power' in plot_selection:
+        # separate plotting
+        fig_ase, (ax1, ax2, ax3) = plt.subplots(nrows=3, sharex=True, figsize=(10, 10))
+        plt.plot(show=True)
+        for scan in range(len(coi_selection)):
+            ax1.plot(power_dBm_list, 10 * np.log10(ase_co[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
+                    markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+            ax2.plot(power_dBm_list, 10 * np.log10(ase_ct[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
+                    markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+            ax3.plot(power_dBm_list, 10 * np.log10(ase_bi[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
+                    markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
+        ax1.grid(which="both")
+        ax3.grid(which="both")
+        ax3.grid(which="both")
+
+        ax3.set_xlabel(r"Power [dBm]")
+
+        ax1.set_ylabel(r"ASE noise [dBm]")
+        ax2.set_ylabel(r"ASE noise [dBm]")
+        ax3.set_ylabel(r"ASE noise [dBm]")
+        ax3.legend()
+        plt.minorticks_on()
+        plt.subplots_adjust(wspace=0.0, hspace=0, right=9.8 / 10, top=9.9 / 10)
+        fig_ase.savefig(plot_save_path + "ASE_vs_power.pdf")
+
+
+    if 'NLIN_and_ASE_vs_power' in plot_selection:
+        # averaged plotting
+        fig_comparison, ((ax1)) = plt.subplots(nrows=1, sharex=True, figsize=(10, 7))
+        plt.plot(show=True)
+        axis_num = 0
+        plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * Delta_theta_2_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
+                    markersize=10, color='green', label="NLIN")
+        plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :]*Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
+                    markersize=10, color='blue')
+        plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :]*Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
+                    markersize=10, color='orange')
+        plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
+                    markersize=10, color='green', label="ASE")
+        plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
+                    markersize=10, color='blue')
+        plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
+                    markersize=10, color='orange')
+        ax1.grid(which="both")
+        #plt.annotate("ciao", (0, 0))
+        plt.grid(which="both")
+
+        plt.xlabel(r"Input power [dBm]")
+        plt.minorticks_on()
+        plt.ylabel(r"Noise power [dBm]")
+        plt.grid()
+        plt.minorticks_on()
+        plt.ylim([-90, 0])
+
+        plt.legend()
+        leg = ax1.get_legend()
+        leg.legendHandles[0].set_color('grey')
+        leg.legendHandles[1].set_color('grey')
+        #plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+        #plt.axis([-13, -5, -60, -45])
+        plt.tight_layout()
+        fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_vs_power.pdf")
+
+
+    if 'OSNR_vs_power' in plot_selection:
+        fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14, 10))
+        plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
+                    markersize=10, color='green')
+        plt.plot(power_dBm_list, osnr_ct, marker=markers[scan],
+                    markersize=10, color='blue')
+        plt.plot(power_dBm_list, osnr_bi, marker=markers[scan],
+                    markersize=10, color='orange')
+        plt.grid(which="both")
+
+        #plt.ylim([20, 50])
+        plt.ylabel(r"$OSNR$ [dB]")
+        plt.xlabel(r"Power [dBm]")
+
+        plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
+        fig_powsnr.savefig(plot_save_path + "OSNR_vs_power.pdf")
 
     #####################################
-    # CHANNEL POWER AND OSNR
+    # wavelength plots
     #####################################
+    if 'OSNR_ASE_vs_wavelength' in plot_selection:
+        fig_ASE_channel, ((ax1)) = plt.subplots(
+            nrows=1, ncols=1, sharex=True, figsize=(10, 6))
+        plt.plot(show=True)
+        plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]),
+                    marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
+        plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]),
+                    marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
+        # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+        plt.xlabel(r"Channel wavelength [THz]")
+        plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
+                    labels=[wavelength_list[0], wavelength_list[-1]])
+        plt.ylabel(r"$OSNR_{ASE}$ [dB]")
+        #plt.ylim([-50, -45])
+        plt.grid(which="both")
 
-    # selected_power = -10
-    # pow_idx = np.where(power_dBm_list == selected_power)[0]
-    # P_B = 10**(selected_power / 10)  # average power of the constellation in mW
-    # T = (1 / 10e9)
-    # # Delta_theta is the average
-    # xdata = [1, 10, 20, 30, 40, 50]
-    # ydata = Delta_theta_2_none[:, pow_idx, ar_idx][:, 0] * P_B / 2
-    # alpha, beta = optimize.curve_fit(NLIN, xdata=xdata, ydata=ydata)[0]
-    # full_coi = [i + 1 for i in range(50)]
-    # fig_channel, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
-    #     nrows=2, ncols=2, sharex=True, figsize=(14, 10))
-    # plt.plot(show=True)
-    # ax1.plot(coi_list, 10 * np.log10(Delta_theta_2_co[:, pow_idx, ar_idx] * power_at_receiver_co[:, pow_idx]),
-    #          marker='x', markersize=15, color='green', label="ch." + str(coi) + "CO")
-    # plt.grid(which="both")
-    # ax2.plot(coi_list, 10 * np.log10(Delta_theta_2_ct[:, pow_idx, ar_idx] * power_at_receiver_ct[:, pow_idx]),
-    #          marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct.")
-    # plt.grid(which="both")
-    # ax3.plot(coi_list, 10 * np.log10(Delta_theta_2_bi[:, pow_idx, ar_idx] * power_at_receiver_bi[:, pow_idx]),
-    #          marker='x', markersize=15, color='orange', label="ch." + str(coi) + "BI")
-    # plt.grid(which="both")
-    # ax4.plot(coi_list, 10 * np.log10(Delta_theta_2_none[:, pow_idx, ar_idx] * P_B / 2),
-    #          marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perf.")
-    # ax4.plot(range(50), 10 * np.log10(NLIN(full_coi, alpha, beta)),
-    #          color='red', linestyle="dashed", linewidth=2)
-    # plt.grid(which="both")
-    # # ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+        plt.tight_layout()
+        fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE_vs_wavelength.pdf")
 
-    # ax2.yaxis.set_label_position("right")
-    # ax2.yaxis.tick_right()
-    # ax4.yaxis.set_label_position("right")
-    # ax4.yaxis.tick_right()
-    # plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
-    #            labels=[wavelength_list[0], wavelength_list[-1]])
-    # ax1.grid(which="both")
-    # ax2.grid(which="both")
-    # ax3.grid(which="both")
-    # ax4.set_xlabel(r"Channel index")
-    # ax3.set_xlabel(r"Channel index")
 
-    # ax3.xaxis.set_label(r"Channel index")
-    # plt.xlabel(r"Channel index")
-    # ax4.grid(which="both")
-    # ax1.text(30, -46, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax2.text(30, -59.5, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax3.text(30, -56, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.text(30, -52, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax1.set_ylabel(r"NLIN [dBm]")
-    # ax2.set_ylabel(r"NLIN [dBm]")
-    # ax4.set_ylabel(r"NLIN [dBm]")
-    # ax3.set_ylabel(r"NLIN [dBm]")
-    # plt.autoscale(True)
-    # plt.subplots_adjust(left=0.15, wspace=0.0, hspace=0, right=8.5 / 10, top=9.5 / 10)
+    #####################################
+    # error metrics vs power
+    #####################################
+    if 'EVM_BER_vs_power' in plot_selection:
+        fig_ber, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
+            nrows=2, ncols=2, sharex=True, figsize=(16, 8))
+        power_list = list(map(dBm2watt, power_dBm_list))
+        for scan in range(len(coi_selection)):
+            osnr_co = power_dBm_list - 10 * \
+                np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
+                         :] + ase_co[coi_selection_idx[scan], :]) - 30
+            osnr_ct = power_dBm_list - 10 * \
+                np.log10(power_list * Delta_theta_2_ct[coi_selection_idx[scan],
+                         :] + ase_ct[coi_selection_idx[scan], :]) - 30
+            osnr_bi = power_dBm_list - 10 * \
+                np.log10(power_list * Delta_theta_2_bi[coi_selection_idx[scan],
+                         :] + ase_bi[coi_selection_idx[scan], :]) - 30
+            osnr_none = power_dBm_list - 10 * \
+                np.log10(power_list *
+                         Delta_theta_2_none[coi_selection_idx[scan], :]) - 30
+            osnr_list = [osnr_co, osnr_ct, osnr_bi, osnr_none]
+            evms = []
+            bers = []
+            for osnr in osnr_list:
+                evms.append(list(map(OSNR_to_EVM, osnr)))
+                bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
 
-    # fig_channel.savefig(plot_save_path + "noise_channel.pdf")
+            ax1.semilogy(power_dBm_list, bers[0], marker=markers[scan],
+                         markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
+            ax2.semilogy(power_dBm_list, bers[1], marker=markers[scan],
+                         markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
+            ax3.semilogy(power_dBm_list, bers[2], marker=markers[scan],
+                         markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
+            ax4.semilogy(power_dBm_list, bers[3], marker=markers[scan],
+                         markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
+        ax1.grid(which="both")
+        #plt.annotate("ciao", (0, 0))
+        ax2.grid(which="both")
+        ax3.grid(which="both")
+        ax4.grid(which="both")
 
-    ###################################
-    # OSNR vs POWER
-    ###################################
-    # fig_powsnr, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
-    #     nrows=2, ncols=2, sharex=True, figsize=(14, 10))
+        ax1.set_ylabel(r"BER")
+        ax2.set_ylabel(r"BER")
+        ax3.set_ylabel(r"BER")
+        ax4.set_ylabel(r"BER")
+        ax3.set_xlabel(r"Power [dBm]")
+        ax4.set_xlabel(r"Power [dBm]")
+        ax1.set_ylim([10**-50, 1])
+        ax2.set_ylim([10**-50, 1])
+        ax3.set_ylim([10**-50, 1])
+        ax4.set_ylim([10**-50, 1])
 
-    # plt.plot(show=True)
-    # coi_selection = [0, 19, 49]
-    # coi_selection_idx = [0, 2, 5]
-    # power_list = np.array(list(map(dBm2watt, power_dBm_list)))
+        ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax2.text(-15, 10**(-6), 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax3.text(-15, 10**(-6), 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax4.text(-10, 10**(-6), 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
+        ax4.legend()
+        ax2.yaxis.set_label_position("right")
+        ax2.yaxis.tick_right()
+        ax4.yaxis.set_label_position("right")
+        ax4.yaxis.tick_right()
+        plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
+        fig_ber.savefig(plot_save_path + "BER_vs_power.pdf")
 
-    # for scan in range(len(coi_selection)):
-    #     osnr_co = power_at_receiver_co[coi_selection_idx[scan], :] - 10 * \
-    #         np.log10(power_at_receiver_co[coi_selection_idx[scan], :] * Delta_theta_2_co[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-    #     osnr_ct = power_at_receiver_ct[coi_selection_idx[scan], :] - 10 * \
-    #         np.log10(power_at_receiver_ct[coi_selection_idx[scan], :] * Delta_theta_2_ct[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_ct[coi_selection_idx[scan], :]) - 30
-    #     osnr_bi = power_at_receiver_bi[coi_selection_idx[scan], :] - 10 * \
-    #         np.log10(power_at_receiver_bi[coi_selection_idx[scan], :] * Delta_theta_2_bi[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_bi[coi_selection_idx[scan], :]) - 30
-    #     osnr_none = power_dBm_list -3 - 10 * \
-    #         np.log10(power_list * 0.5 *
-    #                  Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
-    #     ax1.plot(power_dBm_list, osnr_co, marker=markers[scan],
-    #              markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-    #     ax2.plot(power_dBm_list, osnr_ct, marker=markers[scan],
-    #              markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
-    #     ax3.plot(power_dBm_list, osnr_bi, marker=markers[scan],
-    #              markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
-    #     ax4.plot(power_dBm_list, osnr_none, marker=markers[scan],
-    #              markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
-    # ax1.grid(which="both")
-    # #plt.annotate("ciao", (0, 0))
-    # ax2.grid(which="both")
-    # ax3.grid(which="both")
-    # ax4.grid(which="both")
+        fig_ber, ax1 = plt.subplots(nrows=1, sharex=True, figsize=(8, 6))
 
-    # ax1.set_ylabel(r"$OSNR$ [dB]")
-    # ax2.set_ylabel(r"$OSNR$ [dB]")
-    # ax3.set_ylabel(r"$OSNR$ [dB]")
-    # ax4.set_ylabel(r"$OSNR$ [dB]")
-    # ax3.set_xlabel(r"Power [dBm]")
-    # ax4.set_xlabel(r"Power [dBm]")
+        coi_selection = [0, 19, 49]
+        coi_selection_idx = [0, 2, 5]
+        power_list = list(map(dBm2watt, power_dBm_list))
+        for scan in range(len(coi_selection)):
+            osnr_co = power_dBm_list - 10 * \
+                np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
+                         :] + ase_co[coi_selection_idx[scan], :]) - 30
+            osnr_list = [osnr_co]
+            evms = []
+            bers = []
+            for osnr in osnr_list:
+                evms.append(list(map(OSNR_to_EVM, osnr)))
+                bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
 
-    # ax1.text(-15, 25, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax2.text(-15, 30, 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax3.text(-15, 25, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.text(-15, 25, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.legend()
-    # ax2.yaxis.set_label_position("right")
-    # ax2.yaxis.tick_right()
-    # ax4.yaxis.set_label_position("right")
-    # ax4.yaxis.tick_right()
+            ax1.semilogy(power_dBm_list[-3:], bers[0][-3:], marker=markers[scan],
+                         markersize=10, color='green', label="ch." + str(coi_selection[scan] + 1) + " co.")
+        ax1.grid(which="both")
+        ax1.set_ylabel(r"BER")
+        ax1.set_xlabel(r"Power [dBm]")
+        plt.legend()
 
-    # plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
-    # fig_powsnr.savefig(plot_save_path + "osnr_vs_power.pdf")
-
-    ###################################
-    # OSNR ALTOGETHER
-    ###################################
-    fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14, 10))
-
-    plt.plot(show=True)
-    coi_selection = [0, 9, 19, 29, 39, 49]
-    coi_selection_idx = [0, 1, 2, 3, 4, 5]
-    print(power_at_receiver_co[coi_selection_idx[0], :])
-    for scan in range(len(coi_selection)):
-        osnr_co += 10 * np.log10(power_at_receiver_co[coi_selection_idx[scan], :]/   (power_at_receiver_co[coi_selection_idx[scan], :] * Delta_theta_2_co[coi_selection_idx[scan], :, ar_idx] + ase_co[coi_selection_idx[scan], :]))
-        osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx[scan], :]/ (power_at_receiver_ct[coi_selection_idx[scan], :] * Delta_theta_2_ct[coi_selection_idx[scan], :, ar_idx] + ase_ct[coi_selection_idx[scan], :]))
-        osnr_bi += 10 * np.log10(power_at_receiver_bi[coi_selection_idx[scan], :]/   (power_at_receiver_bi[coi_selection_idx[scan], :] * Delta_theta_2_bi[coi_selection_idx[scan], :, ar_idx] + ase_bi[coi_selection_idx[scan], :]))
-        osnr_none += power_dBm_list - 3 - 10 * np.log10(power_list * 0.5 * Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
-    osnr_co /= len(coi_selection_idx)
-    osnr_ct /= len(coi_selection_idx)
-    osnr_bi /= len(coi_selection_idx)
-    osnr_none /= len(coi_selection_idx)
-    plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
-             markersize=10, color='green')
-    plt.plot(power_dBm_list, osnr_ct, marker=markers[scan],
-             markersize=10, color='blue')
-    plt.plot(power_dBm_list, osnr_bi, marker=markers[scan],
-             markersize=10, color='orange')
-    plt.grid(which="both")
-
-    #plt.ylim([20, 50])
-    plt.ylabel(r"$OSNR$ [dB]")
-    plt.xlabel(r"Power [dBm]")
-
-    plt.legend()
-
-    plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
-    fig_powsnr.savefig(plot_save_path + "osnr_total.pdf")
-
-    ####################################
-    # EVM AND BER
-    ####################################
-
-    # fig_ber, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
-    #     nrows=2, ncols=2, sharex=True, figsize=(16, 8))
-    # coi_selection = [0, 19, 49]
-    # coi_selection_idx = [0, 2, 5]
-    # power_list = list(map(dBm2watt, power_dBm_list))
-    # for scan in range(len(coi_selection)):
-    #     osnr_co = power_dBm_list - 10 * \
-    #         np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-    #     osnr_ct = power_dBm_list - 10 * \
-    #         np.log10(power_list * Delta_theta_2_ct[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_ct[coi_selection_idx[scan], :]) - 30
-    #     osnr_bi = power_dBm_list - 10 * \
-    #         np.log10(power_list * Delta_theta_2_bi[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_bi[coi_selection_idx[scan], :]) - 30
-    #     osnr_none = power_dBm_list - 10 * \
-    #         np.log10(power_list *
-    #                  Delta_theta_2_none[coi_selection_idx[scan], :, ar_idx]) - 30
-    #     osnr_list = [osnr_co, osnr_ct, osnr_bi, osnr_none]
-    #     evms = []
-    #     bers = []
-    #     for osnr in osnr_list:
-    #         evms.append(list(map(OSNR_to_EVM, osnr)))
-    #         bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
-
-    #     ax1.semilogy(power_dBm_list, bers[0], marker=markers[scan],
-    #                  markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-    #     ax2.semilogy(power_dBm_list, bers[1], marker=markers[scan],
-    #                  markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
-    #     ax3.semilogy(power_dBm_list, bers[2], marker=markers[scan],
-    #                  markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
-    #     ax4.semilogy(power_dBm_list, bers[3], marker=markers[scan],
-    #                  markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
-    # ax1.grid(which="both")
-    # #plt.annotate("ciao", (0, 0))
-    # ax2.grid(which="both")
-    # ax3.grid(which="both")
-    # ax4.grid(which="both")
-
-    # ax1.set_ylabel(r"BER")
-    # ax2.set_ylabel(r"BER")
-    # ax3.set_ylabel(r"BER")
-    # ax4.set_ylabel(r"BER")
-    # ax3.set_xlabel(r"Power [dBm]")
-    # ax4.set_xlabel(r"Power [dBm]")
-    # ax1.set_ylim([10**-50, 1])
-    # ax2.set_ylim([10**-50, 1])
-    # ax3.set_ylim([10**-50, 1])
-    # ax4.set_ylim([10**-50, 1])
-
-    # ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax2.text(-15, 10**(-6), 'ct', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax3.text(-15, 10**(-6), 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.text(-10, 10**(-6), 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # ax4.legend()
-    # ax2.yaxis.set_label_position("right")
-    # ax2.yaxis.tick_right()
-    # ax4.yaxis.set_label_position("right")
-    # ax4.yaxis.tick_right()
-    # plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
-    # fig_ber.savefig(plot_save_path + "BER_power.pdf")
-
-    # fig_ber, ax1 = plt.subplots(nrows=1, sharex=True, figsize=(8, 6))
-
-    # coi_selection = [0, 19, 49]
-    # coi_selection_idx = [0, 2, 5]
-    # power_list = list(map(dBm2watt, power_dBm_list))
-    # for scan in range(len(coi_selection)):
-    #     osnr_co = power_dBm_list - 10 * \
-    #         np.log10(power_list * Delta_theta_2_co[coi_selection_idx[scan],
-    #                  :, ar_idx] + ase_co[coi_selection_idx[scan], :]) - 30
-    #     osnr_list = [osnr_co]
-    #     evms = []
-    #     bers = []
-    #     for osnr in osnr_list:
-    #         evms.append(list(map(OSNR_to_EVM, osnr)))
-    #         bers.append(list(map(EVM_to_BER, map(OSNR_to_EVM, osnr))))
-
-    #     ax1.semilogy(power_dBm_list[-3:], bers[0][-3:], marker=markers[scan],
-    #                  markersize=10, color='green', label="ch." + str(coi_selection[scan] + 1) + " co.")
-    # ax1.grid(which="both")
-    # ax1.set_ylabel(r"BER")
-    # ax1.set_xlabel(r"Power [dBm]")
-    # plt.legend()
-
-    # ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-    # plt.subplots_adjust(left=0.2, bottom=0.15, wspace=0.0,
-    #                     hspace=0, right=9.5 / 10, top=9.8 / 10)
-    # plt.tight_layout()
-    # fig_ber.savefig(plot_save_path + "BER_power_zoom.pdf")
+        ax1.text(-15, 10**(-6), 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
+        plt.subplots_adjust(left=0.2, bottom=0.15, wspace=0.0,
+                            hspace=0, right=9.5 / 10, top=9.8 / 10)
+        plt.tight_layout()
+        fig_ber.savefig(plot_save_path + "BER_vs_power_zoom.pdf")
