@@ -90,8 +90,10 @@ if not os.path.exists(noise_path):
 for fiber_length in fiber_lengths:
   length_setup = int(fiber_length * 1e-3)
   #
-  results_path_co = '../results_' + str(length_setup) + '/' + str(num_co) + '_co/'
-  results_path_ct = '../results_' + str(length_setup) + '/' + str(num_co) + '_ct/'
+  num_only_co_pumps = 4
+  num_only_ct_pumps = 4
+  results_path_co = '../results_' + str(length_setup) + '/' + str(num_only_co_pumps) + '_co/'
+  results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
   results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 
   # overall NLIN sum of variances for all m

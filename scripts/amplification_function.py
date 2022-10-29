@@ -81,12 +81,12 @@ points_per_collision = 10
 
 for fiber_length in fiber_lengths:
 	length_setup = int(fiber_length * 1e-3)
-	optimization_result_path_co = '../results_' + str(length_setup) + '/optimization/' + str(num_co) + '_co/'
-	optimization_result_path_ct = '../results_' + str(length_setup) + '/optimization/' + str(num_ct) + '_ct/'
+	optimization_result_path_co = '../results_' + str(length_setup) + '/optimization/' + str(num_only_co_pumps) + '_co/'
+	optimization_result_path_ct = '../results_' + str(length_setup) + '/optimization/' + str(num_only_ct_pumps) + '_ct/'
 	optimization_result_path_bi = '../results_' + str(length_setup) + '/optimization/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 	
-	results_path_co = '../results_' + str(length_setup) + '/' + str(num_co) + '_co/'
-	results_path_ct = '../results_' + str(length_setup) + '/' + str(num_ct) + '_ct/'
+	results_path_co = '../results_' + str(length_setup) + '/' + str(num_only_co_pumps) + '_co/'
+	results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
 	results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 	#
 	if not os.path.exists(results_path_co):
