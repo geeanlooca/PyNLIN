@@ -28,6 +28,7 @@ import pynlin.constellations
 from scipy import optimize
 from scipy.special import erfc
 import json
+from multiprocessing import Pool
 
 f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
 data = json.load(f)
@@ -76,16 +77,6 @@ points_per_collision = 10
 
 print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
-Delta_theta_2_co = np.zeros_like(
-    np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(arity_list)))
-)
-Delta_theta_2_ct = np.zeros_like(Delta_theta_2_co)
-Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
-Delta_theta_2_none = np.zeros_like(Delta_theta_2_co)
-
-show_flag = False
-compute_X0mm_space_integrals = True
-
 time_integrals_results_path = '../results/'
 
 f_0_9 = h5py.File(time_integrals_results_path + '0_9_results.h5', 'r')
@@ -97,147 +88,154 @@ if not os.path.exists(noise_path):
     os.makedirs(noise_path)
 
 for fiber_length in fiber_lengths:
-    length_setup = int(fiber_length * 1e-3)
-    #
-    results_path = '../results_' + str(length_setup) + '/'
-    results_path_bi = '../results_' + \
-        str(length_setup) + '/' + str(num_co) + '_co_' + \
-        str(num_ct) + '_ct_' + special + '/'
+  length_setup = int(fiber_length * 1e-3)
+  #
+  results_path = '../results_' + str(length_setup) + '/'
+  results_path_bi = '../results_' + \
+      str(length_setup) + '/' + str(num_co) + '_co_' + \
+      str(num_ct) + '_ct_' + special + '/'
 
-    # overall NLIN sum of variances for all m
-    X_co = np.zeros_like(
-        np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
-    )
-    X_ct = np.zeros_like(X_co)
-    X_bi = np.zeros_like(X_co)
-    X_none = np.zeros_like(X_co)
-    for pow_idx, power_dBm in enumerate(power_dBm_list):
-        print("Computing power ", power_dBm)
-        average_power = dBm2watt(power_dBm)
-        # SIMULATION DATA LOAD =================================
+  # overall NLIN sum of variances for all m
+  X_co = np.zeros_like(
+      np.ndarray(shape=(len(coi_list), len(power_dBm_list)))
+  )
+  X_ct = np.zeros_like(X_co)
+  X_bi = np.zeros_like(X_co)
+  X_none = np.zeros_like(X_co)
 
-        pump_solution_co = np.load(
-            results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
-        signal_solution_co = np.load(
-            results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
-        pump_solution_ct = np.load(
-            results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
-        signal_solution_ct = np.load(
-            results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
-        pump_solution_bi = np.load(
-            results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
-        signal_solution_bi = np.load(
-            results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+  def space_integral_power(power_arg):
+    pow_idx = power_arg[0]
+    power_dBm = power_arg[1]
+    print("Computing power ", power_dBm)
+    average_power = dBm2watt(power_dBm)
+    # SIMULATION DATA LOAD =================================
 
-        # ASE power evolution
-        ase_solution_co = np.load(
-            results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
-        ase_solution_ct = np.load(
-            results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
-        ase_solution_bi = np.load(
-            results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
+    pump_solution_co = np.load(
+        results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
+    signal_solution_co = np.load(
+        results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
+    pump_solution_ct = np.load(
+        results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
+    signal_solution_ct = np.load(
+        results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
+    pump_solution_bi = np.load(
+        results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
+    signal_solution_bi = np.load(
+        results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
 
-        # compute fB squaring
-        pump_solution_co = np.divide(pump_solution_co, pump_solution_co[0, :])
-        pump_solution_ct = np.divide(pump_solution_ct, pump_solution_ct[0, :])
-        pump_solution_bi = np.divide(pump_solution_bi, pump_solution_bi[0, :])
+    # ASE power evolution
+    ase_solution_co = np.load(
+        results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
+    ase_solution_ct = np.load(
+        results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
+    ase_solution_bi = np.load(
+        results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
-        sampled_fB_co = np.divide(signal_solution_co, signal_solution_co[0, :])
-        sampled_fB_ct = np.divide(signal_solution_ct, signal_solution_ct[0, :])
-        sampled_fB_bi = np.divide(signal_solution_bi, signal_solution_bi[0, :])
+    # compute fB squaring
+    pump_solution_co = np.divide(pump_solution_co, pump_solution_co[0, :])
+    pump_solution_ct = np.divide(pump_solution_ct, pump_solution_ct[0, :])
+    pump_solution_bi = np.divide(pump_solution_bi, pump_solution_bi[0, :])
 
-        z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
+    sampled_fB_co = np.divide(signal_solution_co, signal_solution_co[0, :])
+    sampled_fB_ct = np.divide(signal_solution_ct, signal_solution_ct[0, :])
+    sampled_fB_bi = np.divide(signal_solution_bi, signal_solution_bi[0, :])
 
-        # compute the X0mm coefficients given the precompute time integrals
-        # FULL X0mm EVALUATION FOR EVERY m =======================
-        for coi_idx, coi in enumerate(coi_list):
-            print("Computing Channel Of Interest ", coi + 1)
+    z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
-            # compute the first num_channels interferents (assume the WDM grid is identical)
-            interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
-                coi, wdm.frequency_grid())
-            pbar_description = "Computing space integrals"
-            collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
-                                        0:num_channels - 1], leave=False)
-            collisions_pbar.set_description(pbar_description)
-            for incremental, interf_index in enumerate(collisions_pbar):
-                if coi == 0:
-                    m = np.array(
-                        f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                    z = np.array(
-                        f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                    I = np.array(
-                        f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                elif coi == 9:
-                    m = np.array(
-                        f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                    z = np.array(
-                        f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                    I = np.array(
-                        f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-                elif coi == 19:
-                    m = np.array(
-                        f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                    z = np.array(
-                        f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                    I = np.array(
-                        f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                elif coi == 29:
-                    m = np.array(
-                        f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                    z = np.array(
-                        f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                    I = np.array(
-                        f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
-                elif coi == 39:
-                    m = np.array(
-                        f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
-                    z = np.array(
-                        f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
-                    I = np.array(
-                        f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
-                elif coi == 49:
-                    m = np.array(
-                        f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
-                    z = np.array(
-                        f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
-                    I = np.array(
-                        f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+    # compute the X0mm coefficients given the precompute time integrals
+    # FULL X0mm EVALUATION FOR EVERY m =======================
+    for coi_idx, coi in enumerate(coi_list):
+      print("Computing Channel Of Interest ", coi + 1)
 
-                #upper cut z
-                z = np.array(list(filter(lambda x: x <= fiber_length, z)))
-                net_m = m[partial_collision_margin:len(
-                    m) - partial_collision_margin]
-                I = I[:, :len(z)]
-                m = m[:int((len(net_m)) * (fiber_length / file_length)) +
-                        2 * partial_collision_margin]
-                fB_co = interp1d(
-                    z_max, sampled_fB_co[:, incremental], kind='linear')
-                X0mm_co = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=fB_co(z))
-                X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
+      # compute the first num_channels interferents (assume the WDM grid is identical)
+      interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
+          coi, wdm.frequency_grid())
+      pbar_description = "Computing space integrals"
+      collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
+                                  0:num_channels - 1], leave=False)
+      collisions_pbar.set_description(pbar_description)
+      for incremental, interf_index in enumerate(collisions_pbar):
+          if coi == 0:
+              m = np.array(
+                  f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+              z = np.array(
+                  f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+              I = np.array(
+                  f_0_9['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+          elif coi == 9:
+              m = np.array(
+                  f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+              z = np.array(
+                  f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+              I = np.array(
+                  f_0_9['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+          elif coi == 19:
+              m = np.array(
+                  f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+              z = np.array(
+                  f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+              I = np.array(
+                  f_19_29['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+          elif coi == 29:
+              m = np.array(
+                  f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+              z = np.array(
+                  f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+              I = np.array(
+                  f_19_29['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
+          elif coi == 39:
+              m = np.array(
+                  f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/m'])
+              z = np.array(
+                  f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/z'])
+              I = np.array(
+                  f_39_49['/time_integrals/channel_0/interfering_channel_' + str(incremental) + '/integrals'])
+          elif coi == 49:
+              m = np.array(
+                  f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/m'])
+              z = np.array(
+                  f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/z'])
+              I = np.array(
+                  f_39_49['/time_integrals/channel_1/interfering_channel_' + str(incremental) + '/integrals'])
 
-                fB_ct = interp1d(
-                    z_max, sampled_fB_ct[:, incremental], kind='linear')
-                X0mm_ct = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=fB_ct(z))
-                X_ct[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_ct)**2))
+          #upper cut z
+          z = np.array(list(filter(lambda x: x <= fiber_length, z)))
+          net_m = m[partial_collision_margin:len(
+              m) - partial_collision_margin]
+          I = I[:, :len(z)]
+          m = m[:int((len(net_m)) * (fiber_length / file_length)) +
+                  2 * partial_collision_margin]
+          fB_co = interp1d(
+              z_max, sampled_fB_co[:, incremental], kind='linear')
+          X0mm_co = pynlin.nlin.Xhkm_precomputed(
+              z, I, amplification_function=fB_co(z))
+          X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
 
-                fB_bi = interp1d(
-                    z_max, sampled_fB_bi[:, incremental], kind='linear')
-                X0mm_bi = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=fB_bi(z))
-                X_bi[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_bi)**2))
+          fB_ct = interp1d(
+              z_max, sampled_fB_ct[:, incremental], kind='linear')
+          X0mm_ct = pynlin.nlin.Xhkm_precomputed(
+              z, I, amplification_function=fB_ct(z))
+          X_ct[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_ct)**2))
 
-                X0mm_none = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=None)
-                X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
+          fB_bi = interp1d(
+              z_max, sampled_fB_bi[:, incremental], kind='linear')
+          X0mm_bi = pynlin.nlin.Xhkm_precomputed(
+              z, I, amplification_function=fB_bi(z))
+          X_bi[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_bi)**2))
 
-    np.save(noise_path+str(length_setup) + '_' + str(num_co) +
-            '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
-    np.save(noise_path+str(length_setup) + '_' + str(num_co) +
-            '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
-    np.save(noise_path+str(length_setup) + '_' + str(num_co) +
-            '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
-    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' +
-            str(num_ct) + '_ct_X_none.npy', X_none)
+          X0mm_none = pynlin.nlin.Xhkm_precomputed(
+              z, I, amplification_function=None)
+          X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
+    return
+  
+  with Pool(os.cpu_count()) as p:
+    p.map(space_integral_power, enumerate(power_dBm_list))	
+
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) +
+          '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) +
+          '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) +
+          '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' +
+          str(num_ct) + '_ct_X_none.npy', X_none)
