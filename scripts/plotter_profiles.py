@@ -38,6 +38,8 @@ num_ct=data["num_ct"]
 wavelength=data["wavelength"]
 special=data["special"]
 pump_direction=data["pump_direction"]
+num_only_co_pumps=data['num_only_co_pumps']
+num_only_ct_pumps=data['num_only_ct_pumps']
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
@@ -50,9 +52,13 @@ for fiber_length in fiber_lengths:
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
     #
-    results_path = '../results_'+str(length_setup)+'/'
-    results_path_bi = '../results_'+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/'
+    results_path_co = '../results_' + str(length_setup) + '/' + str(num_only_co_pumps) + '_co/'
+    results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
+    results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
     #
+    optimization_result_path_co = '../results_' + str(length_setup) + '/optimization/' + str(num_only_co_pumps) + '_co/'
+    optimization_result_path_ct = '../results_' + str(length_setup) + '/optimization/' + str(num_only_ct_pumps) + '_ct/'
+    optimization_result_path_bi = '../results_' + str(length_setup) + '/optimization/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
     time_integrals_results_path = '../results/'
 
     # PLOTTING PARAMETERS
@@ -107,27 +113,21 @@ for fiber_length in fiber_lengths:
         num_ct = config[1]
         for idx, power_dBm in enumerate(power_dBm_list):
             average_power = dBm2watt(power_dBm)
-            results_path = '../results_' + str(length_setup) + '/'
-            optimized_result_path = '../results_' + str(length_setup) + '/optimization/'
-            optimized_result_path_bi =  '../results_' + str(length_setup) + '/optimization/'+ str(num_co) + '_co_' + str(num_ct) + '_ct_'+special+"/"
-            results_path_bi = '../results_' + \
-                str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_'+special+'/'
-
             # SIMULATION DATA LOAD =================================
 
             pump_solution_co = np.load(
-                results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
+                results_path_co + 'pump_solution_co_' + str(power_dBm) + '.npy')
             signal_solution_co = np.load(
-                results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
+                results_path_co + 'signal_solution_co_' + str(power_dBm) + '.npy')
             ase_solution_co = np.load(
-                results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
+                results_path_co + 'ase_solution_co_' + str(power_dBm) + '.npy')
 
             pump_solution_ct = np.load(
-                results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
+                results_path_ct + 'pump_solution_ct_' + str(power_dBm) + '.npy')
             signal_solution_ct = np.load(
-                results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
+                results_path_ct + 'signal_solution_ct_' + str(power_dBm) + '.npy')
             ase_solution_ct = np.load(
-                results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
+                results_path_ct + 'ase_solution_ct_' + str(power_dBm) + '.npy')
 
             pump_solution_bi = np.load(
                 results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
@@ -367,7 +367,7 @@ for fiber_length in fiber_lengths:
             num_ct = len(pump_solution_ct[0, :])
             num_bi = len(pump_solution_bi[0, :])
 
-            pump_wavelengths_CO = 1e6*np.load(optimized_result_path+'opt_wavelengths_co' + str(power_dBm) + '.npy')
+            pump_wavelengths_CO = 1e6*np.load(optimized_result_path_co+'opt_wavelengths_co' + str(power_dBm) + '.npy')
 
             for pp in range(num_CO):
                 ax_= ax.plot(z_max, watt2dBm(pump_solution_co[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_CO))))
@@ -401,7 +401,7 @@ for fiber_length in fiber_lengths:
             
             ######### pumps ct
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
-            pump_wavelengths_ct = 1e6*np.load(optimized_result_path+'opt_wavelengths_ct' + str(power_dBm) + '.npy')
+            pump_wavelengths_ct = 1e6*np.load(optimized_result_path_ct+'opt_wavelengths_ct' + str(power_dBm) + '.npy')
 
             for pp in range(num_ct):
                 ax_= ax.plot(z_max, watt2dBm(pump_solution_ct[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_ct))))
