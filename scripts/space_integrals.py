@@ -106,9 +106,13 @@ for fiber_length in fiber_lengths:
   X_bi = np.zeros_like(X_co)
   X_none = np.zeros_like(X_co)
 
-  def space_integral_power(power_arg):
-    pow_idx = power_arg[0]
-    power_dBm = power_arg[1]
+  def space_integral_power(power_dBm):
+    X_co_pow = np.zeros_like(
+      np.ndarray(shape=(len(coi_list)))
+    )
+    X_ct_pow = np.zeros_like(X_co_pow)
+    X_bi_pow = np.zeros_like(X_co_pow)
+    X_none_pow = np.zeros_like(X_co_pow)
     print("Computing power ", power_dBm)
     average_power = dBm2watt(power_dBm)
     # SIMULATION DATA LOAD =================================
@@ -203,33 +207,36 @@ for fiber_length in fiber_lengths:
               z_max, sampled_fB_co[:, incremental], kind='linear')
           X0mm_co = pynlin.nlin.Xhkm_precomputed(
               z, I, amplification_function=fB_co(z))
-          X_co[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_co)**2))
+          X_co_pow[coi_idx] += (np.sum(np.abs(X0mm_co)**2))
 
           fB_ct = interp1d(
               z_max, sampled_fB_ct[:, incremental], kind='linear')
           X0mm_ct = pynlin.nlin.Xhkm_precomputed(
               z, I, amplification_function=fB_ct(z))
-          X_ct[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_ct)**2))
+          X_ct_pow[coi_idx] += (np.sum(np.abs(X0mm_ct)**2))
 
           fB_bi = interp1d(
               z_max, sampled_fB_bi[:, incremental], kind='linear')
           X0mm_bi = pynlin.nlin.Xhkm_precomputed(
               z, I, amplification_function=fB_bi(z))
-          X_bi[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_bi)**2))
+          X_bi_pow[coi_idx] += (np.sum(np.abs(X0mm_bi)**2))
 
           X0mm_none = pynlin.nlin.Xhkm_precomputed(
               z, I, amplification_function=None)
-          X_none[coi_idx, pow_idx] += (np.sum(np.abs(X0mm_none)**2))
-    return
+          X_none_pow[coi_idx] += (np.sum(np.abs(X0mm_none)**2))
+    return [X_co_pow, X_ct_pow, X_bi_pow, X_none_pow]
   
   with Pool(os.cpu_count()) as p:
-    p.map(space_integral_power, enumerate(power_dBm_list))	
+    result = p.map(space_integral_power, power_dBm_list)	
 
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) +
-          '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) +
-          '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) +
-          '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' +
-          str(num_ct) + '_ct_X_none.npy', X_none)
+  print(result)
+  for pp_idx, pp in enumerate(power_dBm_list):
+    X_co[:, pp_idx] = result[pp_idx][0]
+    X_ct[:, pp_idx] = result[pp_idx][1]
+    X_bi[:, pp_idx] = result[pp_idx][2]
+    X_none[:, pp_idx] = result[pp_idx][3]
+
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
+  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_none.npy', X_none)
