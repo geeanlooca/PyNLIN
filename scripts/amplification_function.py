@@ -50,7 +50,7 @@ pump_direction = data["pump_direction"]
 power_per_channel_dBm_list = [-2.0, -4.0]
 power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 # Pumping scheme choice
-pumping_schemes = ['bi']
+pumping_schemes = ['co', 'ct']
 num_only_co_pumps = 4
 num_only_ct_pumps = 4
 optimize = True
@@ -381,7 +381,7 @@ for fiber_length in fiber_lengths:
 	if 'co' in pumping_schemes:
 		with Pool(os.cpu_count()) as p:
 			p.map(co_solver, power_per_channel_dBm_list)	
-			
+
 # OPTIMIZER COUNTER =================================
 	if 'ct' in pumping_schemes:
 		with Pool(os.cpu_count()) as p:
