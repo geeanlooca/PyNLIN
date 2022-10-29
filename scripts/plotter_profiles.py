@@ -23,7 +23,6 @@ import json
 
 f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
 data = json.load(f)
-print(data)
 dispersion=data["dispersion"] 
 effective_area=data["effective_area"] 
 baud_rate=data["baud_rate"] 
@@ -46,7 +45,7 @@ plt.rcParams['font.weight'] = '500'
 plt.rcParams['font.size'] = '24'
 for fiber_length in fiber_lengths:
     length_setup = int(fiber_length*1e-3) 
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/'
+    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/profiles/'
     #
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
@@ -113,7 +112,6 @@ for fiber_length in fiber_lengths:
             optimized_result_path_bi =  '../results_' + str(length_setup) + '/optimization/'+ str(num_co) + '_co_' + str(num_ct) + '_ct_'+special+"/"
             results_path_bi = '../results_' + \
                 str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_'+special+'/'
-            plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_"+str(length_setup)+'/'+str(num_co)+'_co_'+str(num_ct)+'_ct_'+special+'/'
 
             # SIMULATION DATA LOAD =================================
 
@@ -157,79 +155,79 @@ for fiber_length in fiber_lengths:
             ########################################################################
             # SIGNALS AND ASE ONLY
             ########################################################################
-            
-            fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
+            if False:
+              fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
 
-            plt.plot(z_max, np.transpose(
-                watt2dBm([ase_solution_co[:, idx] for idx in [0, 24, 49]])), color="k")
-            plt.plot(z_max, np.transpose(
-                watt2dBm([signal_solution_co[:, idx] for idx in [0, 24, 49]])), color="b")
-            if show_pumps:
-                plt.plot(z_max, watt2dBm(pump_solution_co), color="r")
+              plt.plot(z_max, np.transpose(
+                  watt2dBm([ase_solution_co[:, idx] for idx in [0, 24, 49]])), color="k")
+              plt.plot(z_max, np.transpose(
+                  watt2dBm([signal_solution_co[:, idx] for idx in [0, 24, 49]])), color="b")
+              if show_pumps:
+                  plt.plot(z_max, watt2dBm(pump_solution_co), color="r")
 
-            plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
+              plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
-            plt.xlabel("z [km]")
-            plt.ylabel("Wave power [dBm]")
-            plt.grid("on")
-            plt.minorticks_on()
-            osnr = 10 * np.log10(signal_solution_co[-1:, :] / ase_solution_co[-1:, :])
-            # plt.figure()
-            # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
-            if show_plots:
-                plt.show()
+              plt.xlabel("z [km]")
+              plt.ylabel("Wave power [dBm]")
+              plt.grid("on")
+              plt.minorticks_on()
+              osnr = 10 * np.log10(signal_solution_co[-1:, :] / ase_solution_co[-1:, :])
+              # plt.figure()
+              # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
+              if show_plots:
+                  plt.show()
 
-            plt.tight_layout()
-            plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_co.pdf")
+              plt.tight_layout()
+              plt.savefig(plot_save_path + "co_profile" + str(power_dBm) + ".pdf")
 
-            ###############
-            fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
-            plt.plot(z_max, np.transpose(
-                watt2dBm([ase_solution_ct[:, idx] for idx in [0, 24, 49]])), color="k")
-            plt.plot(z_max, np.transpose(
-                watt2dBm([signal_solution_ct[:, idx] for idx in [0, 24, 49]])), color="b")
-            if show_pumps:
-                plt.plot(z_max, watt2dBm(pump_solution_ct), color="r")
+              ###############
+              fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
+              plt.plot(z_max, np.transpose(
+                  watt2dBm([ase_solution_ct[:, idx] for idx in [0, 24, 49]])), color="k")
+              plt.plot(z_max, np.transpose(
+                  watt2dBm([signal_solution_ct[:, idx] for idx in [0, 24, 49]])), color="b")
+              if show_pumps:
+                  plt.plot(z_max, watt2dBm(pump_solution_ct), color="r")
 
-            plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
+              plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
 
-            plt.xlabel("z [km]")
-            plt.ylabel("Wave power [dBm]")
-            plt.grid("on")
-            plt.minorticks_on()
-            osnr = 10 * np.log10(signal_solution_ct[-1:, :] / ase_solution_ct[-1:, :])
-            # plt.figure()
-            # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
-            if show_plots:
-                plt.show()
+              plt.xlabel("z [km]")
+              plt.ylabel("Wave power [dBm]")
+              plt.grid("on")
+              plt.minorticks_on()
+              osnr = 10 * np.log10(signal_solution_ct[-1:, :] / ase_solution_ct[-1:, :])
+              # plt.figure()
+              # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
+              if show_plots:
+                  plt.show()
 
-            plt.tight_layout()
-            plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_ct.pdf")
+              plt.tight_layout()
+              plt.savefig(plot_save_path + "ct_profile" + str(power_dBm) + ".pdf")
 
-            #########
-            fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
-            plt.plot(z_max, np.transpose(
-                watt2dBm([ase_solution_bi[:, idx] for idx in [0, 24, 49]])), color="k")
-            plt.plot(z_max, np.transpose(
-                watt2dBm([signal_solution_bi[:, idx] for idx in [0, 24, 49]])), color="b")
-            if show_pumps:
-                plt.plot(z_max, watt2dBm(pump_solution_bi), color="r")
+              #########
+              fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
+              plt.plot(z_max, np.transpose(
+                  watt2dBm([ase_solution_bi[:, idx] for idx in [0, 24, 49]])), color="k")
+              plt.plot(z_max, np.transpose(
+                  watt2dBm([signal_solution_bi[:, idx] for idx in [0, 24, 49]])), color="b")
+              if show_pumps:
+                  plt.plot(z_max, watt2dBm(pump_solution_bi), color="r")
 
-            plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
+              plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
-            plt.xlabel("z [km]")
-            plt.ylabel("Wave power [dBm]")
-            plt.grid("on")
-            plt.minorticks_on()
-            osnr = 10 * np.log10(signal_solution_bi[-1:, :] / ase_solution_bi[-1:, :])
-            # plt.figure()
-            # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
-            if show_plots:
-                plt.show()
+              plt.xlabel("z [km]")
+              plt.ylabel("Wave power [dBm]")
+              plt.grid("on")
+              plt.minorticks_on()
+              osnr = 10 * np.log10(signal_solution_bi[-1:, :] / ase_solution_bi[-1:, :])
+              # plt.figure()
+              # plt.plot(signal_wavelengths, watt2dBm(signal_solution[-1]), color="k")
+              if show_plots:
+                  plt.show()
 
-            plt.tight_layout()
-            plt.savefig(plot_save_path + "profile" + str(power_dBm) + "_bi.pdf")
+              plt.tight_layout()
+              plt.savefig(plot_save_path + "bi_profile" + str(power_dBm) + ".pdf")
         
             ########################################################################
             # SIGNALS ONLY
@@ -251,7 +249,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_co.pdf")
+            plt.savefig(plot_save_path + "co_signals" + str(power_dBm) + ".pdf")
 
             # à
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
@@ -270,7 +268,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_ct.pdf")
+            plt.savefig(plot_save_path + "ct_signals" + str(power_dBm) + ".pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
@@ -289,7 +287,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "signals" + str(power_dBm) + "_bi.pdf")
+            plt.savefig(plot_save_path + "bi_signals" + str(power_dBm) + ".pdf")
 
             ########################################################################
             # ASE ONLY
@@ -314,7 +312,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_co.pdf")
+            plt.savefig(plot_save_path + "co_ases" + str(power_dBm) + ".pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 8))
@@ -334,7 +332,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_ct.pdf")
+            plt.savefig(plot_save_path + "ct_ases" + str(power_dBm) + ".pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 8))
@@ -355,7 +353,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "ases" + str(power_dBm) + "_bi.pdf")
+            plt.savefig(plot_save_path + "bi_ases" + str(power_dBm) + ".pdf")
 
             ########################################################################
             # PUMPS ONLY
@@ -399,7 +397,7 @@ for fiber_length in fiber_lengths:
             # print(pump_wavelengths_CO)
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
-            plt.savefig(plot_save_path + "../pumps" + str(power_dBm) + "_co.pdf")
+            plt.savefig(plot_save_path + "co_pumps" + str(power_dBm) + ".pdf")
             
             ######### pumps ct
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
@@ -433,13 +431,13 @@ for fiber_length in fiber_lengths:
             # print(pump_wavelengths_ct)
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
-            plt.savefig(plot_save_path + "../pumps" + str(power_dBm) + "_ct.pdf")
+            plt.savefig(plot_save_path + "ct_pumps" + str(power_dBm) + ".pdf")
             
             ######### pumps bi
             #
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             pump_wavelengths_bi = 1e6*np.load(optimized_result_path_bi+'opt_wavelengths_bi' + str(power_dBm) + '.npy')
-
+            print(pump_wavelengths_bi)
             for pp in range(num_bi):
                 ax_= ax.plot(z_max, watt2dBm(pump_solution_bi[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_bi))))
             plt.xlabel("z [km]")
@@ -468,7 +466,7 @@ for fiber_length in fiber_lengths:
             # print(pump_wavelengths_bi)
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
-            plt.savefig(plot_save_path + "pumps" + str(power_dBm) + "_bi.pdf")
+            plt.savefig(plot_save_path + "bi_pumps" + str(power_dBm) + ".pdf")
             
             # pump wavelengths and power
             #################################
@@ -482,11 +480,16 @@ for fiber_length in fiber_lengths:
             cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
             #Get cmap values
 
-            markerline, stemline, baseline, = plt.stem(1e6*pump_wavelengths_bi, 10*np.log10(pump_powers_bi)+30, linefmt=None, markerfmt="x", basefmt=None)
-            plt.setp(stemline, linewidth = 3)
+            if pump_direction != "direct":
+              print("\nWarning: stem plot do not respect real pump directions!")
+            markerline, stemline, baseline, = plt.stem(1e6*pump_wavelengths_bi[:num_co], 10*np.log10(pump_powers_bi[:num_co])+30, linefmt=None, markerfmt="x", basefmt=None)
+            plt.setp(stemline, linewidth = 3, label="co")
+            plt.setp(markerline, markersize = 15)
+            markerline, stemline, baseline, = plt.stem(1e6*pump_wavelengths_bi[num_co:], 10*np.log10(pump_powers_bi[num_co:])+30, linefmt=None, markerfmt="o", basefmt=None)
+            plt.setp(stemline, linewidth = 3, label="ct")
             plt.setp(markerline, markersize = 15)
             cmap_vals = cm.gist_rainbow([item/num_bi for item in range(num_bi)])
-            
+            plt.legend()
             # Define new cmap
 
             #norm = mpl.colors.BoundaryNorm(pump_wavelengths_bi, num_bi)
@@ -512,8 +515,6 @@ for fiber_length in fiber_lengths:
             ## the signals are allright
             #################################
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
-
-            print(signal_solution_bi[-1, :])
             plt.plot(1e6*signal_wavelengths, 10*np.log10(signal_solution_bi[-1, ::-1])-10*np.log10(signal_solution_bi[0, :]), marker="x", markersize=10)
             #Get cmap values
             cmap_vals = cm.gist_rainbow([item/num_bi for item in range(num_bi)])

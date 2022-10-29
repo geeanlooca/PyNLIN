@@ -14,6 +14,6 @@
   "interfering_grid_index":1,
   "wavelength":1550e-9,
   "time_integral_length":100e3,
-  "special":"bromage",
+  "special":"symmetric",
   "pump_direction":"direct"
 } 

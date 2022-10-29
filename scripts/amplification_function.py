@@ -49,7 +49,7 @@ pump_direction = data["pump_direction"]
 power_per_channel_dBm_list = [-2.0, -4.0]
 power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 # Pumping scheme choice
-pumping_schemes = ['co']
+pumping_schemes = ['bi']
 num_only_co_pumps = 4
 num_only_ct_pumps = 4
 optimize = True
@@ -135,7 +135,7 @@ for fiber_length in fiber_lengths:
 			pump_band_a = lambda2nu(1410e-9)
 			#initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 			# BROMAGE
-			initial_pump_frequencies = np.array(lambda2nu([1447e-9, 1467e-9, 1447e-9, 1467e-9, 1485e-9, 1515e-9]))
+			initial_pump_frequencies = np.array(lambda2nu([1485e-9, 1515e-9, 1447e-9, 1467e-9, 1485e-9, 1515e-9]))
 
 			print("INITIAL PUMP FREQUENCIES:\n\t")
 			print(initial_pump_frequencies)
@@ -333,7 +333,7 @@ for fiber_length in fiber_lengths:
 
 				target_spectrum = watt2dBm(0.5 * signal_powers)
 				if power_per_channel > -6.0:
-					learning_rate = 2e-4
+					learning_rate = 1e-4
 				else:
 					learning_rate = 1e-3
 
