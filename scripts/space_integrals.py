@@ -90,10 +90,9 @@ if not os.path.exists(noise_path):
 for fiber_length in fiber_lengths:
   length_setup = int(fiber_length * 1e-3)
   #
-  results_path = '../results_' + str(length_setup) + '/'
-  results_path_bi = '../results_' + \
-      str(length_setup) + '/' + str(num_co) + '_co_' + \
-      str(num_ct) + '_ct_' + special + '/'
+  results_path_co = '../results_' + str(length_setup) + '/' + str(num_co) + '_co/'
+  results_path_ct = '../results_' + str(length_setup) + '/' + str(num_co) + '_ct/'
+  results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 
   # overall NLIN sum of variances for all m
   X_co = np.zeros_like(
@@ -110,26 +109,17 @@ for fiber_length in fiber_lengths:
     average_power = dBm2watt(power_dBm)
     # SIMULATION DATA LOAD =================================
 
-    pump_solution_co = np.load(
-        results_path + 'pump_solution_co_' + str(power_dBm) + '.npy')
-    signal_solution_co = np.load(
-        results_path + 'signal_solution_co_' + str(power_dBm) + '.npy')
-    pump_solution_ct = np.load(
-        results_path + 'pump_solution_ct_' + str(power_dBm) + '.npy')
-    signal_solution_ct = np.load(
-        results_path + 'signal_solution_ct_' + str(power_dBm) + '.npy')
-    pump_solution_bi = np.load(
-        results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
-    signal_solution_bi = np.load(
-        results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
+    pump_solution_co = np.load(results_path_co + 'pump_solution_co_' + str(power_dBm) + '.npy')
+    signal_solution_co = np.load(results_path_co + 'signal_solution_co_' + str(power_dBm) + '.npy')
+    pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_' + str(power_dBm) + '.npy')
+    signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm) + '.npy')
+    pump_solution_bi = np.load(results_path_bi + 'pump_solution_bi_' + str(power_dBm) + '.npy')
+    signal_solution_bi = np.load(results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
 
     # ASE power evolution
-    ase_solution_co = np.load(
-        results_path + 'ase_solution_co_' + str(power_dBm) + '.npy')
-    ase_solution_ct = np.load(
-        results_path + 'ase_solution_ct_' + str(power_dBm) + '.npy')
-    ase_solution_bi = np.load(
-        results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
+    ase_solution_co = np.load(results_path_co + 'ase_solution_co_' + str(power_dBm) + '.npy')
+    ase_solution_ct = np.load(results_path_ct + 'ase_solution_ct_' + str(power_dBm) + '.npy')
+    ase_solution_bi = np.load(results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
 
     # compute fB squaring
     pump_solution_co = np.divide(pump_solution_co, pump_solution_co[0, :])
