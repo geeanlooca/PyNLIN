@@ -11,6 +11,8 @@
   "partial_collision_margin":5,
   "num_co": 2, 
   "num_ct":4,
+  "num_only_co_pumps":4,
+  "num_only_ct_pumps":4,
   "interfering_grid_index":1,
   "wavelength":1550e-9,
   "time_integral_length":100e3,

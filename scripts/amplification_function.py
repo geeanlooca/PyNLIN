@@ -44,6 +44,8 @@ num_ct = data["num_ct"]
 wavelength = data["wavelength"]
 special = data["special"]
 pump_direction = data["pump_direction"]
+num_only_co_pumps=data['num_only_co_pumps']
+num_only_ct_pumps=data['num_only_ct_pumps']
 
 # Manual configuration
 power_per_channel_dBm_list = [-2.0, -4.0]
