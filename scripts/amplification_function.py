@@ -10,7 +10,6 @@ import pynlin.nlin
 import pynlin.utils
 from multiprocessing import Pool
 
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from scipy.constants import lambda2nu, nu2lambda
@@ -82,27 +81,28 @@ points_per_collision = 10
 
 for fiber_length in fiber_lengths:
 	length_setup = int(fiber_length * 1e-3)
-	optimization_result_path = '../results_' + \
-		str(length_setup) + '/optimization/' + str(num_co) + \
-		'_co_' + str(num_ct) + '_ct_' + special + '/'
-	optimization_result_path_coct = '../results_' + str(length_setup) + '/optimization'
+	optimization_result_path_co = '../results_' + str(length_setup) + '/optimization/' + str(num_co) + '_co/'
+	optimization_result_path_ct = '../results_' + str(length_setup) + '/optimization/' + str(num_ct) + '_ct/'
+	optimization_result_path_bi = '../results_' + str(length_setup) + '/optimization/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 	
-	results_path = '../results_' + str(length_setup) + '/'
-	results_path_bi = '../results_' + \
-		str(length_setup) + '/' + str(num_co) + '_co_' + \
-		str(num_ct) + '_ct_' + special + '/'
+	results_path_co = '../results_' + str(length_setup) + '/' + str(num_co) + '_co/'
+	results_path_ct = '../results_' + str(length_setup) + '/' + str(num_ct) + '_ct/'
+	results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 	#
-	if not os.path.exists(results_path):
-		os.makedirs(results_path)
-	#
+	if not os.path.exists(results_path_co):
+		os.makedirs(results_path_co)
+	if not os.path.exists(results_path_ct):
+		os.makedirs(results_path_ct)
 	if not os.path.exists(results_path_bi):
-		os.makedirs(results_path_bi)
+		os.makedirs(results_path_bi)				
 	#
-	if not os.path.exists(optimization_result_path):
-		os.makedirs(optimization_result_path)
-	#
-	if not os.path.exists(optimization_result_path_coct):
-		os.makedirs(optimization_result_path_coct)
+	if not os.path.exists(optimization_result_path_co):
+		os.makedirs(optimization_result_path_co)
+	if not os.path.exists(optimization_result_path_ct):
+		os.makedirs(optimization_result_path_ct)
+	if not os.path.exists(optimization_result_path_bi):
+		os.makedirs(optimization_result_path_bi)
+
 	time_integrals_results_path = '../results/'
 
 	# PRECISION REQUIREMENTS ESTIMATION =================================
@@ -169,68 +169,51 @@ for fiber_length in fiber_lengths:
 
 		#pump_powers = dBm2watt(np.array([10, 10, 10, 10, -60, -60, -50, -40]))
 		pump_powers = np.array(pump_powers)
-		if optimize:
-			torch_amplifier = RamanAmplifier(
-				fiber_length,
-				integration_steps,
-				num_pumps,
-				signal_wavelengths,
-				power_per_channel,
-				fiber,
-				pump_direction=pump_directions
-			)
+		torch_amplifier = RamanAmplifier(
+			fiber_length,
+			integration_steps,
+			num_pumps,
+			signal_wavelengths,
+			power_per_channel,
+			fiber,
+			pump_direction=pump_directions
+		)
 
-			optimizer = CopropagatingOptimizer(
-				torch_amplifier,
-				torch.from_numpy(pump_wavelengths),
-				torch.from_numpy(pump_powers),
-			)
+		optimizer = CopropagatingOptimizer(
+			torch_amplifier,
+			torch.from_numpy(pump_wavelengths),
+			torch.from_numpy(pump_powers),
+		)
 
-			target_spectrum = watt2dBm(0.5*signal_powers)
-			if power_per_channel > -6.0:
-				learning_rate = 1e-4
-			else:
-				learning_rate = 5e-3
-
-			pump_wavelengths_bi, pump_powers_bi = optimizer.optimize(
-				target_spectrum=target_spectrum,
-				epochs=600,
-				learning_rate=learning_rate
-			)
-			print("\n\nOPTIMIZED POWERS= ", pump_powers_bi, "\n\n")
-			np.save(optimization_result_path + "opt_wavelengths_bi" +
-					str(power_per_channel_dBm) + ".npy", pump_wavelengths_bi)
-			np.save(optimization_result_path + "opt_powers_bi" +
-					str(power_per_channel_dBm) + ".npy", pump_powers_bi)
+		target_spectrum = watt2dBm(0.5*signal_powers)
+		if power_per_channel > -6.0:
+			learning_rate = 1e-4
 		else:
-			pump_wavelengths_bi = np.load(
-				optimization_result_path + "opt_wavelengths_bi" + str(power_per_channel_dBm) + ".npy")
-			pump_powers_bi = np.load(optimization_result_path +
-									"opt_powers_bi" + str(power_per_channel_dBm) + ".npy")
-		if profiles:
-			amplifier = NumpyRamanAmplifier(fiber)
+			learning_rate = 5e-3
 
-			pump_solution_bi, signal_solution_bi, ase_solution_bi = amplifier.solve(
-				signal_powers,
-				signal_wavelengths,
-				pump_powers_bi,
-				pump_wavelengths_bi,
-				z_max,
-				pump_direction=pump_directions,
-				use_power_at_fiber_start=True,
-				reference_bandwidth=ref_bandwidth
-			)
+		pump_wavelengths_bi, pump_powers_bi = optimizer.optimize(
+			target_spectrum=target_spectrum,
+			epochs=600,
+			learning_rate=learning_rate
+		)
+		print("\n\nOPTIMIZED POWERS= ", pump_powers_bi, "\n\n")
+		np.save(optimization_result_path_bi + "opt_wavelengths_bi" + str(power_per_channel_dBm) + ".npy", pump_wavelengths_bi)
+		np.save(optimization_result_path_bi + "opt_powers_bi" + str(power_per_channel_dBm) + ".npy", pump_powers_bi)
+		
+		amplifier = NumpyRamanAmplifier(fiber)
 
-			np.save(results_path_bi + "pump_solution_bi_" +
-					str(power_per_channel_dBm) + ".npy", pump_solution_bi)
-			np.save(results_path_bi + "signal_solution_bi_" +
-					str(power_per_channel_dBm) + ".npy", signal_solution_bi)
-			np.save(results_path_bi + "ase_solution_bi_" +
-					str(power_per_channel_dBm) + ".npy", ase_solution_bi)
-		plt.figure()
-		plt.plot(signal_wavelengths, watt2dBm(signal_solution_bi[-1]), color="k")
-		plt.savefig(results_path + "signal_profile_" +
-					str(power_per_channel_dBm) + ".pdf")
+		pump_solution_bi, signal_solution_bi, ase_solution_bi = amplifier.solve(
+			signal_powers,
+			signal_wavelengths,
+			pump_powers_bi,
+			pump_wavelengths_bi,
+			z_max,
+			reference_bandwidth=ref_bandwidth
+		)
+
+		np.save(results_path_bi+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_bi)
+		np.save(results_path_bi+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_bi)
+		np.save(results_path_bi+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
 		return 
 
 	def co_solver(power_per_channel_dBm):
@@ -248,51 +231,46 @@ for fiber_length in fiber_lengths:
 
 		signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
 		pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-		if optimize:
-			torch_amplifier = RamanAmplifier(
-				fiber_length,
-				integration_steps,
-				num_pumps,
-				signal_wavelengths,
-				power_per_channel,
-				fiber,
+		torch_amplifier = RamanAmplifier(
+			fiber_length,
+			integration_steps,
+			num_pumps,
+			signal_wavelengths,
+			power_per_channel,
+			fiber,
 
-			)
-			optimizer = CopropagatingOptimizer(
-				torch_amplifier,
-				torch.from_numpy(pump_wavelengths),
-				torch.from_numpy(pump_powers),
-			)
+		)
+		optimizer = CopropagatingOptimizer(
+			torch_amplifier,
+			torch.from_numpy(pump_wavelengths),
+			torch.from_numpy(pump_powers),
+		)
 
-			target_spectrum = watt2dBm(0.5*signal_powers)
+		target_spectrum = watt2dBm(0.5*signal_powers)
 
-			pump_wavelengths_co, pump_powers_co = optimizer.optimize(
-				target_spectrum=target_spectrum,
-				epochs=500,
-				learning_rate=1e-3,
-			)
+		pump_wavelengths_co, pump_powers_co = optimizer.optimize(
+			target_spectrum=target_spectrum,
+			epochs=500,
+			learning_rate=1e-3,
+		)
 
-			np.save(optimization_result_path_coct+"opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
-			np.save(optimization_result_path_coct+"opt_powers_co"+str(power_per_channel_dBm)+".npy", pump_powers_co)
-		else: 
-			pump_wavelengths_co = np.load(optimization_result_path_coct+"opt_wavelengths_co"+str(power_per_channel_dBm)+".npy")
-			pump_powers_co = np.load(optimization_result_path_coct+"opt_powers_co"+str(power_per_channel_dBm)+".npy")
+		np.save(optimization_result_path_co+"opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
+		np.save(optimization_result_path_co+"opt_powers_co"+str(power_per_channel_dBm)+".npy", pump_powers_co)
 
-		if profiles:
-			amplifier = NumpyRamanAmplifier(fiber)
+		amplifier = NumpyRamanAmplifier(fiber)
 
-			pump_solution_co, signal_solution_co, ase_solution_co = amplifier.solve(
-				signal_powers,
-				signal_wavelengths,
-				pump_powers_co,
-				pump_wavelengths_co,
-				z_max,
-				reference_bandwidth=ref_bandwidth
-			)
+		pump_solution_co, signal_solution_co, ase_solution_co = amplifier.solve(
+			signal_powers,
+			signal_wavelengths,
+			pump_powers_co,
+			pump_wavelengths_co,
+			z_max,
+			reference_bandwidth=ref_bandwidth
+		)
 
-			np.save(results_path+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
-			np.save(results_path+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
-			np.save(results_path+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
+		np.save(results_path_co+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
+		np.save(results_path_co+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
+		np.save(results_path_co+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
 		return 
 
 	def ct_solver(power_per_channel_dBm):
@@ -311,65 +289,53 @@ for fiber_length in fiber_lengths:
 		num_pumps = len(pump_wavelengths)
 		signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
 		pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-		if optimize:
-			torch_amplifier_ct = RamanAmplifier(
-				fiber_length,
-				integration_steps,
-				num_pumps,
-				signal_wavelengths,
-				power_per_channel,
-				fiber,
-				pump_direction=-1,
-			)
+		torch_amplifier_ct = RamanAmplifier(
+			fiber_length,
+			integration_steps,
+			num_pumps,
+			signal_wavelengths,
+			power_per_channel,
+			fiber,
+			pump_direction=-1,
+		)
 
-			optimizer = CopropagatingOptimizer(
-				torch_amplifier_ct,
-				torch.from_numpy(pump_wavelengths),
-				torch.from_numpy(pump_powers),
-			)
+		optimizer = CopropagatingOptimizer(
+			torch_amplifier_ct,
+			torch.from_numpy(pump_wavelengths),
+			torch.from_numpy(pump_powers),
+		)
 
-			target_spectrum = watt2dBm(0.5 * signal_powers)
-			if power_per_channel > -6.0:
-				learning_rate = 1e-4
-			else:
-				learning_rate = 1e-3
-
-			pump_wavelengths_ct, pump_powers_ct = optimizer.optimize(
-				target_spectrum=target_spectrum,
-				epochs=500,
-				learning_rate=learning_rate,
-				lock_wavelengths=200,
-			)
-			np.save(optimization_result_path_coct + "opt_wavelengths_ct" +
-					str(power_per_channel_dBm) + ".npy", pump_wavelengths_ct)
-			np.save(optimization_result_path_coct + "opt_powers_ct" +
-					str(power_per_channel_dBm) + ".npy", pump_powers_ct)
+		target_spectrum = watt2dBm(0.5 * signal_powers)
+		if power_per_channel > -6.0:
+			learning_rate = 1e-4
 		else:
-			pump_wavelengths_ct = np.load(
-				optimization_result_path_coct + "opt_wavelengths_ct" + str(power_per_channel_dBm) + ".npy")
-			pump_powers_ct = np.load(
-				optimization_result_path_coct + "opt_powers_ct" + str(power_per_channel_dBm) + ".npy")
+			learning_rate = 1e-3
 
-		if profiles:
-			amplifier = NumpyRamanAmplifier(fiber)
+		pump_wavelengths_ct, pump_powers_ct = optimizer.optimize(
+			target_spectrum=target_spectrum,
+			epochs=500,
+			learning_rate=learning_rate,
+			lock_wavelengths=200,
+		)
+		np.save(optimization_result_path_ct + "opt_wavelengths_ct" + str(power_per_channel_dBm) + ".npy", pump_wavelengths_ct)
+		np.save(optimization_result_path_ct + "opt_powers_ct" + str(power_per_channel_dBm) + ".npy", pump_powers_ct)
 
-			pump_solution_ct, signal_solution_ct, ase_solution_ct = amplifier.solve(
-				signal_powers,
-				signal_wavelengths,
-				pump_powers_ct,
-				pump_wavelengths_ct,
-				z_max,
-				pump_direction=-1,
-				use_power_at_fiber_start=True,
-				reference_bandwidth=ref_bandwidth
-			)
+		amplifier = NumpyRamanAmplifier(fiber)
 
-			np.save(results_path + "pump_solution_ct_" +
-					str(power_per_channel_dBm) + ".npy", pump_solution_ct)
-			np.save(results_path + "signal_solution_ct_" +
-					str(power_per_channel_dBm) + ".npy", signal_solution_ct)
-			np.save(results_path + "ase_solution_ct_" +
-					str(power_per_channel_dBm) + ".npy", ase_solution_ct)
+		pump_solution_ct, signal_solution_ct, ase_solution_ct = amplifier.solve(
+			signal_powers,
+			signal_wavelengths,
+			pump_powers_ct,
+			pump_wavelengths_ct,
+			z_max,
+			pump_direction=-1,
+			use_power_at_fiber_start=True,
+			reference_bandwidth=ref_bandwidth
+		)
+
+		np.save(results_path_ct + "pump_solution_ct_" + str(power_per_channel_dBm) + ".npy", pump_solution_ct)
+		np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) + ".npy", signal_solution_ct)
+		np.save(results_path_ct + "ase_solution_ct_" + str(power_per_channel_dBm) + ".npy", ase_solution_ct)
 		return
 
 # OPTIMIZER BIDIRECTIONAL =================================
