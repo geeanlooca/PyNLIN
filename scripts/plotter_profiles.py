@@ -251,7 +251,6 @@ for fiber_length in fiber_lengths:
             plt.tight_layout()
             plt.savefig(plot_save_path + "co_signals" + str(power_dBm) + ".pdf")
 
-            # à
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             for ii, idx in enumerate(coi_list):
                 plt.plot(z_max, np.transpose(watt2dBm(
@@ -367,10 +366,10 @@ for fiber_length in fiber_lengths:
             num_ct = len(pump_solution_ct[0, :])
             num_bi = len(pump_solution_bi[0, :])
 
-            pump_wavelengths_CO = 1e6*np.load(optimized_result_path_co+'opt_wavelengths_co' + str(power_dBm) + '.npy')
+            pump_wavelengths_co = 1e6*np.load(optimized_result_path_co+'opt_wavelengths_co' + str(power_dBm) + '.npy')
 
             for pp in range(num_CO):
-                ax_= ax.plot(z_max, watt2dBm(pump_solution_co[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_CO))))
+                ax_= ax.plot(z_max, watt2dBm(pump_solution_co[:, pp]), color=cm.rainbow((0.9*pp/(num_CO))-0.05))
             plt.xlabel("z [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
@@ -380,21 +379,20 @@ for fiber_length in fiber_lengths:
             plt.tight_layout()
 
             #Get cmap values
-            cmap_vals = cm.gist_rainbow([item/num_co for item in range(num_CO)])
+            cmap_vals = cm.rainbow([item/num_co for item in range(num_CO)])
             
             # Define new cmap
-            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
-            #norm = mpl.colors.BoundaryNorm(pump_wavelengths_CO, num_CO)
-            norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_CO), vmax=np.max(pump_wavelengths_CO)) 
+            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals)
+            #norm = mpl.colors.BoundaryNorm(pump_wavelengths_co, num_CO)
+            norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_co), vmax=np.max(pump_wavelengths_co)) 
             # Define SM
             sm = plt.cm.ScalarMappable(cmap=cmap_new, norm=norm)
             sm.set_array([])
 
             # Plot colorbar
             clb = plt.colorbar(sm, pad=0.01)
-            clb.ax.set_xticks(pump_wavelengths_CO)
-            clb.ax.set_xticklabels(["{:1.4f}".format(pmp) for pmp in pump_wavelengths_CO])
-            # print(pump_wavelengths_CO)
+            clb.ax.set_xticks(pump_wavelengths_co)
+            clb.ax.set_xticklabels(["{:1.4f}".format(pmp) for pmp in pump_wavelengths_co])
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
             plt.savefig(plot_save_path + "co_pumps" + str(power_dBm) + ".pdf")
@@ -404,7 +402,7 @@ for fiber_length in fiber_lengths:
             pump_wavelengths_ct = 1e6*np.load(optimized_result_path_ct+'opt_wavelengths_ct' + str(power_dBm) + '.npy')
 
             for pp in range(num_ct):
-                ax_= ax.plot(z_max, watt2dBm(pump_solution_ct[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_ct))))
+                ax_= ax.plot(z_max, watt2dBm(pump_solution_ct[:, pp]), color=cm.rainbow((0.9*pp/(num_ct))-0.05))
             plt.xlabel("z [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
@@ -414,10 +412,10 @@ for fiber_length in fiber_lengths:
             plt.tight_layout()
 
             #Get cmap values
-            cmap_vals = cm.gist_rainbow([item/num_ct for item in range(num_ct)])
+            cmap_vals = cm.rainbow([item/num_ct for item in range(num_ct)])
             
             # Define new cmap
-            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
+            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals)
             #norm = mpl.colors.BoundaryNorm(pump_wavelengths_ct, num_ct)
             norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_ct), vmax=np.max(pump_wavelengths_ct)) 
             # Define SM
@@ -438,8 +436,10 @@ for fiber_length in fiber_lengths:
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             pump_wavelengths_bi = 1e6*np.load(optimized_result_path_bi+'opt_wavelengths_bi' + str(power_dBm) + '.npy')
             print(pump_wavelengths_bi)
+            max_wavelength = np.max(pump_wavelengths_bi)
+            min_wavelength = np.min(pump_wavelengths_bi)
             for pp in range(num_bi):
-                ax_= ax.plot(z_max, watt2dBm(pump_solution_bi[:, pp]), color=cm.gist_rainbow(0.95-(0.9*pp/(num_bi))))
+                ax_= ax.plot(z_max, watt2dBm(pump_solution_bi[:, pp]), color=cm.rainbow(0.9*(pump_wavelengths_bi[pp]-min_wavelength)/(max_wavelength-min_wavelength)-0.05))
             plt.xlabel("z [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
@@ -449,10 +449,10 @@ for fiber_length in fiber_lengths:
             plt.tight_layout()
 
             #Get cmap values
-            cmap_vals = cm.gist_rainbow([item/num_bi for item in range(num_bi)])
+            cmap_vals = cm.rainbow([item/num_bi for item in range(num_bi)])
             
             # Define new cmap
-            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
+            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals)
             #norm = mpl.colors.BoundaryNorm(pump_wavelengths_bi, num_bi)
             norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_bi), vmax=np.max(pump_wavelengths_bi)) 
             # Define SM
@@ -488,7 +488,7 @@ for fiber_length in fiber_lengths:
             markerline, stemline, baseline, = plt.stem(1e6*pump_wavelengths_bi[num_co:], 10*np.log10(pump_powers_bi[num_co:])+30, linefmt=None, markerfmt="o", basefmt=None)
             plt.setp(stemline, linewidth = 3, label="ct")
             plt.setp(markerline, markersize = 15)
-            cmap_vals = cm.gist_rainbow([item/num_bi for item in range(num_bi)])
+            cmap_vals = cm.rainbow([item/num_bi for item in range(num_bi)])
             plt.legend()
             # Define new cmap
 
@@ -509,15 +509,51 @@ for fiber_length in fiber_lengths:
             plt.minorticks_on()
             plt.tight_layout()
 
-            plt.savefig(plot_save_path + "stems" + str(power_dBm) + "_bi.pdf")
+            plt.savefig(plot_save_path + "bi_stems" + str(power_dBm) + "_bi.pdf")
 
+
+            ## COPUMPS
+
+            fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
+            pump_wavelengths_co = 1e6*np.load(optimized_result_path_co+'opt_wavelengths_co' + str(power_dBm) + '.npy')
+            pump_powers_co = np.load(optimized_result_path_co+'opt_powers_co' + str(power_dBm) + '.npy')
+            print(pump_powers_co)
+
+            cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
+            #Get cmap values
+
+            if pump_direction != "direct":
+              print("\nWarning: stem plot do not respect real pump directions!")
+            markerline, stemline, baseline, = plt.stem(1e6*pump_wavelengths_co, 10*np.log10(pump_powers_co)+30, linefmt=None, markerfmt="x", basefmt=None)
+            plt.setp(stemline, linewidth = 3, label="co")
+            plt.setp(markerline, markersize = 15)
+            cmap_vals = cm.rainbow([item/num_co for item in range(num_co)])
+            plt.legend()
+            # Define new cmap
+            norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_co), vmax=np.max(pump_wavelengths_co)) 
+            # Define SM
+            sm = plt.cm.ScalarMappable(cmap=cmap_new, norm=norm)
+            sm.set_array([])
+
+            # Plot colorbar
+            # clb = plt.colorbar(sm, pad=0.01)
+            # clb.ax.set_xticks(pump_wavelengths_bi)
+            # clb.ax.set_xticklabels(["{:1.4f}".format(pmp) for pmp in pump_wavelengths_bi])
+            # # print(pump_wavelengths_bi)
+            plt.xlabel(r"Pump wavelength [$\mu$m]")
+            plt.ylabel("Pump power [dBm]")
+            plt.grid("on")
+            plt.minorticks_on()
+            plt.tight_layout()
+
+            plt.savefig(plot_save_path + "co_stems" + str(power_dBm) + ".pdf")
             #################################
             ## the signals are allright
             #################################
             fig1, (ax) = plt.subplots(nrows=1, figsize=(8, 6))
             plt.plot(1e6*signal_wavelengths, 10*np.log10(signal_solution_bi[-1, ::-1])-10*np.log10(signal_solution_bi[0, :]), marker="x", markersize=10)
             #Get cmap values
-            cmap_vals = cm.gist_rainbow([item/num_bi for item in range(num_bi)])
+            cmap_vals = cm.rainbow([item/num_bi for item in range(num_bi)])
             
             # Define new cmap
 

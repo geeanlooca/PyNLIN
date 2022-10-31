@@ -232,19 +232,19 @@ for fiber_length in fiber_lengths:
 ## PLOTTING
 	 
 		markers = ["x", "+", "o", "o", "x", "+"]
-		wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e-12 for _ in coi_list]
+		wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e9 for _ in coi_list]
 		coi_selection = [0, 19, 49]
 		coi_selection_idx = [0, 2, 5]
 		coi_selection_average = [0, 9, 19, 29, 39, 49]
 		coi_selection_idx_average = [0, 1, 2, 3, 4, 5]
-		selected_power = -12.0
+		selected_power = -10.0
 		pow_idx = np.where(power_dBm_list == selected_power)[0]
-		P_B = 10**(selected_power / 10)  # average power of the constellation in mW
+		P_B = 10**((selected_power-30) / 10)  # average power of the constellation in mW
 		T = (1 / baud_rate)
 
 		full_coi = [i + 1 for i in range(50)]
 		# selection between 'NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'EVM_BER_vs_power'
-		plot_selection = ['NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength']
+		plot_selection = ['NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'NLIN_vs_wavelength']
 		# evaluation of metrics
 		# Average OSNR vs power
 		osnr_co = np.ndarray(shape=(len(power_dBm_list)))
@@ -397,9 +397,9 @@ for fiber_length in fiber_lengths:
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]),
 										marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
 				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
-				plt.xlabel(r"Channel wavelength [THz]")
+				plt.xlabel(r"Channel wavelength [nm]")
 				plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
-										labels=[wavelength_list[0], wavelength_list[-1]])
+										labels=["%4.0f" % (_) for _ in [wavelength_list[0], wavelength_list[-1]]])
 				plt.ylabel(r"$OSNR_{ASE}$ [dB]")
 				#plt.ylim([-50, -45])
 				plt.grid(which="both")
@@ -407,7 +407,27 @@ for fiber_length in fiber_lengths:
 				plt.tight_layout()
 				fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE_vs_wavelength.pdf")
 
+		if 'NLIN_vs_wavelength' in plot_selection:
+				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 10))
+				plt.plot(show=True)
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] *Delta_theta_2_co[:, pow_idx])+30,
+										marker='x', markersize=15, color='green', label="ch." + str(coi) + "co")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_ct[:, pow_idx])+30,
+										marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_bi[:, pow_idx])+30,
+										marker='x', markersize=15, color='orange', label="ch." + str(coi) + "bi")
+				plt.plot(wavelength_list, 10 * np.log10(P_B/2 * Delta_theta_2_none[:, pow_idx])+30,
+										marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perfect")
+				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+				plt.xlabel(r"Channel wavelength [nm]")
+				plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
+										labels=["%4.0f" % (_) for _ in [wavelength_list[0], wavelength_list[-1]]])
+				plt.ylabel(r"$NLIN$ [dBm]")
+				#plt.ylim([-50, -45])
+				plt.grid(which="both")
 
+				plt.tight_layout()
+				fig_NLIN_channel.savefig(plot_save_path + "NLIN_vs_wavelength.pdf")
 		#####################################
 		# error metrics vs power
 		#####################################
