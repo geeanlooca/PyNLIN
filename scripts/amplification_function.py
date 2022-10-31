@@ -48,7 +48,7 @@ num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
 
 # Manual configuration
-power_per_channel_dBm_list = [0.0, -2.0, -4.0, -6.0]
+power_per_channel_dBm_list = [0.0]
 #power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 # Pumping scheme choice
 pumping_schemes = ['co']
@@ -224,10 +224,10 @@ for fiber_length in fiber_lengths:
 		pump_band_b = lambda2nu(1510e-9)
 		pump_band_a = lambda2nu(1410e-9)
 		#initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
-		initial_pump_frequencies = np.array(lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
+		initial_pump_frequencies = np.array(lambda2nu([1395e-9, 1450e-9, 1465e-9, 1497e-9]))
 
 		power_per_channel = dBm2watt(power_per_channel_dBm)
-		power_per_pump = dBm2watt(-5)
+		power_per_pump = np.array([dBm2watt(21.5), dBm2watt(21.5), dBm2watt(20), dBm2watt(20)])
 		signal_wavelengths = wdm.wavelength_grid()
 		pump_wavelengths = nu2lambda(initial_pump_frequencies)*1e9
 		num_pumps = len(pump_wavelengths)
@@ -251,15 +251,18 @@ for fiber_length in fiber_lengths:
 		target_spectrum = watt2dBm(0.5*signal_powers)
 
 		target_spectrum = watt2dBm(0.5 * signal_powers)
-		if power_per_channel >= -6.0:
-			learning_rate = 1e-4
+		if power_per_channel >= -2.0:
+			learning_rate = 3e-3
+		elif ower_per_channel >= -6.0:
+			learning_rate = 7e-3
 		else:
 			learning_rate = 1e-3
 
 		pump_wavelengths_co, pump_powers_co = optimizer.optimize(
 			target_spectrum=target_spectrum,
-			epochs=500,
+			epochs=4000,
 			learning_rate=learning_rate,
+			lock_wavelengths=150
 		)
 
 		np.save(optimization_result_path_co+"opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
