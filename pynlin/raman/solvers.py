@@ -121,6 +121,7 @@ class RamanAmplifier:
         else:
             pump_direction = np.atleast_1d(pump_direction)
 
+        # organization of gain matrix
         self.direction = np.concatenate((pump_direction, signal_direction))
 
         # check if we need a shooting algorithm

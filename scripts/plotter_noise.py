@@ -219,15 +219,10 @@ for fiber_length in fiber_lengths:
 						np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
 
 				for coi_idx, coi in enumerate(coi_list):
-						Delta_theta_2_co[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
-								constellation_variance * np.abs(X_co[coi_idx, pow_idx])
-						Delta_theta_2_ct[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
-								constellation_variance * np.abs(X_ct[coi_idx, pow_idx])
-						Delta_theta_2_bi[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
-								constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
-						Delta_theta_2_none[coi_idx, pow_idx] = 4 * fiber.gamma**2 * \
-								constellation_variance * np.abs(X_none[coi_idx, pow_idx])
-
+						Delta_theta_2_co[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, pow_idx])
+						Delta_theta_2_ct[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx, pow_idx])
+						Delta_theta_2_bi[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
+						Delta_theta_2_none[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx])
 
 ## PLOTTING
 	 
@@ -267,16 +262,15 @@ for fiber_length in fiber_lengths:
 		if 'NLIN_vs_power' in plot_selection:
 				fig_power, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
 						nrows=2, ncols=2, sharex=True, figsize=(14, 10))
-
 				plt.plot(show=True)
 				for scan in range(len(coi_selection)):
-						ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+						ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :]*power_at_receiver_co[coi_idx, :]) , marker=markers[scan],
 										markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-						ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+						ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :]*power_at_receiver_ct[coi_idx, :]) , marker=markers[scan],
 										markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
-						ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+						ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :]*power_at_receiver_bi[coi_idx, :]), marker=markers[scan],
 										markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
-						ax4.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_none[coi_selection_idx[scan], :]) + power_dBm_list, marker=markers[scan],
+						ax4.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_none[coi_selection_idx[scan], :]) + power_dBm_list-3, marker=markers[scan],
 										markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
 				ax1.grid(which="both")
 				#plt.annotate("ciao", (0, 0))
@@ -337,9 +331,9 @@ for fiber_length in fiber_lengths:
 				axis_num = 0
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * Delta_theta_2_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
 										markersize=10, color='green', label="NLIN")
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :]*Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
 										markersize=10, color='blue')
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :]*Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
 										markersize=10, color='orange')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
 										markersize=10, color='green', label="ASE")
