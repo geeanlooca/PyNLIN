@@ -253,7 +253,7 @@ for fiber_length in fiber_lengths:
 		target_spectrum = watt2dBm(0.5 * signal_powers)
 		if power_per_channel >= -2.0:
 			learning_rate = 3e-3
-		elif ower_per_channel >= -6.0:
+		elif power_per_channel >= -6.0:
 			learning_rate = 7e-3
 		else:
 			learning_rate = 1e-3

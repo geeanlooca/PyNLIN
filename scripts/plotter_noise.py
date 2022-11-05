@@ -384,9 +384,9 @@ for fiber_length in fiber_lengths:
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='blue')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='orange')
 
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * T_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='green', label="NLIN")
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * T_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='blue')
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * T_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='orange')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * constellation_variance * T_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='green', label="SRS")
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * constellation_variance * T_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='blue')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * constellation_variance * T_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='orange')
 
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='green', label="ASE")
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='blue')
@@ -400,7 +400,7 @@ for fiber_length in fiber_lengths:
 				plt.ylabel(r"Noise power [dBm]")
 				plt.grid()
 				plt.minorticks_on()
-				plt.ylim([-90, 0])
+				#plt.ylim([-90, 0])
 
 				plt.legend()
 				leg = ax1.get_legend()
@@ -409,7 +409,7 @@ for fiber_length in fiber_lengths:
 				#plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 				#plt.axis([-13, -5, -60, -45])
 				plt.tight_layout()
-				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_vs_power.pdf")
+				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_and_SRS_vs_power.pdf")
 
 		if 'OSNR_vs_power' in plot_selection:
 				fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14, 10))

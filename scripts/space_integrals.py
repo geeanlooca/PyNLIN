@@ -22,12 +22,7 @@ import json
 from multiprocessing import Pool
 
 from pynlin.raman.response import gain_spectrum, impulse_response
-from pynlin.utils import (
-    alpha_to_linear,
-    dBm_to_watt,
-    watt_to_dBm,
-    wavelength_to_frequency,
-)
+from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 
 f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
 data = json.load(f)
@@ -159,6 +154,10 @@ for fiber_length in fiber_lengths:
       # print("\nDelta frequencies : ",delta_frequencies)
       c_r = gain_spectrum(delta_frequencies)[0] * fiber.raman_coefficient / fiber.effective_area
       print("C_R : ", c_r)
+      amplifier = NumpyRamanAmplifier(fiber)
+      c_r_matrix = amplifier.compute_gain_matrix(wdm.frequency_grid())
+      print("c_r_matrix: ",c_r_matrix)
+
       pbar_description = "Computing space integrals"
       collisions_pbar = tqdm.tqdm(interfering_frequencies, leave=False)
       collisions_pbar.set_description(pbar_description)
@@ -227,6 +226,10 @@ for fiber_length in fiber_lengths:
           X_bi_pow[coi_idx] += (np.sum(np.abs(X0mm_bi)**2))
           X_none_pow[coi_idx] += (np.sum(np.abs(X0mm_none)**2))
           
+          c_r = c_r_matrix[incremental]
+          c_r = c_r[np.arange(len(c_r)) != incremental]
+          print("\nc_r, ", c_r)
+
           T_co_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_co)**2))
           T_ct_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_ct)**2))
           T_bi_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_bi)**2))
