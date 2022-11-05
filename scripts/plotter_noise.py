@@ -116,6 +116,10 @@ Delta_theta_2_co = np.zeros_like(
 Delta_theta_2_ct = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_bi = np.zeros_like(Delta_theta_2_co)
 Delta_theta_2_none = np.zeros_like(Delta_theta_2_co)
+R_co = np.zeros_like(Delta_theta_2_co)
+R_ct = np.zeros_like(Delta_theta_2_co)
+R_bi = np.zeros_like(Delta_theta_2_co)
+R_none = np.zeros_like(Delta_theta_2_co)
 
 show_flag = False
 compute_X0mm_space_integrals = True
@@ -220,11 +224,8 @@ for fiber_length in fiber_lengths:
 				qam_symbols = qam.symbols()
 
 				# assign specific average optical energy
-				qam_symbols = qam_symbols / \
-						np.sqrt(np.mean(np.abs(qam_symbols)**2)) * \
-						np.sqrt(average_power / baud_rate)
-				constellation_variance = (
-						np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
+				qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power / baud_rate)
+				constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
 
 				for coi_idx, coi in enumerate(coi_list):
 						Delta_theta_2_co[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, pow_idx])
@@ -232,6 +233,10 @@ for fiber_length in fiber_lengths:
 						Delta_theta_2_bi[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
 						Delta_theta_2_none[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx])
 
+						R_co[coi_idx, pow_idx] = constellation_variance * np.abs(T_co[coi_idx, pow_idx])
+						R_ct[coi_idx, pow_idx] = constellation_variance * np.abs(T_ct[coi_idx, pow_idx])
+						R_bi[coi_idx, pow_idx] = constellation_variance * np.abs(T_bi[coi_idx, pow_idx])
+						R_none[coi_idx, pow_idx] = constellation_variance * np.abs(T_none[coi_idx, pow_idx])
 ## PLOTTING
 	 
 		markers = ["x", "+", "o", "o", "x", "+"]
@@ -253,7 +258,8 @@ for fiber_length in fiber_lengths:
                       'OSNR_vs_power', 
                       'OSNR_ASE_vs_wavelength', 
                       'NLIN_vs_wavelength',
-                      'NLIN_and_ASE_and_SRS_vs_power']
+                      'NLIN_and_ASE_and_SRSN_vs_power', 
+											'(NLIN_plus_SRSN)_vs_wavelength']
 		# evaluation of metrics
 		# Average OSNR vs power
 		osnr_co = np.ndarray(shape=(len(power_dBm_list)))
@@ -278,11 +284,11 @@ for fiber_length in fiber_lengths:
 						nrows=2, ncols=2, sharex=True, figsize=(14, 10))
 				plt.plot(show=True)
 				for scan in range(len(coi_selection)):
-						ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :]*power_at_receiver_co[coi_idx, :]) , marker=markers[scan],
+						ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :] * power_at_receiver_co[coi_idx, :]) , marker=markers[scan],
 										markersize=10, color='green', label="ch." + str(coi_selection[scan]) + " co.")
-						ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :]*power_at_receiver_ct[coi_idx, :]) , marker=markers[scan],
+						ax2.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_ct[coi_selection_idx[scan], :] * power_at_receiver_ct[coi_idx, :]) , marker=markers[scan],
 										markersize=10, color='blue', label="ch." + str(coi_selection[scan]) + " count.")
-						ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :]*power_at_receiver_bi[coi_idx, :]), marker=markers[scan],
+						ax3.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_bi[coi_selection_idx[scan], :] * power_at_receiver_bi[coi_idx, :]), marker=markers[scan],
 										markersize=10, color='orange', label="ch." + str(coi_selection[scan] + 1))
 						ax4.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_none[coi_selection_idx[scan], :]) + power_dBm_list-3, marker=markers[scan],
 										markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
@@ -375,7 +381,7 @@ for fiber_length in fiber_lengths:
 				plt.tight_layout()
 				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_vs_power.pdf")
 
-		if 'NLIN_and_ASE_and_SRS_vs_power' in plot_selection:
+		if 'NLIN_and_ASE_and_SRSN_vs_power' in plot_selection:
 				# averaged plotting
 				fig_comparison, ((ax1)) = plt.subplots(nrows=1, sharex=True, figsize=(10, 7))
 				plt.plot(show=True)
@@ -384,9 +390,9 @@ for fiber_length in fiber_lengths:
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='blue')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='orange')
 
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * constellation_variance * T_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='green', label="SRS")
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * constellation_variance * T_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='blue')
-				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * constellation_variance * T_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='orange')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * (R_co[coi_idx, :] - Delta_theta_2_co[coi_idx, :]) for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='green', label="SRSN")
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * (R_ct[coi_idx, :] - Delta_theta_2_ct[coi_idx, :]) for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='blue')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * (R_bi[coi_idx, :] - Delta_theta_2_bi[coi_idx, :]) for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[1], markersize=10, color='orange')
 
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='green', label="ASE")
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='blue')
@@ -409,7 +415,7 @@ for fiber_length in fiber_lengths:
 				#plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 				#plt.axis([-13, -5, -60, -45])
 				plt.tight_layout()
-				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_and_SRS_vs_power.pdf")
+				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_and_SRSN_vs_power.pdf")
 
 		if 'OSNR_vs_power' in plot_selection:
 				fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14, 10))
@@ -435,10 +441,8 @@ for fiber_length in fiber_lengths:
 				fig_ASE_channel, ((ax1)) = plt.subplots(
 						nrows=1, ncols=1, sharex=True, figsize=(10, 6))
 				plt.plot(show=True)
-				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]),
-										marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
-				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]),
-										marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
 				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
 				plt.xlabel(r"Channel wavelength [nm]")
 				plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
@@ -449,18 +453,14 @@ for fiber_length in fiber_lengths:
 
 				plt.tight_layout()
 				fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE_vs_wavelength.pdf")
-
+		print(power_at_receiver_co[0, 0])
 		if 'NLIN_vs_wavelength' in plot_selection:
 				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 10))
 				plt.plot(show=True)
-				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] *Delta_theta_2_co[:, pow_idx])+30,
-										marker='x', markersize=15, color='green', label="ch." + str(coi) + "co")
-				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_ct[:, pow_idx])+30,
-										marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct")
-				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_bi[:, pow_idx])+30,
-										marker='x', markersize=15, color='orange', label="ch." + str(coi) + "bi")
-				plt.plot(wavelength_list, 10 * np.log10(P_B/2 * Delta_theta_2_none[:, pow_idx])+30,
-										marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perfect")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] * Delta_theta_2_co[:, pow_idx]) + 30, marker='x', markersize=15, color='green', label="ch." + str(coi) + "co")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_ct[:, pow_idx]) + 30, marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_bi[:, pow_idx]) + 30, marker='x', markersize=15, color='orange', label="ch." + str(coi) + "bi")
+				plt.plot(wavelength_list, 10 * np.log10(P_B/2 * Delta_theta_2_none[:, pow_idx])+30, marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perfect")
 				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
 				plt.xlabel(r"Channel wavelength [nm]")
 				plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
@@ -471,6 +471,25 @@ for fiber_length in fiber_lengths:
 
 				plt.tight_layout()
 				fig_NLIN_channel.savefig(plot_save_path + "NLIN_vs_wavelength.pdf")
+
+		if '(NLIN_plus_SRSN)_vs_wavelength' in plot_selection:
+				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 10))
+				plt.plot(show=True)
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] * (R_co[:, pow_idx]- Delta_theta_2_co[:, pow_idx]))+30, marker='x', markersize=15, color='green', label="ch." + str(coi) + "co")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * (R_ct[:, pow_idx]- Delta_theta_2_ct[:, pow_idx]))+30, marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct")
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * (R_bi[:, pow_idx]- Delta_theta_2_bi[:, pow_idx]))+30, marker='x', markersize=15, color='orange', label="ch." + str(coi) + "bi")
+				plt.plot(wavelength_list, 10 * np.log10(P_B/2 * Delta_theta_2_none[:, pow_idx])+30, marker='x', markersize=15, color='grey', label="ch." + str(coi) + "perfect")
+				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+				plt.xlabel(r"Channel wavelength [nm]")
+				plt.xticks(ticks=[wavelength_list[0], wavelength_list[-1]],
+										labels=["%4.0f" % (_) for _ in [wavelength_list[0], wavelength_list[-1]]])
+				plt.ylabel(r"$(NLIN + SRSN)$ [dBm]")
+				#plt.ylim([-50, -45])
+				plt.grid(which="both")
+
+				plt.tight_layout()
+				fig_NLIN_channel.savefig(plot_save_path + "(NLIN_plus_SRSN)_vs_wavelength.pdf")
+				
 		#####################################
 		# error metrics vs power
 		#####################################

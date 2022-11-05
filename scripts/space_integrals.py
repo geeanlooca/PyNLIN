@@ -152,11 +152,8 @@ for fiber_length in fiber_lengths:
       # print("\nWDM frequencies : ",interfering_frequencies)
       # print("\n COI frequency: ", wdm.frequency_grid()[coi])
       # print("\nDelta frequencies : ",delta_frequencies)
-      c_r = gain_spectrum(delta_frequencies)[0] * fiber.raman_coefficient / fiber.effective_area
-      print("C_R : ", c_r)
       amplifier = NumpyRamanAmplifier(fiber)
       c_r_matrix = amplifier.compute_gain_matrix(wdm.frequency_grid())
-      print("c_r_matrix: ",c_r_matrix)
 
       pbar_description = "Computing space integrals"
       collisions_pbar = tqdm.tqdm(interfering_frequencies, leave=False)
@@ -228,7 +225,6 @@ for fiber_length in fiber_lengths:
           
           c_r = c_r_matrix[incremental]
           c_r = c_r[np.arange(len(c_r)) != incremental]
-          print("\nc_r, ", c_r)
 
           T_co_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_co)**2))
           T_ct_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_ct)**2))
