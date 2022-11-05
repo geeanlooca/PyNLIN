@@ -152,7 +152,7 @@ for fiber_length in fiber_lengths:
 
       # compute the first num_channels interferents (assume the WDM grid is identical)
       interfering_frequencies = pynlin.nlin.get_interfering_frequencies(
-          coi, wdm.frequency_grid())
+          wdm.frequency_grid()[coi], wdm.frequency_grid())
       delta_frequencies = interfering_frequencies-wdm.frequency_grid()[coi]
       # print("\nWDM frequencies : ",interfering_frequencies)
       # print("\n COI frequency: ", wdm.frequency_grid()[coi])
@@ -160,8 +160,7 @@ for fiber_length in fiber_lengths:
       c_r = gain_spectrum(delta_frequencies)[0] * fiber.raman_coefficient / fiber.effective_area
       print("C_R : ", c_r)
       pbar_description = "Computing space integrals"
-      collisions_pbar = tqdm.tqdm(range(np.shape(signal_solution_co)[1])[
-                                  0:num_channels - 1], leave=False)
+      collisions_pbar = tqdm.tqdm(interfering_frequencies, leave=False)
       collisions_pbar.set_description(pbar_description)
       for incremental, interf_index in enumerate(collisions_pbar):
           if coi == 0:
@@ -236,29 +235,27 @@ for fiber_length in fiber_lengths:
     return [[X_co_pow, X_ct_pow, X_bi_pow, X_none_pow], [T_co_pow, T_ct_pow, T_bi_pow, T_none_pow]]
   
   compute = ["T"]
-  if "X" in compute:
-    with Pool(os.cpu_count()) as p:
-      result_X = p.map(space_integral_power, power_dBm_list)[0]
-    for pp_idx, pp in enumerate(power_dBm_list):
-      X_co[:, pp_idx] = result_X[pp_idx][0]
-      X_ct[:, pp_idx] = result_X[pp_idx][1]
-      X_bi[:, pp_idx] = result_X[pp_idx][2]
-      X_none[:, pp_idx] = result_X[pp_idx][3]
-      
 
+  with Pool(os.cpu_count()) as p:
+    result = p.map(space_integral_power, power_dBm_list)
+  for pp_idx, pp in enumerate(power_dBm_list):
+    X_co[:, pp_idx] =   result[pp_idx][0][0]
+    X_ct[:, pp_idx] =   result[pp_idx][0][1]
+    X_bi[:, pp_idx] =   result[pp_idx][0][2]
+    X_none[:, pp_idx] = result[pp_idx][0][3]
+    
+    T_co[:, pp_idx] =   result[pp_idx][1][0]
+    T_ct[:, pp_idx] =   result[pp_idx][1][1]
+    T_bi[:, pp_idx] =   result[pp_idx][1][2]
+    T_none[:, pp_idx] = result[pp_idx][1][3]
+    
+  if "X" in compute:
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_none.npy', X_none)
 
   if "T" in compute:
-    with Pool(os.cpu_count()) as p:
-      result_T = p.map(space_integral_power, power_dBm_list)[1]
-    for pp_idx, pp in enumerate(power_dBm_list):
-      T_co[:, pp_idx] = result_T[pp_idx][0]
-      T_ct[:, pp_idx] = result_T[pp_idx][1]
-      T_bi[:, pp_idx] = result_T[pp_idx][2]
-      T_none[:, pp_idx] = result_T[pp_idx][3]
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_co.npy', T_co)
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_ct.npy', T_ct)
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_bi.npy', T_bi)

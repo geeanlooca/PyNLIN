@@ -150,9 +150,16 @@ for fiber_length in fiber_lengths:
 		X_ct = np.zeros_like(X_co)
 		X_bi = np.zeros_like(X_co)
 		X_none = np.zeros_like(X_co)
+    
+		T_co = np.zeros_like(X_co)
+		T_ct = np.zeros_like(X_co)
+		T_bi = np.zeros_like(X_co)
+		T_none = np.zeros_like(X_co)
+
 		ase_co = np.zeros_like(X_co)
 		ase_ct = np.zeros_like(X_co)
 		ase_bi = np.zeros_like(X_co)
+
 		power_at_receiver_co = np.zeros_like(X_co)
 		power_at_receiver_ct = np.zeros_like(X_co)
 		power_at_receiver_bi = np.zeros_like(X_co)
@@ -195,15 +202,16 @@ for fiber_length in fiber_lengths:
 						ase_bi[coi_idx, pow_idx] = ase_solution_bi[-1, coi_idx]
 
 		# Retrieve sum of X0mm^2: noises
-		X_co = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
-										'_co_' + str(num_ct) + '_ct_X_co.npy')
-		X_ct = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
-										'_co_' + str(num_ct) + '_ct_X_ct.npy')
-		X_bi = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
-										'_co_' + str(num_ct) + '_ct_X_bi.npy')
-		X_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) +
-												'_co_' + str(num_ct) + '_ct_X_none.npy')
-
+		X_co =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_co.npy')
+		X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
+		X_bi =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_bi.npy')
+		X_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_none.npy')
+		
+    # Retrieve sum of X0mm^2: noises
+		T_co =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_co.npy')
+		T_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_ct.npy')
+		T_bi =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_bi.npy')
+		T_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_none.npy')
 		# choose modulation format and compute phase noise
 		M = 16
 		for pow_idx, power_dBm in enumerate(power_dBm_list):
@@ -239,7 +247,13 @@ for fiber_length in fiber_lengths:
 
 		full_coi = [i + 1 for i in range(50)]
 		# selection between 'NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'EVM_BER_vs_power'
-		plot_selection = ['NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'NLIN_vs_wavelength']
+		plot_selection = ['NLIN_vs_power', 
+                      'ASE_vs_power', 
+                      'NLIN_and_ASE_vs_power',
+                      'OSNR_vs_power', 
+                      'OSNR_ASE_vs_wavelength', 
+                      'NLIN_vs_wavelength',
+                      'NLIN_and_ASE_and_SRS_vs_power']
 		# evaluation of metrics
 		# Average OSNR vs power
 		osnr_co = np.ndarray(shape=(len(power_dBm_list)))
@@ -361,6 +375,41 @@ for fiber_length in fiber_lengths:
 				plt.tight_layout()
 				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_vs_power.pdf")
 
+		if 'NLIN_and_ASE_and_SRS_vs_power' in plot_selection:
+				# averaged plotting
+				fig_comparison, ((ax1)) = plt.subplots(nrows=1, sharex=True, figsize=(10, 7))
+				plt.plot(show=True)
+				axis_num = 0
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * Delta_theta_2_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='green', label="NLIN")
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='blue')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='orange')
+
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_co[coi_idx, :] * T_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='green', label="NLIN")
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_ct[coi_idx, :] * T_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='blue')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([power_at_receiver_bi[coi_idx, :] * T_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0], markersize=10, color='orange')
+
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='green', label="ASE")
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='blue')
+				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='orange')
+				ax1.grid(which="both")
+				#plt.annotate("ciao", (0, 0))
+				plt.grid(which="both")
+
+				plt.xlabel(r"Input power [dBm]")
+				plt.minorticks_on()
+				plt.ylabel(r"Noise power [dBm]")
+				plt.grid()
+				plt.minorticks_on()
+				plt.ylim([-90, 0])
+
+				plt.legend()
+				leg = ax1.get_legend()
+				leg.legendHandles[0].set_color('grey')
+				leg.legendHandles[1].set_color('grey')
+				#plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
+				#plt.axis([-13, -5, -60, -45])
+				plt.tight_layout()
+				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_vs_power.pdf")
 
 		if 'OSNR_vs_power' in plot_selection:
 				fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14, 10))
