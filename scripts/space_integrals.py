@@ -233,27 +233,33 @@ for fiber_length in fiber_lengths:
           T_bi_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_bi)**2))
           T_none_pow[coi_idx] += (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_none)**2))
 
-    return ([X_co_pow, X_ct_pow, X_bi_pow, X_none_pow], [T_co_pow, T_ct_pow, T_bi_pow, T_none_pow])
+    return [[X_co_pow, X_ct_pow, X_bi_pow, X_none_pow], [T_co_pow, T_ct_pow, T_bi_pow, T_none_pow]]
   
-  with Pool(os.cpu_count()) as p:
-    result_X, result_T = p.map(space_integral_power, power_dBm_list)	
+  compute = ["T"]
+  if "X" in compute:
+    with Pool(os.cpu_count()) as p:
+      result_X = p.map(space_integral_power, power_dBm_list)[0]
+    for pp_idx, pp in enumerate(power_dBm_list):
+      X_co[:, pp_idx] = result_X[pp_idx][0]
+      X_ct[:, pp_idx] = result_X[pp_idx][1]
+      X_bi[:, pp_idx] = result_X[pp_idx][2]
+      X_none[:, pp_idx] = result_X[pp_idx][3]
+      
 
-  print(result_X)
-  for pp_idx, pp in enumerate(power_dBm_list):
-    X_co[:, pp_idx] = result_X[pp_idx][0]
-    X_ct[:, pp_idx] = result_X[pp_idx][1]
-    X_bi[:, pp_idx] = result_X[pp_idx][2]
-    X_none[:, pp_idx] = result_X[pp_idx][3]
-    T_co[:, pp_idx] = result_T[pp_idx][0]
-    T_ct[:, pp_idx] = result_T[pp_idx][1]
-    T_bi[:, pp_idx] = result_T[pp_idx][2]
-    T_none[:, pp_idx] = result_T[pp_idx][3]
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_none.npy', X_none)
 
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_bi.npy', X_bi)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_none.npy', X_none)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_co.npy', X_co)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_ct.npy', X_ct)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_bi.npy', X_bi)
-  np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_none.npy', X_none)
+  if "T" in compute:
+    with Pool(os.cpu_count()) as p:
+      result_T = p.map(space_integral_power, power_dBm_list)[1]
+    for pp_idx, pp in enumerate(power_dBm_list):
+      T_co[:, pp_idx] = result_T[pp_idx][0]
+      T_ct[:, pp_idx] = result_T[pp_idx][1]
+      T_bi[:, pp_idx] = result_T[pp_idx][2]
+      T_none[:, pp_idx] = result_T[pp_idx][3]
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_co.npy', T_co)
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_ct.npy', T_ct)
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_bi.npy', T_bi)
+    np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_none.npy', T_none)
