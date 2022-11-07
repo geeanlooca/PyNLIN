@@ -26,7 +26,7 @@ plt.rcParams['font.size'] = '24'
 m_QAM = [4, 16, 64, 256, 1024]
 m_PSK = [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024] 
 arity_list=[2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
-fig_arity = fig_arity = plt.figure(figsize=(8, 6))
+fig_arity = fig_arity = plt.figure(figsize=(10, 5))
 var_QAM = []
 var_PSK = []
 for m in m_QAM:

@@ -154,7 +154,7 @@ for fiber_length in fiber_lengths:
 		X_ct = np.zeros_like(X_co)
 		X_bi = np.zeros_like(X_co)
 		X_none = np.zeros_like(X_co)
-    
+		
 		T_co = np.zeros_like(X_co)
 		T_ct = np.zeros_like(X_co)
 		T_bi = np.zeros_like(X_co)
@@ -211,7 +211,7 @@ for fiber_length in fiber_lengths:
 		X_bi =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_bi.npy')
 		X_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_none.npy')
 		
-    # Retrieve sum of X0mm^2: noises
+		# Retrieve sum of X0mm^2: noises
 		T_co =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_co.npy')
 		T_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_ct.npy')
 		T_bi =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_T_bi.npy')
@@ -238,7 +238,9 @@ for fiber_length in fiber_lengths:
 						R_bi[coi_idx, pow_idx] = constellation_variance * np.abs(T_bi[coi_idx, pow_idx])
 						R_none[coi_idx, pow_idx] = constellation_variance * np.abs(T_none[coi_idx, pow_idx])
 ## PLOTTING
-	 
+		plot_height = 7
+		plot_width = 10
+		aspect_ratio = 10/7
 		markers = ["x", "+", "o", "o", "x", "+"]
 		wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e9 for _ in coi_list]
 		coi_selection = [0, 19, 49]
@@ -253,12 +255,12 @@ for fiber_length in fiber_lengths:
 		full_coi = [i + 1 for i in range(50)]
 		# selection between 'NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'EVM_BER_vs_power'
 		plot_selection = ['NLIN_vs_power', 
-                      'ASE_vs_power', 
-                      'NLIN_and_ASE_vs_power',
-                      'OSNR_vs_power', 
-                      'OSNR_ASE_vs_wavelength', 
-                      'NLIN_vs_wavelength',
-                      'NLIN_and_ASE_and_SRSN_vs_power', 
+											'ASE_vs_power', 
+											'NLIN_and_ASE_vs_power',
+											'OSNR_vs_power', 
+											'OSNR_ASE_vs_wavelength', 
+											'NLIN_vs_wavelength',
+											'NLIN_and_ASE_and_SRSN_vs_power', 
 											'(NLIN_plus_SRSN)_vs_wavelength']
 		# evaluation of metrics
 		# Average OSNR vs power
@@ -281,7 +283,7 @@ for fiber_length in fiber_lengths:
 		##############################
 		if 'NLIN_vs_power' in plot_selection:
 				fig_power, ((ax1, ax2), (ax3, ax4)) = plt.subplots(
-						nrows=2, ncols=2, sharex=True, figsize=(14, 10))
+						nrows=2, ncols=2, sharex=True, figsize=(plot_width, plot_height))
 				plt.plot(show=True)
 				for scan in range(len(coi_selection)):
 						ax1.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_co[coi_selection_idx[scan], :] * power_at_receiver_co[coi_idx, :]) , marker=markers[scan],
@@ -320,7 +322,7 @@ for fiber_length in fiber_lengths:
 
 		if 'ASE_vs_power' in plot_selection:
 				# separate plotting
-				fig_ase, (ax1, ax2, ax3) = plt.subplots(nrows=3, sharex=True, figsize=(10, 10))
+				fig_ase, (ax1, ax2, ax3) = plt.subplots(nrows=3, sharex=True, figsize=(plot_width, plot_height))
 				plt.plot(show=True)
 				for scan in range(len(coi_selection)):
 						ax1.plot(power_dBm_list, 10 * np.log10(ase_co[coi_selection_idx[scan], :]) + 30, marker=markers[scan],
@@ -418,7 +420,7 @@ for fiber_length in fiber_lengths:
 				fig_comparison.savefig(plot_save_path + "NLIN_and_ASE_and_SRSN_vs_power.pdf")
 
 		if 'OSNR_vs_power' in plot_selection:
-				fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(14, 10))
+				fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
 				plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
 										markersize=10, color='green')
 				plt.plot(power_dBm_list, osnr_ct, marker=markers[scan],
@@ -439,7 +441,7 @@ for fiber_length in fiber_lengths:
 		#####################################
 		if 'OSNR_ASE_vs_wavelength' in plot_selection:
 				fig_ASE_channel, ((ax1)) = plt.subplots(
-						nrows=1, ncols=1, sharex=True, figsize=(10, 6))
+						nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
 				plt.plot(show=True)
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]), marker='x', markersize=15, color='blue', label="ch." + str(coi) + "CO")
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]), marker='x', markersize=15, color='orange', label="ch." + str(coi) + "ct.")
@@ -455,7 +457,7 @@ for fiber_length in fiber_lengths:
 				fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE_vs_wavelength.pdf")
 		print(power_at_receiver_co[0, 0])
 		if 'NLIN_vs_wavelength' in plot_selection:
-				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 10))
+				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, 10))
 				plt.plot(show=True)
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] * Delta_theta_2_co[:, pow_idx]) + 30, marker='x', markersize=15, color='green', label="ch." + str(coi) + "co")
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * Delta_theta_2_ct[:, pow_idx]) + 30, marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct")
@@ -473,7 +475,7 @@ for fiber_length in fiber_lengths:
 				fig_NLIN_channel.savefig(plot_save_path + "NLIN_vs_wavelength.pdf")
 
 		if '(NLIN_plus_SRSN)_vs_wavelength' in plot_selection:
-				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(8, 10))
+				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, 10))
 				plt.plot(show=True)
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] * (R_co[:, pow_idx]- Delta_theta_2_co[:, pow_idx]))+30, marker='x', markersize=15, color='green', label="ch." + str(coi) + "co")
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] * (R_ct[:, pow_idx]- Delta_theta_2_ct[:, pow_idx]))+30, marker='x', markersize=15, color='blue', label="ch." + str(coi) + "ct")
