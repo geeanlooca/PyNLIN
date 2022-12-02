@@ -150,7 +150,7 @@ for fiber_length in fiber_lengths:
           wdm.frequency_grid()[coi], wdm.frequency_grid())
       delta_frequencies = interfering_frequencies-wdm.frequency_grid()[coi]
       # print("\nWDM frequencies : ",interfering_frequencies)
-      # print("\n COI frequency: ", wdm.frequency_grid()[coi])
+      # print("\n COI frequency: ", wdm.frequency_grid())
       # print("\nDelta frequencies : ",delta_frequencies)
       amplifier = NumpyRamanAmplifier(fiber)
       c_r_matrix = amplifier.compute_gain_matrix(wdm.frequency_grid())
@@ -225,15 +225,15 @@ for fiber_length in fiber_lengths:
           
           c_r = c_r_matrix[incremental]
           c_r = c_r[np.arange(len(c_r)) != incremental]
-
-          T_co_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_co)**2))
-          T_ct_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_ct)**2))
-          T_bi_pow[coi_idx] +=   (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_bi)**2))
-          T_none_pow[coi_idx] += (np.sum(np.abs(2*j*fiber.gamma+c_r[incremental]/2)**2 * np.abs(X0mm_none)**2))
-
+          
+          gamma_srsn = fiber.gamma 
+          T_co_pow[coi_idx] +=   (np.sum(np.abs(2*j*gamma_srsn+c_r[incremental]/2)**2 * np.abs(X0mm_co)**2))
+          T_ct_pow[coi_idx] +=   (np.sum(np.abs(2*j*gamma_srsn+c_r[incremental]/2)**2 * np.abs(X0mm_ct)**2))
+          T_bi_pow[coi_idx] +=   (np.sum(np.abs(2*j*gamma_srsn+c_r[incremental]/2)**2 * np.abs(X0mm_bi)**2))
+          T_none_pow[coi_idx] += (np.sum(np.abs(2*j*gamma_srsn+c_r[incremental]/2)**2 * np.abs(X0mm_none)**2))
     return [[X_co_pow, X_ct_pow, X_bi_pow, X_none_pow], [T_co_pow, T_ct_pow, T_bi_pow, T_none_pow]]
   
-  compute = ["T"]
+  compute = ["T", "X"]
 
   with Pool(os.cpu_count()) as p:
     result = p.map(space_integral_power, power_dBm_list)
@@ -247,7 +247,7 @@ for fiber_length in fiber_lengths:
     T_ct[:, pp_idx] =   result[pp_idx][1][1]
     T_bi[:, pp_idx] =   result[pp_idx][1][2]
     T_none[:, pp_idx] = result[pp_idx][1][3]
-    
+    print(T_co)
   if "X" in compute:
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_co.npy', X_co)
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)
