@@ -288,7 +288,7 @@ for fiber_length in fiber_lengths:
             '''
     ##
             plt.grid(which="both")
-            plt.xlabel("Position [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel(r"$f_B$")
             plt.legend()
             plt.yticks(range(5))
@@ -367,7 +367,7 @@ for fiber_length in fiber_lengths:
                 # ax4.axvline(locs[i] * 1e-3, color="grey", linestyle="dashed")
 
             # ax4.set_xlabel("Position [km]")
-            ax1.set_xlabel("Position [km]")
+            ax1.set_xlabel(r"$z$ [km]")
             ax1.set_ylabel(r"$s^{-1}$")
             # ax3.set_ylabel(r"$s^{-1}$")
             # ax1.text(70, 2, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
@@ -433,174 +433,7 @@ for fiber_length in fiber_lengths:
                 ax1.set_ylabel(r"$s^{-1}$")
                 ax3.set_ylabel(r"$s^{-1}$")
                 # ax1.set_ylim([0, 3])
-                # ax2.set_ylim([0, 1.5])
-                # ax3.set_ylim([0, 1.5])
-                # ax4.set_ylim([0, 1.5])
-                # ax1.text(70, 3, 'CO', bbox={'facecolor': 'white', 'alpha': 0.8})
-                # ax2.text(70, -2, 'CT', bbox={'facecolor': 'white', 'alpha': 0.8})
-                # ax3.text(70, 2, 'BI', bbox={'facecolor': 'white', 'alpha': 0.8})
-                # ax4.text(70, 2, 'perf.', bbox={'facecolor': 'white', 'alpha': 0.8})
-                plt.autoscale()
-                plt.subplots_adjust(left = 0.1, wspace=0.0, hspace=0.0, right = 9.8/10, top=9.9/10)
-                fig1.savefig(plot_save_path+'collision_shape_last_'+str(power_dBm)+'.pdf')
-
-            ##########################
-            #### X0mm
-            ##########################
-            fig2 = plt.figure(figsize=(10, 6))
-            plt.plot(show = show_flag)
-
-            plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="CO")
-            plt.semilogy(m, np.abs(X0mm_ct), marker='x', markersize = 10, color='blue', label="CT")
-            plt.semilogy(m, np.abs(X0mm_bi), marker='x', markersize = 10, color='orange', label="BI")
-
-            # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
-            # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
-            plt.minorticks_on()
-            plt.grid(which="both")
-            plt.xlabel(r"Collision index $m$")
-            plt.ylabel(r"$X_{0,m,m}$ [m/s]")
-            # plt.title(
-            #     rf"$f_B(z)$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
-            # )
-            plt.legend()
-            fig2.tight_layout()
-            fig2.savefig(plot_save_path+'X0mm_'+str(power_dBm)+'.pdf')
-
-            ##########################
-            #### X0mm channel 50
-            ##########################
-            if True:
-                f2 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
-                interfering_grid_index = 10
-
-                # compute the X0mm coefficients given the precompute time integrals
-                m = np.array(f['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/m'])
-                z = np.array(f['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/z'])
-                I = np.array(f['/time_integrals/channel_1/interfering_channel_'+str(interfering_grid_index-1)+'/integrals'])
-                interfering_grid_index = 49
-                # interpolate the amplification function using optimization results
-                fB_co = interp1d(z_max, signal_solution_co[:, interfering_grid_index], kind='linear')
-                fB_ct = interp1d(z_max, signal_solution_ct[:, interfering_grid_index], kind='linear')
-                fB_bi = interp1d(z_max, signal_solution_bi[:, interfering_grid_index], kind='linear')
-                # upper cut z
-                z = np.array(list(filter(lambda x: x<=fiber_length, z)))
-                I = I[:int(len(m)*(fiber_length/80e3)), :len(z)]
-                m = m[:int(len(m)*(fiber_length/80e3))]
-                X0mm_co = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=fB_co(z))
-                X0mm_ct = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=fB_ct(z))
-                X0mm_bi = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=fB_bi(z))
-                X0mm_none = pynlin.nlin.Xhkm_precomputed(
-                    z, I, amplification_function=None)
-
-                fig2 = plt.figure(figsize=(10, 8))
-                plt.plot(show = show_flag)
-
-                plt.semilogy(m, np.abs(X0mm_co), marker='x', markersize = 10, color='green', label="CO")
-                plt.semilogy(m, np.abs(X0mm_ct), marker='x', markersize = 10, color='blue', label="CT")
-                plt.semilogy(m, np.abs(X0mm_bi), marker='x', markersize = 10, color='orange', label="BI")
-
-                # plt.semilogy(m, np.abs(X0mm_none), marker="s", color='grey', label="perfect ampl.")
-                # plt.semilogy(m, np.abs(approx), marker="s", label="approximation")
-                plt.minorticks_on()
-                plt.grid(which="both")
-                plt.xlabel(r"Collision index $m$")
-                plt.ylabel(r"$X_{0,m,m}$ [m/s]")
-                # plt.title(
-                #     rf"$f_B(z)$, $D={args.dispersion}$ ps/(nm km), $L={args.fiber_length}$ km, $R={args.baud_rate}$ GHz"
-                # )
-                plt.legend()
-                fig2.tight_layout()
-                fig2.savefig(plot_save_path+'X0mm_last_'+str(power_dBm)+'.pdf')
-            
-        # FULL X0mm EVALUATION FOR EVERY m and every channel =======================
-        X_co = []
-        X_co.append(0.0)
-        X_ct = []
-        X_ct.append(0.0)
-        X_bi = []
-        X_bi.append(0.0)
-        X_none = []
-        X_none.append(0.0)
-
-        # compute the first num_channels interferents (assume the WDM grid is identical)
-        pbar_description = "Computing space integrals over interfering channels"
-        collisions_pbar = tqdm.tqdm(range(1, 50), leave=False)
-        collisions_pbar.set_description(pbar_description)
-        for interf_index in collisions_pbar:
-            fB_co = interp1d(
-                z_max, signal_solution_co[:, interf_index], kind='linear')
-            X0mm_co = pynlin.nlin.Xhkm_precomputed(
-                z, I, amplification_function=fB_co(z))
-            X_co.append(np.sum(np.abs(X0mm_co)**2))
-
-            fB_ct = interp1d(
-                z_max, signal_solution_ct[:, interf_index], kind='linear')
-            X0mm_ct = pynlin.nlin.Xhkm_precomputed(
-                z, I, amplification_function=fB_ct(z))
-            X_ct.append(np.sum(np.abs(X0mm_ct)**2))
-
-            fB_bi = interp1d(
-                z_max, signal_solution_bi[:, interf_index], kind='linear')
-            X0mm_bi = pynlin.nlin.Xhkm_precomputed(
-                z, I, amplification_function=fB_bi(z))
-            X_bi.append(np.sum(np.abs(X0mm_bi)**2))
-
-            fB_none = interp1d(
-                z_max, signal_solution_bi[:, interf_index], kind='linear')
-            X0mm_none = pynlin.nlin.Xhkm_precomputed(
-                z, I, amplification_function=None)
-            X_none.append(np.sum(np.abs(X0mm_none)**2))
-
-        # PHASE NOISE COMPUTATION =======================
-        # copropagating
-
-        for ar_idx, M in enumerate(arity_list):
-            qam = pynlin.constellations.QAM(M)
-
-            qam_symbols = qam.symbols()
-            cardinality = len(qam_symbols)
-
-            # assign specific average optical energy
-            qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power/baud_rate)
-
-            fig4 = plt.figure(figsize=(10, 10))
-            plt.plot(show = show_flag)
-            plt.scatter(np.real(qam_symbols), np.imag(qam_symbols))
-            constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) **2)
-            #print("\tenergy variance      = ", constellation_variance)
-
-            Delta_theta_ch_2_co = 0
-            Delta_theta_ch_2_ct = 0
-            Delta_theta_ch_2_bi = 0
-
-            for i in range(1, num_channels):
-                Delta_theta_ch_2_co = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
-                Delta_theta_2_co[idx, ar_idx] += Delta_theta_ch_2_co
-                Delta_theta_ch_2_ct = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[i])
-                Delta_theta_2_ct[idx, ar_idx] += Delta_theta_ch_2_ct
-                Delta_theta_ch_2_bi = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[i])
-                Delta_theta_2_bi[idx, ar_idx] += Delta_theta_ch_2_bi
-            for i in interfering_list:
-                Noise_spacing_co[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[i])
-                Noise_spacing_ct[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[i])
-                Noise_spacing_bi[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[i])
-                Noise_spacing_none[idx, i] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[i])
-
-
-            #print("Total phase variance (CO): ", Delta_theta_2_co[idx])
-            #print("Total phase variance (CT): ", Delta_theta_2_ct[idx])
-
-
-    ar_idx = 0 # 16-QAM
-    # fig_power = plt.figure(figsize=(10, 5))
-    # plt.plot(show = True)
-    # plt.semilogy(power_dBm_list, Delta_theta_2_co[:, ar_idx], marker='x', markersize = 10, color='green', label="coprop.")
-    # plt.semilogy(power_dBm_list, Delta_theta_2_ct[:, ar_idx], marker='x', markersize = 10,color='blue',label="counterprop.")
-    # plt.semilogy(power_dBm_list, Delta_theta_2_ct[:, ar_idx], marker='x', markersize = 10,color='blue',label="bidirection.")
+                # axdirection.")
     # plt.minorticks_on()
     # plt.grid(which="both")
     # plt.xlabel(r"Power [dBm]")

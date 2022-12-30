@@ -28,6 +28,7 @@ import pynlin.constellations
 from scipy import optimize
 from scipy.special import erfc
 import json
+import pickle
 
 f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
 data = json.load(f)
@@ -167,6 +168,11 @@ for fiber_length in fiber_lengths:
 		power_at_receiver_co = np.zeros_like(X_co)
 		power_at_receiver_ct = np.zeros_like(X_co)
 		power_at_receiver_bi = np.zeros_like(X_co)
+		
+		all_co_pumps = np.zeros((len(power_dBm_list), 4))
+		avg_pump_dBm_co = np.zeros((len(power_dBm_list)))
+		avg_pump_dBm_ct = np.zeros_like(avg_pump_dBm_co)
+		avg_pump_dBm_bi = np.zeros_like(avg_pump_dBm_co)
 
 		for pow_idx, power_dBm in enumerate(power_dBm_list):
 				# PUMP power evolution
@@ -197,6 +203,14 @@ for fiber_length in fiber_lengths:
 
 				# compute the X0mm coefficients given the precompute time integrals
 				# FULL X0mm EVALUATION FOR EVERY m =======================
+				all_co_pumps[pow_idx, :] = watt2dBm(pump_solution_co[0, :])
+				avg_pump_dBm_co[pow_idx] = watt2dBm(np.mean(pump_solution_co[0, :]))
+				avg_pump_dBm_ct[pow_idx] = watt2dBm(np.mean(pump_solution_ct[-1, :]))
+				res = pump_solution_bi[0, 0] + pump_solution_bi[0, 1]
+				for idx in [2, 3, 4, 5]:
+					res += pump_solution_bi[-1, idx]
+				avg_pump_dBm_bi[pow_idx] = watt2dBm(res/4)
+
 				for coi_idx, coi in enumerate(coi_list):
 						power_at_receiver_co[coi_idx,pow_idx] = signal_solution_co[-1, coi_idx]
 						power_at_receiver_ct[coi_idx,pow_idx] = signal_solution_ct[-1, coi_idx]
@@ -255,14 +269,15 @@ for fiber_length in fiber_lengths:
 		P_A = power_list
 		full_coi = [i + 1 for i in range(50)]
 		# selection between 'NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'EVM_BER_vs_power'
-		plot_selection = ['NLIN_vs_power', 
-											'ASE_vs_power', 
-											'NLIN_and_ASE_vs_power',
-											'OSNR_vs_power', 
-											'OSNR_ASE_vs_wavelength', 
-											'NLIN_vs_wavelength',
-											'NLIN_and_ASE_and_SRSN_vs_power', 
-											'SRSN_vs_wavelength']
+		plot_selection = [ #'NLIN_vs_power', 
+		# 									'ASE_vs_power', 
+		# 									'NLIN_and_ASE_vs_power',
+		# 									'OSNR_vs_power', 
+		# 									'OSNR_ASE_vs_wavelength', 
+		# 									'NLIN_vs_wavelength',
+		# 									'NLIN_and_ASE_and_SRSN_vs_power', 
+		# 									'SRSN_vs_wavelength',
+											'Pumps_all']
 		# evaluation of metrics
 		# Average OSNR vs power
 		osnr_co = np.ndarray(shape=(len(power_dBm_list)))
@@ -460,7 +475,7 @@ for fiber_length in fiber_lengths:
 				plt.tight_layout()
 				fig_comparison.savefig(plot_save_path + "ratio_vs_power.pdf")
 
-		if 'OSNR_vs_power' in plot_selection:
+		if 'osnr_vs_power' in plot_selection:
 				fig_powsnr, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
 				plt.plot(power_dBm_list, osnr_co, marker=markers[scan],
 										markersize=10, color='green')
@@ -471,11 +486,11 @@ for fiber_length in fiber_lengths:
 				plt.grid(which="both")
 
 				#plt.ylim([20, 50])
-				plt.ylabel(r"$OSNR$ [dB]")
-				plt.xlabel(r"Power [dBm]")
+				plt.ylabel(r"osnr [db]")
+				plt.xlabel(r"power [dbm]")
 
 				plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
-				fig_powsnr.savefig(plot_save_path + "OSNR_vs_power.pdf")
+				fig_powsnr.savefig(plot_save_path + "osnr_vs_power.pdf")
 
 		#####################################
 		# wavelength plots
@@ -491,12 +506,12 @@ for fiber_length in fiber_lengths:
 				plt.xlabel(r"Channel wavelength [nm]")
 				plt.xticks(ticks=wavelength_list,
 										labels=["%4.0f" % (_) for _ in wavelength_list])
-				plt.ylabel(r"$OSNR_{ASE}$ [dB]")
+				plt.ylabel(r"OSNR (ASE) [dB]")
 				#plt.ylim([-50, -45])
 				plt.grid(which="both")
 
 				plt.tight_layout()
-				fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE_vs_wavelength.pdf")
+				fig_ASE_channel.savefig(plot_save_path + "OSNR_ASE_vs_wavelength.pdf") 
 		
 
 		if 'NLIN_vs_wavelength' in plot_selection:
@@ -531,10 +546,25 @@ for fiber_length in fiber_lengths:
 				plt.ylabel(r"SRSN [dBm]")
 				#plt.ylim([-50, -45])
 				plt.grid(which="both")
-
 				plt.tight_layout()
 				fig_NLIN_channel.savefig(plot_save_path + "total_vs_wavelength.pdf")
-				
+
+		if 'Pumps_all' in plot_selection:
+			fig_pumps, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
+			for pp in range(4):
+				plt.plot(power_dBm_list, all_co_pumps[:, pp], marker=markers[0],
+										markersize=10, color='green')
+			plt.plot(power_dBm_list, avg_pump_dBm_co, linestyle='dashed', color='green')
+			plt.plot(power_dBm_list, avg_pump_dBm_ct,linestyle='dashed', color='blue')
+			plt.plot(power_dBm_list, avg_pump_dBm_bi, linestyle='dashed', color='orange')
+			#plt.ylim([20, 50])
+			plt.ylabel(r"Average pump power [dBm]")
+			plt.xlabel(r"Input power [dBm]")
+			plt.ylim([17.0, 35.0])
+			plt.grid(which="both")
+			plt.tight_layout()
+			plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
+			fig_pumps.savefig(plot_save_path + "Pumps_all.pdf")
 		#####################################
 		# error metrics vs power
 		#####################################

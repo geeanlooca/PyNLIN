@@ -40,7 +40,7 @@ special=data["special"]
 pump_direction=data["pump_direction"]
 num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
-
+"z [km]"
 plot_width = 10
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
@@ -66,7 +66,7 @@ for fiber_length in fiber_lengths:
     interfering_grid_index = 1
     #power_dBm_list = [-20, -10, -5, 0]
     power_dBm_list = [0.0, -10.0, -20.0]
-    power_dBm_list = np.linspace(-20, 0, 11)
+    power_dBm_list = [-6.0]
 
     arity_list = [16]
 
@@ -136,7 +136,6 @@ for fiber_length in fiber_lengths:
                 results_path_bi + 'signal_solution_bi_' + str(power_dBm) + '.npy')
             ase_solution_bi = np.load(
                 results_path_bi + 'ase_solution_bi_' + str(power_dBm) + '.npy')
-
             # plt.figure()
             # plt.plot(signal_wavelengths, watt2dBm(signal_solution_co[-1]), color="k")
             # plt.figure()
@@ -168,7 +167,7 @@ for fiber_length in fiber_lengths:
 
               plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
-              plt.xlabel("z [km]")
+              plt.xlabel(r"$z$ [km]")
               plt.ylabel("Wave power [dBm]")
               plt.grid("on")
               plt.minorticks_on()
@@ -193,7 +192,7 @@ for fiber_length in fiber_lengths:
               plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
 
-              plt.xlabel("z [km]")
+              plt.xlabel(r"$z$ [km]")
               plt.ylabel("Wave power [dBm]")
               plt.grid("on")
               plt.minorticks_on()
@@ -217,7 +216,7 @@ for fiber_length in fiber_lengths:
 
               plt.legend(custom_lines, ['ASE', 'Signal', 'Pump'])
 
-              plt.xlabel("z [km]")
+              plt.xlabel(r"$z$ [km]")
               plt.ylabel("Wave power [dBm]")
               plt.grid("on")
               plt.minorticks_on()
@@ -240,7 +239,7 @@ for fiber_length in fiber_lengths:
                     signal_solution_co[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
         
 
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("Signal power [dBm]")
             plt.grid("on")
             plt.legend()
@@ -257,7 +256,7 @@ for fiber_length in fiber_lengths:
                 plt.plot(z_max, np.transpose(watt2dBm(
                     signal_solution_ct[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
 
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("Signal power [dBm]")
             plt.grid("on")
             plt.legend()
@@ -276,7 +275,7 @@ for fiber_length in fiber_lengths:
                 plt.plot(z_max, np.transpose(watt2dBm(
                     signal_solution_bi[:, idx])), color="b", linestyle=linestyles[ii], label=labels[ii])
 
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("Signal power [dBm]")
             plt.grid("on")
             plt.legend()
@@ -300,7 +299,7 @@ for fiber_length in fiber_lengths:
                 plt.plot(z_max, np.transpose(watt2dBm(
                     ase_solution_co[:, idx])), color="black", linestyle=linestyles[ii], label=labels[ii])
             plt.legend()
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("ASE power [dBm]")
             plt.grid("on")
             plt.xticks([0, 40, 80], [0, 40,80])
@@ -320,7 +319,7 @@ for fiber_length in fiber_lengths:
                 plt.plot(z_max, np.transpose(watt2dBm(
                     ase_solution_ct[:, idx])), color="black", linestyle=linestyles[ii], label=labels[ii])
             plt.legend()   
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("ASE power [dBm]")
             #plt.annotate("ct", (60, -70))
             plt.xticks([0, 40, 80], [0, 40,80])
@@ -341,7 +340,7 @@ for fiber_length in fiber_lengths:
                     ase_solution_bi[:, idx])), color="black", linestyle=linestyles[ii], label=labels[ii])
             plt.legend()
             #plt.annotate("BI", (60, -70))
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("ASE power [dBm]")
             plt.xticks([0, 40, 80], [0, 40,80])
             plt.yticks([-80, -70, -60,  -50, -40], [-80, -70, -60,  -50, -40])
@@ -369,7 +368,7 @@ for fiber_length in fiber_lengths:
 
             for pp in range(num_ct):
                 ax_= ax.plot(z_max, watt2dBm(pump_solution_ct[:, pp]), color=cmap[pp])
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
             plt.minorticks_on()
@@ -413,7 +412,7 @@ for fiber_length in fiber_lengths:
 
             for pp in range(num_CO):
                 ax_= ax.plot(z_max, watt2dBm(pump_solution_co[:, pp]), color=cmap[pp])
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
             plt.minorticks_on()
@@ -448,7 +447,7 @@ for fiber_length in fiber_lengths:
 
             for pp in range(num_bi):
                 ax_= ax.plot(z_max, watt2dBm(pump_solution_bi[:, pp]), color=cmap[pp])
-            plt.xlabel("z [km]")
+            plt.xlabel(r"$z$ [km]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
             plt.minorticks_on()
@@ -467,20 +466,22 @@ for fiber_length in fiber_lengths:
             clb = plt.colorbar(sm, pad=0.01)
             clb.ax.set_yticks(pump_wavelengths_bi)
             clb.ax.set_yticklabels(["{:1.3f}".format(pmp) for pmp in pump_wavelengths_bi])
-            # print(pump_wavelengths_bi)
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
             plt.savefig(plot_save_path + "bi_pumps" + str(power_dBm) + ".pdf")
             
+
             # pump wavelengths and power
-            #################################
-            ## the pumps are allright
-            #################################
+            
             fig1, (ax) = plt.subplots(nrows=1, figsize=(plot_width, 6))
             pump_wavelengths_bi = 1e6*np.load(optimized_result_path_bi+'opt_wavelengths_bi' + str(power_dBm) + '.npy')
             pump_powers_bi = np.load(optimized_result_path_bi+'opt_powers_bi' + str(power_dBm) + '.npy')
+            print("\n\nwlngths bi: ", pump_wavelengths_bi)
+            print("pwrs bi: ", watt2dBm(pump_powers_bi))
+            print("front powers bi: ", watt2dBm(pump_solution_bi[0, :]))
+            print("end powers bi: ", watt2dBm(pump_solution_bi[-1, :]))
+
             cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
-            #Get cmap values
 
             if pump_direction != "direct":
               print("\nWarning: stem plot do not respect real pump directions!")
@@ -493,18 +494,12 @@ for fiber_length in fiber_lengths:
             cmap_vals = cm.rainbow([item/num_bi for item in range(num_bi)])
             # Define new cmap
 
-            #norm = mpl.colors.BoundaryNorm(pump_wavelengths_bi, num_bi)
             norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_bi), vmax=np.max(pump_wavelengths_bi)) 
             # Define SM
             sm = plt.cm.ScalarMappable(cmap=cmap_new, norm=norm)
             sm.set_array([])
             plt.legend()
 
-            # Plot colorbar
-            # clb = plt.colorbar(sm, pad=0.01)
-            # clb.ax.set_xticks(pump_wavelengths_bi)
-            # clb.ax.set_xticklabels(["{:1.3f}".format(pmp) for pmp in pump_wavelengths_bi])
-            # # print(pump_wavelengths_bi)
             plt.xlabel(r"Pump wavelength [$\mu$m]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
@@ -515,14 +510,13 @@ for fiber_length in fiber_lengths:
 
 
             ## COPUMPS
-
             fig1, (ax) = plt.subplots(nrows=1, figsize=(plot_width, 6))
             pump_wavelengths_co = 1e6*np.load(optimized_result_path_co+'opt_wavelengths_co' + str(power_dBm) + '.npy')
             pump_powers_co = np.load(optimized_result_path_co+'opt_powers_co' + str(power_dBm) + '.npy')
-            print(pump_powers_co)
+            print("\n\nwlngths co: ", pump_wavelengths_co)
+            print("pwrs co: ", watt2dBm(pump_powers_co))
 
             cmap_new = mpl.colors.LinearSegmentedColormap.from_list('new_cmap', cmap_vals[::-1])
-            #Get cmap values
 
             if pump_direction != "direct":
               print("\nWarning: stem plot do not respect real pump directions!")
@@ -537,11 +531,6 @@ for fiber_length in fiber_lengths:
             sm = plt.cm.ScalarMappable(cmap=cmap_new, norm=norm)
             sm.set_array([])
 
-            # Plot colorbar
-            # clb = plt.colorbar(sm, pad=0.01)
-            # clb.ax.set_xticks(pump_wavelengths_bi)
-            # clb.ax.set_xticklabels(["{:1.3f}".format(pmp) for pmp in pump_wavelengths_bi])
-            # # print(pump_wavelengths_bi)
             plt.xlabel(r"Pump wavelength [$\mu$m]")
             plt.ylabel("Pump power [dBm]")
             plt.grid("on")
@@ -549,29 +538,27 @@ for fiber_length in fiber_lengths:
             plt.tight_layout()
 
             plt.savefig(plot_save_path + "co_stems" + str(power_dBm) + ".pdf")
-            #################################
-            ## the signals are allright
-            #################################
+
+            pump_wavelengths_ct = 1e6*np.load(optimized_result_path_ct+'opt_wavelengths_ct' + str(power_dBm) + '.npy')
+            pump_powers_ct = np.load(optimized_result_path_ct+'opt_powers_ct' + str(power_dBm) + '.npy')
+            print("\n\nwlngths ct: ", pump_wavelengths_ct)
+            print("pwrs ct: ", watt2dBm(pump_powers_ct))
+            print("end powers bi: ", watt2dBm(pump_solution_ct[-1, :]))
+            
+            ## Signals
+
             fig1, (ax) = plt.subplots(nrows=1, figsize=(plot_width, 6))
             plt.plot(1e6*signal_wavelengths, 10*np.log10(signal_solution_bi[-1, ::-1])-10*np.log10(signal_solution_bi[0, :]), marker="x", markersize=10)
             #Get cmap values
             cmap_vals = cm.rainbow([item/num_bi for item in range(num_bi)])
             
             # Define new cmap
-
-            #norm = mpl.colors.BoundaryNorm(pump_wavelengths_bi, num_bi)
             norm = mpl.colors.Normalize(vmin=np.min(pump_wavelengths_bi), vmax=np.max(pump_wavelengths_bi)) 
             # Define SM
             sm = plt.cm.ScalarMappable(cmap=cmap_new, norm=norm)
             sm.set_array([])
             plt.xlabel(r"Signal wavelength [$\mu$m]")
             plt.ylabel("Signal gain [dB]")
-            # Plot colorbar
-            # clb = plt.colorbar(sm, pad=0.01)
-            # clb.ax.set_xticks(pump_wavelengths_bi)
-            # clb.ax.set_xticklabels(["{:1.3f}".format(pmp) for pmp in pump_wavelengths_bi])
-            # # print(pump_wavelengths_bi)
-            # clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
             ax.axhline(-3, color="red", linestyle="dotted", linewidth=2)
 
             plt.grid()
