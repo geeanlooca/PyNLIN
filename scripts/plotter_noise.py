@@ -29,6 +29,7 @@ from scipy import optimize
 from scipy.special import erfc
 import json
 import pickle
+from matplotlib.lines import Line2D
 
 f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
 data = json.load(f)
@@ -170,6 +171,9 @@ for fiber_length in fiber_lengths:
 		power_at_receiver_bi = np.zeros_like(X_co)
 		
 		all_co_pumps = np.zeros((len(power_dBm_list), 4))
+		all_ct_pumps = np.zeros((len(power_dBm_list), 4))
+		all_bi_pumps = np.zeros((len(power_dBm_list), 6))
+
 		avg_pump_dBm_co = np.zeros((len(power_dBm_list)))
 		avg_pump_dBm_ct = np.zeros_like(avg_pump_dBm_co)
 		avg_pump_dBm_bi = np.zeros_like(avg_pump_dBm_co)
@@ -203,13 +207,15 @@ for fiber_length in fiber_lengths:
 
 				# compute the X0mm coefficients given the precompute time integrals
 				# FULL X0mm EVALUATION FOR EVERY m =======================
-				all_co_pumps[pow_idx, :] = watt2dBm(pump_solution_co[0, :])
-				avg_pump_dBm_co[pow_idx] = watt2dBm(np.mean(pump_solution_co[0, :]))
-				avg_pump_dBm_ct[pow_idx] = watt2dBm(np.mean(pump_solution_ct[-1, :]))
+				all_co_pumps[pow_idx, :] = (pump_solution_co[0, :])
+				all_ct_pumps[pow_idx, :] = (pump_solution_ct[-1, :])
+				all_bi_pumps[pow_idx, :] = (np.hstack((pump_solution_bi[0, 0:2],pump_solution_bi[-1, 2:])))
+				avg_pump_dBm_co[pow_idx] = (np.mean(pump_solution_co[0, :]))
+				avg_pump_dBm_ct[pow_idx] = (np.mean(pump_solution_ct[-1, :]))
 				res = pump_solution_bi[0, 0] + pump_solution_bi[0, 1]
 				for idx in [2, 3, 4, 5]:
 					res += pump_solution_bi[-1, idx]
-				avg_pump_dBm_bi[pow_idx] = watt2dBm(res/4)
+				avg_pump_dBm_bi[pow_idx] = (res/4)
 
 				for coi_idx, coi in enumerate(coi_list):
 						power_at_receiver_co[coi_idx,pow_idx] = signal_solution_co[-1, coi_idx]
@@ -269,14 +275,14 @@ for fiber_length in fiber_lengths:
 		P_A = power_list
 		full_coi = [i + 1 for i in range(50)]
 		# selection between 'NLIN_vs_power', 'ASE_vs_power', 'NLIN_and_ASE_vs_power', 'OSNR_vs_power', 'OSNR_ASE_vs_wavelength', 'EVM_BER_vs_power'
-		plot_selection = [ #'NLIN_vs_power', 
-		# 									'ASE_vs_power', 
-		# 									'NLIN_and_ASE_vs_power',
-		# 									'OSNR_vs_power', 
-		# 									'OSNR_ASE_vs_wavelength', 
-		# 									'NLIN_vs_wavelength',
-		# 									'NLIN_and_ASE_and_SRSN_vs_power', 
-		# 									'SRSN_vs_wavelength',
+		plot_selection = ['NLIN_vs_power', 
+											'ASE_vs_power', 
+											'NLIN_and_ASE_vs_power',
+											'OSNR_vs_power', 
+											'OSNR_ASE_vs_wavelength', 
+											'NLIN_vs_wavelength',
+											'NLIN_and_ASE_and_SRSN_vs_power', 
+											'SRSN_vs_wavelength',
 											'Pumps_all']
 		# evaluation of metrics
 		# Average OSNR vs power
@@ -406,21 +412,26 @@ for fiber_length in fiber_lengths:
 				plt.plot(show=True)
 				axis_num = 0
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([P_A * Delta_theta_2_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
-										markersize=10, color='green', label="NLIN")
+										markersize=10, linestyle="dotted", color='green')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([P_A * Delta_theta_2_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
-										markersize=10, color='blue')
+										markersize=10,  linestyle="dashed", color='blue')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([P_A * Delta_theta_2_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[0],
 										markersize=10, color='orange')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_co[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
-										markersize=10, color='green', label="ASE")
+										markersize=10, linestyle="dotted", color='green')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
-										markersize=10, color='blue')
+										markersize=10,linestyle="dashed",  color='blue')
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
 										markersize=10, color='orange')
 				ax1.grid(which="both")
 				#plt.annotate("ciao", (0, 0))
 				plt.grid(which="both")
-
+				custom_lines = [Line2D([0], [0], color='green', linestyle='dashed'),
+                Line2D([0], [0], color='blue', linestyle='dashed'),
+                Line2D([0], [0], color='orange'), 
+								Line2D([0], [0], marker=markers[0], color='grey'),
+								Line2D([0], [0], marker=markers[2], color='grey')]
+				ax1.legend(custom_lines, ['CO', 'CT', 'BI', 'NLIN', 'ASE'])
 				plt.xlabel(r"Input power [dBm]")
 				plt.minorticks_on()
 				plt.ylabel(r"Noise power [dBm]")
@@ -430,8 +441,6 @@ for fiber_length in fiber_lengths:
 
 				plt.legend()
 				leg = ax1.get_legend()
-				leg.legendHandles[0].set_color('grey')
-				leg.legendHandles[1].set_color('grey')
 				#plt.subplots_adjust(wspace=0.0, hspace=0, right = 9.8/10, top=9.9/10)
 				#plt.axis([-13, -5, -60, -45])
 				plt.tight_layout()
@@ -553,17 +562,23 @@ for fiber_length in fiber_lengths:
 			fig_pumps, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
 			for pp in range(4):
 				plt.plot(power_dBm_list, all_co_pumps[:, pp], marker=markers[0],
-										markersize=10, color='green')
-			plt.plot(power_dBm_list, avg_pump_dBm_co, linestyle='dashed', color='green')
-			plt.plot(power_dBm_list, avg_pump_dBm_ct,linestyle='dashed', color='blue')
-			plt.plot(power_dBm_list, avg_pump_dBm_bi, linestyle='dashed', color='orange')
+										markersize=10, linestyle='dashed', color='green')
+			for pp in range(4):
+				plt.plot(power_dBm_list, all_ct_pumps[:, pp],linestyle='dashed', marker=markers[0],
+										markersize=10, color='blue')
+			for pp in range(6):
+				plt.plot(power_dBm_list, all_bi_pumps[:, pp],linestyle='dashed',  marker=markers[0],
+										markersize=10, color='orange')
+			plt.plot(power_dBm_list, avg_pump_dBm_co, color='green')
+			plt.plot(power_dBm_list, avg_pump_dBm_ct, color='blue')
+			plt.plot(power_dBm_list, avg_pump_dBm_bi, color='orange')
 			#plt.ylim([20, 50])
 			plt.ylabel(r"Average pump power [dBm]")
 			plt.xlabel(r"Input power [dBm]")
-			plt.ylim([17.0, 35.0])
+			#plt.ylim([17.0, 35.0])
 			plt.grid(which="both")
 			plt.tight_layout()
-			plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
+			plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.7 / 10)
 			fig_pumps.savefig(plot_save_path + "Pumps_all.pdf")
 		#####################################
 		# error metrics vs power
