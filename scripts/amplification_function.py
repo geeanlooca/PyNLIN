@@ -46,12 +46,13 @@ special = data["special"]
 pump_direction = data["pump_direction"]
 num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
+gain=data['gain']
 
 # Manual configuration
 power_per_channel_dBm_list = [0.0]
 #power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 # Pumping scheme choice
-pumping_schemes = ['co']
+pumping_schemes = ['ct']
 num_only_co_pumps = 4
 num_only_ct_pumps = 4
 optimize = True
@@ -129,6 +130,9 @@ for fiber_length in fiber_lengths:
 	pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
 	pbar.set_description(pbar_description)
 		
+	'''
+	Solver for the bidirectional case
+	'''
 	def bi_solver(power_per_channel_dBm):
 		#print("Power per channel: ", power_per_channel_dBm, "dBm")
 		num_pumps = num_co + num_ct
@@ -217,7 +221,10 @@ for fiber_length in fiber_lengths:
 		np.save(results_path_bi+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_bi)
 		np.save(results_path_bi+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
 		return 
-
+	
+	'''
+	Solver for the copropagating case
+	'''
 	def co_solver(power_per_channel_dBm):
 		#print("Power per channel: ", power_per_channel_dBm, "dBm")
 		num_pumps = num_only_co_pumps
@@ -283,7 +290,10 @@ for fiber_length in fiber_lengths:
 		np.save(results_path_co+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
 		np.save(results_path_co+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
 		return 
-
+ 
+	'''
+	Solver for the counterpropagating case
+	'''
 	def ct_solver(power_per_channel_dBm):
 		#print("Power per channel: ", power_per_channel_dBm, "dBm")
 		num_pumps = num_only_ct_pumps
@@ -348,6 +358,7 @@ for fiber_length in fiber_lengths:
 		np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) + ".npy", signal_solution_ct)
 		np.save(results_path_ct + "ase_solution_ct_" + str(power_per_channel_dBm) + ".npy", ase_solution_ct)
 		return
+
 
 # OPTIMIZER BIDIRECTIONAL =================================
 	if 'bi' in pumping_schemes:
