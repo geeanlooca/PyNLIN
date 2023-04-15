@@ -20,7 +20,7 @@ import pynlin.constellations
 from matplotlib.patches import Arc
 import json
 
-f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
+f = open("./scripts/sim_config.json")
 data = json.load(f)
 print(data)
 dispersion=data["dispersion"] 

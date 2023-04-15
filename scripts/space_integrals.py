@@ -24,7 +24,7 @@ from multiprocessing import Pool
 from pynlin.raman.response import gain_spectrum, impulse_response
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 
-f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
+f = open("./scripts/sim_config.json")
 data = json.load(f)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]

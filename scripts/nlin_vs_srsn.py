@@ -24,7 +24,7 @@ from multiprocessing import Pool
 from pynlin.raman.response import gain_spectrum, impulse_response
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 
-f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
+f = open("./scripts/sim_config.json")
 data = json.load(f)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
@@ -76,7 +76,7 @@ points_per_collision = 10
 print("beta2: ", fiber.beta2)
 print("gamma: ", fiber.gamma)
 wdm_bandwidths = np.linspace(2, 15, 20) # in THz
-xi_N = np.ones(len(wdm_bandwidths))*  4*fiber.gamma**2
+xi_N = np.ones(len(wdm_bandwidths))*  16/9*fiber.gamma**2
 
 for fiber_length in fiber_lengths:
   length_setup = int(fiber_length * 1e-3)

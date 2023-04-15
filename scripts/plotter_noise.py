@@ -31,7 +31,7 @@ import json
 import pickle
 from matplotlib.lines import Line2D
 
-f = open("/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/sim_config.json")
+f = open("./scripts/sim_config.json")
 data = json.load(f)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
@@ -246,12 +246,12 @@ for fiber_length in fiber_lengths:
 				# assign specific average optical energy
 				qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power / baud_rate)
 				constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
-
 				for coi_idx, coi in enumerate(coi_list):
-						Delta_theta_2_co[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, pow_idx])
-						Delta_theta_2_ct[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx, pow_idx])
-						Delta_theta_2_bi[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
-						Delta_theta_2_none[coi_idx, pow_idx] = 4 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx])
+						print("\n\nreassinging delta theta")
+						Delta_theta_2_co[coi_idx, pow_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx, pow_idx])
+						Delta_theta_2_ct[coi_idx, pow_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx, pow_idx])
+						Delta_theta_2_bi[coi_idx, pow_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[coi_idx, pow_idx])
+						Delta_theta_2_none[coi_idx, pow_idx] = 16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx])
 
 						R_co[coi_idx, pow_idx] = constellation_variance * np.abs(T_co[coi_idx, pow_idx])
 						R_ct[coi_idx, pow_idx] = constellation_variance * np.abs(T_ct[coi_idx, pow_idx])
@@ -268,7 +268,8 @@ for fiber_length in fiber_lengths:
 		coi_selection_idx = [0, 2, 5]
 		coi_selection_average = [0, 9, 19, 29, 39, 49]
 		coi_selection_idx_average = [0, 1, 2, 3, 4, 5]
-		selected_power = -6.0
+		
+		selected_power = -14.0
 		pow_idx = np.where(power_dBm_list == selected_power)[0]
 		P_B = 10**((selected_power-30) / 10)  # average power of the constellation in mW
 		T = (1 / baud_rate)
@@ -281,6 +282,7 @@ for fiber_length in fiber_lengths:
 											'OSNR_vs_power', 
 											'OSNR_ASE_vs_wavelength', 
 											'NLIN_vs_wavelength',
+											'NLIN_vs_wavelength_multiple',
 											#'NLIN_and_ASE_and_SRSN_vs_power', 
 											#'SRSN_vs_wavelength',
 											'Pumps_all']
@@ -432,7 +434,7 @@ for fiber_length in fiber_lengths:
 								Line2D([0], [0], marker=markers[0], markersize=10, color='grey'),
 								Line2D([0], [0], marker=markers[2], markersize=7, color='grey')]
 				ax1.legend(custom_lines, ['CO', 'CT', 'BI', 'NLIN', 'ASE'], ncol=2)
-				plt.xlabel(r"Input power [dBm]")
+				plt.xlabel(r"Signal input power [dBm]")
 				plt.minorticks_on()
 				plt.ylabel(r"Noise power [dBm]")
 				plt.grid()
@@ -465,7 +467,7 @@ for fiber_length in fiber_lengths:
 				#plt.annotate("ciao", (0, 0))
 				plt.grid(which="both")
 
-				plt.xlabel(r"Input power [dBm]")
+				plt.xlabel(r"Signal input power [dBm]")
 				plt.minorticks_on()
 				plt.ylabel(r"Total noise to NLIN ratio [dB]")
 				plt.grid()
@@ -493,7 +495,7 @@ for fiber_length in fiber_lengths:
 
 				#plt.ylim([20, 50])
 				plt.ylabel("OSNR [dB]")
-				plt.xlabel("Input power [dBm]")
+				plt.xlabel("Signal input power [dBm]")
 				plt.legend()
 				plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.9 / 10)
 				fig_powsnr.savefig(plot_save_path + "OSNR_vs_power.pdf")
@@ -506,7 +508,7 @@ for fiber_length in fiber_lengths:
 				fig_ASE_channel, ((ax1)) = plt.subplots(
 						nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
 				plt.plot(show=True)
-				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]), marker='x', markersize=15, ls='dashed', color='blue', label='CO')
+				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_co[:, pow_idx] / ase_ct[:, pow_idx]), marker='x', markersize=15, ls='dashed', color='blue', label='CT')
 				plt.plot(wavelength_list, 10 * np.log10(power_at_receiver_bi[:, pow_idx] / ase_bi[:, pow_idx]), marker='x', markersize=15, color='orange', label='BI')
 				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
 				plt.xlabel(r"Channel wavelength [μm]")
@@ -539,6 +541,33 @@ for fiber_length in fiber_lengths:
 				plt.tight_layout()
 				fig_NLIN_channel.savefig(plot_save_path + "NLIN_vs_wavelength.pdf")
 
+		if 'NLIN_vs_wavelength_multiple' in plot_selection:
+				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, 10))
+				plt.plot(show=True)
+				tmp = pow_idx
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_co[:, pow_idx]) + 30, marker='x', markersize=15, ls='dotted', color='green', label='CO')
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_none[:, pow_idx])+30, marker='x', markersize=15, ls='dashdot',color='grey', label='perf.')
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_bi[:, pow_idx]) + 30, marker='x', markersize=15, color='orange', label='BI')
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_ct[:, pow_idx]) + 30, marker='x', markersize=15, ls='dashed', color='blue', label='CT')
+				alt_selected_power = -6.0
+				pow_idx = np.where(power_dBm_list == alt_selected_power)[0]
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_co[:, pow_idx]) + 30, marker='x', markersize=15, ls='dotted', color='green')
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_none[:, pow_idx])+30, marker='x', markersize=15, ls='dashdot',color='grey')
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_bi[:, pow_idx]) + 30, marker='x', markersize=15, color='orange')
+				plt.plot(wavelength_list, 10 * np.log10(P_A[pow_idx] * Delta_theta_2_ct[:, pow_idx]) + 30, marker='x', markersize=15, ls='dashed', color='blue')
+				pow_idx = tmp
+				# ax1.yaxis.set_major_locator(plt.MaxNLocator(5))
+				plt.xlabel(r"Channel wavelength [μm]")
+				plt.xticks(ticks=wavelength_list,
+										labels=["%4.3f" % (_) for _ in wavelength_list])
+				plt.ylabel(r"NLIN [dBm]")
+				#plt.ylim([-50, -45])
+				plt.grid(which="both")
+				plt.legend(bbox_to_anchor=(1, 0.6), loc='center right')
+				plt.tight_layout()
+				fig_NLIN_channel.savefig(plot_save_path + "NLIN_vs_wavelength_multiple.pdf")
+
+
 		if 'SRSN_vs_wavelength' in plot_selection:
 				fig_NLIN_channel, ((ax1)) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, 10))
 				plt.plot(show=True)
@@ -559,25 +588,33 @@ for fiber_length in fiber_lengths:
 
 		if 'Pumps_all' in plot_selection:
 			fig_pumps, (ax1) = plt.subplots(nrows=1, ncols=1, sharex=True, figsize=(plot_width, plot_height))
-			for pp in range(4):
+			for pp in range(3):
 				plt.plot(power_dBm_list, all_co_pumps[:, pp], marker=markers[0],
-										markersize=10, linestyle='dashed', color='green')
-			for pp in range(4):
-				plt.plot(power_dBm_list, all_ct_pumps[:, pp],linestyle='dashed', marker=markers[0],
-										markersize=10, color='blue')
-			for pp in range(6):
-				plt.plot(power_dBm_list, all_bi_pumps[:, pp],linestyle='dashed',  marker=markers[0],
-										markersize=10, color='orange')
-			plt.plot(power_dBm_list, avg_pump_dBm_co, color='green')
-			plt.plot(power_dBm_list, avg_pump_dBm_ct, color='blue')
-			plt.plot(power_dBm_list, avg_pump_dBm_bi, color='orange')
+										markersize=5, linestyle='dotted', color='green')
+			plt.plot(power_dBm_list, all_co_pumps[:, pp+1], marker=markers[0],
+										markersize=5, linestyle='dotted', color='green',label='CO')
+			for pp in range(3):
+				plt.plot(power_dBm_list, all_ct_pumps[:, pp],linestyle='dashed', marker=markers[1],
+										markersize=6, color='blue')
+
+			plt.plot(power_dBm_list, all_ct_pumps[:, pp+1],linestyle='dashed', marker=markers[1],
+										markersize=6, color='blue', label='CT')
+			for pp in range(5):
+				plt.plot(power_dBm_list, all_bi_pumps[:, pp],  marker=markers[2],
+										markersize=6, color='orange' )
+			plt.plot(power_dBm_list, all_bi_pumps[:, pp+1],  marker=markers[2],
+										markersize=6, color='orange', label='BI' )
+			# plt.plot(power_dBm_list, avg_pump_dBm_co, color='green')
+			# plt.plot(power_dBm_list, avg_pump_dBm_ct, color='blue')
+			# plt.plot(power_dBm_list, avg_pump_dBm_bi, color='orange')
 			#plt.ylim([20, 50])
-			plt.ylabel(r"Pump power [dBm]")
-			plt.xlabel(r"Input power [dBm]")
+			plt.ylabel(r"Pump input power [dBm]")
+			plt.xlabel(r"Signal input power [dBm]")
 			#plt.ylim([17.0, 35.0])
 			plt.grid(which="both")
 			plt.tight_layout()
 			plt.subplots_adjust(wspace=0.0, hspace=0, right=8.5 / 10, top=9.7 / 10)
+			plt.legend()
 			fig_pumps.savefig(plot_save_path + "Pumps_all.pdf")
 		#####################################
 		# error metrics vs power

@@ -129,3 +129,6 @@ tests/reports/
 
 # Numpy caching
 *.npy
+
+Pipfile
+Pipfile.lock
