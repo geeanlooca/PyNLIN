@@ -46,8 +46,10 @@ special = data["special"]
 pump_direction = data["pump_direction"]
 num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
-gain_dB_list=data['gain_dB']
+gain_dB_setup=data['gain_dB_list']
 
+gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
+print(gain_dB_list)
 # Manual configuration
 power_per_channel_dBm_list = np.linspace(-20, 0, 11)
 # Pumping scheme choice
@@ -92,19 +94,10 @@ for fiber_length in fiber_lengths:
 		results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
 		results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 		#
-		if not os.path.exists(results_path_co):
-			os.makedirs(results_path_co)
-		if not os.path.exists(results_path_ct):
-			os.makedirs(results_path_ct)
-		if not os.path.exists(results_path_bi):
-			os.makedirs(results_path_bi)				
-		#
-		if not os.path.exists(optimization_result_path_co):
-			os.makedirs(optimization_result_path_co)
-		if not os.path.exists(optimization_result_path_ct):
-			os.makedirs(optimization_result_path_ct)
-		if not os.path.exists(optimization_result_path_bi):
-			os.makedirs(optimization_result_path_bi)
+	#
+
+		
+		
 
 		time_integrals_results_path = '../results/'
 
@@ -134,7 +127,7 @@ for fiber_length in fiber_lengths:
 		'''
 		Solver for the bidirectional case
 		'''
-		def bi_solver(power_per_channel_dBm, gain_dB):
+		def bi_solver(power_per_channel_dBm):
 			#print("Power per channel: ", power_per_channel_dBm, "dBm")
 			num_pumps = num_co + num_ct
 			pump_band_b = lambda2nu(1510e-9)
@@ -218,15 +211,15 @@ for fiber_length in fiber_lengths:
 				reference_bandwidth=ref_bandwidth
 			)
 
-			np.save(results_path_bi+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_bi)
-			np.save(results_path_bi+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_bi)
-			np.save(results_path_bi+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_bi)
+			np.save(results_path_bi+"pump_solution_co_"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB) +".npy",   pump_solution_bi)
+			np.save(results_path_bi+"signal_solution_co_"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB) +".npy", signal_solution_bi)
+			np.save(results_path_bi+"ase_solution_co_"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB) +".npy",    ase_solution_bi)
 			return 
 		
 		'''
 		Solver for the copropagating case
 		'''
-		def co_solver(power_per_channel_dBm, gain_dB):
+		def co_solver(power_per_channel_dBm):
 			#print("Power per channel: ", power_per_channel_dBm, "dBm")
 			num_pumps = num_only_co_pumps
 			pump_band_b = lambda2nu(1510e-9)
@@ -285,15 +278,15 @@ for fiber_length in fiber_lengths:
 				reference_bandwidth=ref_bandwidth
 			)
 
-			np.save(results_path_co+"pump_solution_co_"+str(power_per_channel_dBm)+".npy", pump_solution_co)
-			np.save(results_path_co+"signal_solution_co_"+str(power_per_channel_dBm)+".npy", signal_solution_co)
-			np.save(results_path_co+"ase_solution_co_"+str(power_per_channel_dBm)+".npy", ase_solution_co)
+			np.save(results_path_co+"pump_solution_co_"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB) +".npy", pump_solution_co)
+			np.save(results_path_co+"signal_solution_co_"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB) +".npy", signal_solution_co)
+			np.save(results_path_co+"ase_solution_co_"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB) +".npy", ase_solution_co)
 			return 
 	
 		'''
 		Solver for the counterpropagating case
 		'''
-		def ct_solver(power_per_channel_dBm, gain_dB):
+		def ct_solver(power_per_channel_dBm):
 			#print("Power per channel: ", power_per_channel_dBm, "dBm")
 			num_pumps = num_only_ct_pumps
 			pump_band_b = lambda2nu(1480e-9)
@@ -352,24 +345,35 @@ for fiber_length in fiber_lengths:
 				use_power_at_fiber_start=True,
 				reference_bandwidth=ref_bandwidth
 			)
-
-			np.save(results_path_ct + "pump_solution_ct_" + str(power_per_channel_dBm) + ".npy", pump_solution_ct)
-			np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) + ".npy", signal_solution_ct)
-			np.save(results_path_ct + "ase_solution_ct_" + str(power_per_channel_dBm) + ".npy", ase_solution_ct)
+			np.save(results_path_ct + "pump_solution_ct_power"   + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_solution_ct)
+			np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", signal_solution_ct)
+			np.save(results_path_ct + "ase_solution_ct_"    + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", ase_solution_ct)
 			return
 
 
 		# OPTIMIZER BIDIRECTIONAL =================================
 		if 'bi' in pumping_schemes:
+			if not os.path.exists(results_path_bi):
+				os.makedirs(results_path_bi)			
+			if not os.path.exists(optimization_result_path_bi):
+				os.makedirs(optimization_result_path_bi)
 			with Pool(os.cpu_count()) as p:
-				p.map(bi_solver, (power_per_channel_dBm_list, gain_dB))	
+				p.map(bi_solver, power_per_channel_dBm_list)	
 					
 		# OPTIMIZER CO =================================
 		if 'co' in pumping_schemes:
+			if not os.path.exists(results_path_co):
+				os.makedirs(results_path_co)
+			if not os.path.exists(optimization_result_path_co):
+				os.makedirs(optimization_result_path_co)
 			with Pool(os.cpu_count()) as p:
-				p.map(co_solver, (power_per_channel_dBm_list, gain_dB))	
+				p.map(co_solver, power_per_channel_dBm_list)	
 
 		# OPTIMIZER COUNTER =================================
 		if 'ct' in pumping_schemes:
+			if not os.path.exists(results_path_ct):
+				os.makedirs(results_path_ct)
+			if not os.path.exists(optimization_result_path_ct):
+				os.makedirs(optimization_result_path_ct)
 			with Pool(os.cpu_count()) as p:
-				p.map(ct_solver, (power_per_channel_dBm_list, gain_dB))	
+				p.map(ct_solver, power_per_channel_dBm_list)	

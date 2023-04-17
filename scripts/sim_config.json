@@ -18,5 +18,5 @@
   "time_integral_length":100e3,
   "special":"symmetric",
   "pump_direction":"direct",
-  "gain_dB":[-6.0, -5.0, -4.0, -3.0, -2.0, -1.0, 0.0]
+  "gain_dB_list":[-6.0, 0.0, 20]
 } 
