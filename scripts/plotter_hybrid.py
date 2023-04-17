@@ -44,8 +44,8 @@ special = data['special']
 num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
 gain_dB_setup=data['gain_dB_list']
-
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
+total_gain_dB = 0.0
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
@@ -157,13 +157,10 @@ for fiber_length in fiber_lengths:
       for pow_idx, power_dBm in enumerate(power_dBm_list):
           # PUMP power evolution
           pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-
           # SIGNAL power evolution
           signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-
           # ASE power evolution
           ase_solution_ct = np.load(results_path_ct + 'ase_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-
           z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
           # compute the X0mm coefficients given the precompute time integrals
@@ -195,18 +192,19 @@ for fiber_length in fiber_lengths:
           for coi_idx, coi in enumerate(coi_list):
               print("\n\nreassinging delta theta")
               Delta_theta_2_ct[coi_idx,   pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx,   pow_idx, gain_idx])
-
               R_ct[coi_idx, pow_idx] = constellation_variance * np.abs(T_ct[coi_idx, pow_idx])
 
-  # ==============================
-  ## PLOTTING
-  # ==============================
+# ==============================
+# PLOTTING
+# ==============================
 
 plot_height = 7
 plot_width = 10
 aspect_ratio = 10/7
 markers = ["x", "+", "o", "o", "x", "+"]
 wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e6 for _ in coi_list]
+freq_list = [wdm.frequency_grid()[_] for _ in coi_list]
+
 coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 5]
 coi_selection_average = [0, 9, 19, 29, 39, 49]
@@ -218,9 +216,23 @@ P_B = 10**((selected_power-30) / 10)  # average power of the constellation in mW
 T = (1 / baud_rate)
 P_A = power_list
 full_coi = [i + 1 for i in range(50)]
-osnr_ct = np.ndarray(shape=(len(power_dBm_list)))
 
+# EDFA noise from model
+h_planck = 6.626e-34
+edfa_noise = np.ndarray(shape=(len(coi_list), len(gain_dB_list)))
+NG = 2
+for chan_idx, freq in enumerate(freq_list):
+  for gain_idx, gain_dB in enumerate(gain_dB_list):
+    G = 10^((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
+    edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) 
 
+osnr_ct = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
+
+# vectorized over power and gain
 for scan in range(len(coi_selection_average)):
-    osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :]/   (P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :] + ase_ct[coi_selection_idx_average[scan], :]))
+  osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :, :]/   (P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :, :] + ase_ct[coi_selection_idx_average[scan], :, :]))
 osnr_ct /= len(coi_selection_idx_average)
+
+
+plt.imshow(osnr_ct, cmap='hot', interpolation='nearest')
+plt.show()
