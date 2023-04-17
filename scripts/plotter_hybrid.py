@@ -25,7 +25,6 @@ import json
 import pickle
 from matplotlib.lines import Line2D
 
-f = open("./scripts/sim_config.json")
 data = json.load(f)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
@@ -112,10 +111,7 @@ print("gamma: ", fiber.gamma)
 Delta_theta_2_ct = np.zeros_like(
 		np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(gain_dB_list)))
 )
-R_co =   np.zeros_like(Delta_theta_2_ct)
 R_ct =   np.zeros_like(Delta_theta_2_ct)
-R_bi =   np.zeros_like(Delta_theta_2_ct)
-R_none = np.zeros_like(Delta_theta_2_ct)
 
 show_flag = False
 compute_X0mm_space_integrals = True
@@ -138,35 +134,21 @@ for fiber_length in fiber_lengths:
     if not os.path.exists(plot_save_path):
         os.makedirs(plot_save_path)
     #
-    results_path_co = '../results_' + str(length_setup) + '/' + str(num_only_co_pumps) + '_co/'
     results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
-    results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
     noise_path = '../noises/'
 
     # retrieve ASE and SIGNAL power at receiver
     X_ct = np.zeros_like(
         np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(gain_dB_list)))
     )
-    X_ct = np.zeros_like(X_co)
-    X_bi = np.zeros_like(X_co)
-    X_none = np.zeros_like(X_co)
     
-    T_co = np.zeros_like(X_co)
     T_ct = np.zeros_like(X_ct)
-    T_bi = np.zeros_like(X_co)
-    T_none = np.zeros_like(X_co)
 
-    ase_co = np.zeros_like(X_co)
     ase_ct = np.zeros_like(X_ct)
-    ase_bi = np.zeros_like(X_co)
 
-    power_at_receiver_co = np.zeros_like(X_co)
     power_at_receiver_ct = np.zeros_like(X_ct)
-    power_at_receiver_bi = np.zeros_like(X_co)
     
-    all_co_pumps = np.zeros((len(power_dBm_list), 4))
     all_ct_pumps = np.zeros((len(power_dBm_list), 4))
-    all_bi_pumps = np.zeros((len(power_dBm_list), 6))
 
     avg_pump_dBm_ct = np.zeros((len(power_dBm_list)))
 
@@ -174,53 +156,30 @@ for fiber_length in fiber_lengths:
     for gain_idx, gain_dB in enumerate(gain_dB_list):
       for pow_idx, power_dBm in enumerate(power_dBm_list):
           # PUMP power evolution
-          pump_solution_co = np.load(results_path_co + 'pump_solution_co_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
           pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-          pump_solution_bi = np.load(results_path_bi + 'pump_solution_bi_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
 
           # SIGNAL power evolution
-          signal_solution_co = np.load(results_path_co + 'signal_solution_co_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
           signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-          signal_solution_bi = np.load(results_path_bi + 'signal_solution_bi_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
 
           # ASE power evolution
-          ase_solution_co = np.load(results_path_co + 'ase_solution_co_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
           ase_solution_ct = np.load(results_path_ct + 'ase_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-          ase_solution_bi = np.load(results_path_bi + 'ase_solution_bi_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
 
           z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
           # compute the X0mm coefficients given the precompute time integrals
           # FULL X0mm EVALUATION FOR EVERY m =======================
-          all_co_pumps[pow_idx, :] = watt2dBm(pump_solution_co[0, :])
           all_ct_pumps[pow_idx, :] = watt2dBm(pump_solution_ct[-1, :])
-          all_bi_pumps[pow_idx, :] = watt2dBm(np.hstack((pump_solution_bi[0, 0:2],pump_solution_bi[-1, 2:])))
-          avg_pump_dBm_co[pow_idx] = watt2dBm(np.mean(pump_solution_co[0, :]))
           avg_pump_dBm_ct[pow_idx] = watt2dBm(np.mean(pump_solution_ct[-1, :]))
-          res = pump_solution_bi[0, 0] + pump_solution_bi[0, 1]
-          for idx in [2, 3, 4, 5]:
-            res += pump_solution_bi[-1, idx]
-          avg_pump_dBm_bi[pow_idx] = watt2dBm(res/4)
 
           for coi_idx, coi in enumerate(coi_list):
-              power_at_receiver_co[coi_idx, pow_idx, gain_idx] = signal_solution_co[-1, coi_idx]
               power_at_receiver_ct[coi_idx, pow_idx, gain_idx] = signal_solution_ct[-1, coi_idx]
-              power_at_receiver_bi[coi_idx, pow_idx, gain_idx] = signal_solution_bi[-1, coi_idx]
-              ase_co[coi_idx, pow_idx, gain_idx] = ase_solution_co[-1, coi_idx]
               ase_ct[coi_idx, pow_idx, gain_idx] = ase_solution_ct[-1, coi_idx]
-              ase_bi[coi_idx, pow_idx, gain_idx] = ase_solution_bi[-1, coi_idx]
 
     # Retrieve sum of X0mm^2: noises
-    X_co =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_X_co.npy')
     X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_X_ct.npy')
-    X_bi =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_X_bi.npy')
-    X_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_X_none.npy')
     
     # Retrieve sum of X0mm^2: noises
-    T_co =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_T_co.npy')
     T_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_T_ct.npy')
-    T_bi =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_T_bi.npy')
-    T_none = np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_T_none.npy')
     # choose modulation format and compute phase noise
     M = 16
 
@@ -235,15 +194,9 @@ for fiber_length in fiber_lengths:
           constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
           for coi_idx, coi in enumerate(coi_list):
               print("\n\nreassinging delta theta")
-              Delta_theta_2_co[coi_idx,   pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_co[coi_idx,   pow_idx, gain_idx])
               Delta_theta_2_ct[coi_idx,   pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx,   pow_idx, gain_idx])
-              Delta_theta_2_bi[coi_idx,   pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_bi[coi_idx,   pow_idx, gain_idx])
-              Delta_theta_2_none[coi_idx, pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_none[coi_idx, pow_idx, gain_idx])
 
-              R_co[coi_idx, pow_idx] = constellation_variance * np.abs(T_co[coi_idx, pow_idx])
               R_ct[coi_idx, pow_idx] = constellation_variance * np.abs(T_ct[coi_idx, pow_idx])
-              R_bi[coi_idx, pow_idx] = constellation_variance * np.abs(T_bi[coi_idx, pow_idx])
-              R_none[coi_idx, pow_idx] = constellation_variance * np.abs(T_none[coi_idx, pow_idx])
 
   # ==============================
   ## PLOTTING
@@ -269,11 +222,5 @@ osnr_ct = np.ndarray(shape=(len(power_dBm_list)))
 
 
 for scan in range(len(coi_selection_average)):
-    osnr_co += 10 * np.log10(power_at_receiver_co[coi_selection_idx_average[scan], :]/   (P_A * Delta_theta_2_co[coi_selection_idx_average[scan], :] + ase_co[coi_selection_idx_average[scan], :]))
     osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :]/   (P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :] + ase_ct[coi_selection_idx_average[scan], :]))
-    osnr_bi += 10 * np.log10(power_at_receiver_bi[coi_selection_idx_average[scan], :]/   (P_A * Delta_theta_2_bi[coi_selection_idx_average[scan], :] + ase_bi[coi_selection_idx_average[scan], :]))
-    osnr_none += power_dBm_list - 3 - 10 * np.log10(P_A * Delta_theta_2_none[coi_selection_idx_average[scan], :]) - 30
-osnr_co /= len(coi_selection_idx_average)
 osnr_ct /= len(coi_selection_idx_average)
-osnr_bi /= len(coi_selection_idx_average)
-osnr_none /= len(coi_selection_idx_average)
