@@ -47,11 +47,11 @@ pump_direction = data["pump_direction"]
 num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
 gain_dB_setup=data['gain_dB_list']
-
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
-print(gain_dB_list)
+power_dBm_setup=data['power_dBm_list']
+power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
 # Manual configuration
-power_per_channel_dBm_list = np.linspace(-20, 0, 11)
+power_per_channel_dBm_list = power_dBm_list
 # Pumping scheme choice
 pumping_schemes = ['ct']
 num_only_co_pumps = 4
@@ -287,6 +287,9 @@ for fiber_length in fiber_lengths:
 		Solver for the counterpropagating case
 		'''
 		def ct_solver(power_per_channel_dBm):
+			if not os.path.exists(results_path_ct + "pump_solution_ct_power"   + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy"):
+				print("\tResult already computed!")
+				return
 			#print("Power per channel: ", power_per_channel_dBm, "dBm")
 			num_pumps = num_only_ct_pumps
 			pump_band_b = lambda2nu(1480e-9)
