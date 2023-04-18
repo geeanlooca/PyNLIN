@@ -213,7 +213,7 @@ full_coi = [i + 1 for i in range(50)]
 h_planck = 6.626e-34
 edfa_noise = np.ndarray(shape=(len(coi_list), len(gain_dB_list)))
 NG = 2
-B = baud_rate
+B = channel_spacing
 for chan_idx, freq in enumerate(freq_list):
   for gain_idx, gain_dB in enumerate(gain_dB_list):
     G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
@@ -223,7 +223,7 @@ osnr_ct = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 nlin = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 edfa_ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
-rec_pow_average = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+rec_pow = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 
 ase_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
 nli_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
@@ -240,14 +240,15 @@ for pow_idx, power in enumerate(power_dBm_list):
     nlin[pow_idx, gain_idx]            = np.sum(pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx], axis=0)
     ase[pow_idx, gain_idx]             = np.sum(ase_vec[:, pow_idx, gain_idx])
     edfa_ase[pow_idx, gain_idx]        = np.sum(edfa_noise[:, gain_idx])
-    rec_pow_average[pow_idx, gain_idx] = np.sum(pow_vec[:, pow_idx, gain_idx])
-    osnr_ct[pow_idx, gain_idx]         = np.sum(10 * np.log10(pow_vec[:, pow_idx, gain_idx]/(ase_vec[:, pow_idx, gain_idx] + edfa_noise[:, gain_idx] +pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx])))
+    rec_pow[pow_idx, gain_idx] = np.sum(pow_vec[:, pow_idx, gain_idx])
+    # suppose to have full power restoration
+    osnr_ct[pow_idx, gain_idx]         = np.sum(10 * np.log10(dBm2watt(power)/(ase_vec[:, pow_idx, gain_idx] + edfa_noise[:, gain_idx] +pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx])))
 
 osnr_ct /=             len(coi_selection_idx_average)
 nlin /=                len(coi_selection_idx_average)
 ase /=                 len(coi_selection_idx_average)
 edfa_ase /=            len(coi_selection_idx_average)
-rec_pow_average /=     len(coi_selection_idx_average)
+rec_pow /=     len(coi_selection_idx_average)
 
 
 print("Plotting...")
@@ -255,16 +256,16 @@ print("Plotting...")
 #print(nlin)
 # sb.heatmap(nlin, annot=False,  linewidths=0.0)
 # sb.heatmap(nlin, annot=False,  linewidths=0.0)
-fig = plt.imshow(np.flip(nlin, axis=0), extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]), cmap='nipy_spectral', aspect='auto')
+# fig = plt.imshow(np.flip(osnr_ct, axis=0), extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]), cmap='nipy_spectral', aspect='auto')
+# plt.ylabel(r"Signal input power [dBm]")
+# plt.xlabel(r"DRA gain [dB]")
+# plt.colorbar()
+# plt.show()
 
-# plt.imshow(osnr_ct, cmap='hot', interpolation='nearest')
+plt.contour(osnr_ct, levels=16, extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]))
 plt.ylabel(r"Signal input power [dBm]")
 plt.xlabel(r"DRA gain [dB]")
 plt.colorbar()
-# plt.minorticks_on()
-# plt.tight_layout()
-# # plt.xticks(power_dBm_list, power_dBm_list)
-# # plt.yticks(gain_dB_list, gain_dB_list)
 plt.show()
 
 print("Done!")
