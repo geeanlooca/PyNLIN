@@ -348,6 +348,7 @@ for fiber_length in fiber_lengths:
 			np.save(results_path_ct + "pump_solution_ct_power"   + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_solution_ct)
 			np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", signal_solution_ct)
 			np.save(results_path_ct + "ase_solution_ct_"    + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", ase_solution_ct)
+			print(pump_solution_ct[-1])
 			return
 
 

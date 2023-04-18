@@ -85,8 +85,13 @@ file_length = time_integral_length
 noise_path = '../noises/'
 if not os.path.exists(noise_path):
 		os.makedirs(noise_path)
+                
 
 for fiber_length in fiber_lengths:
+  X_ct = np.zeros_like(
+      np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(gain_dB_list)))
+  )
+  T_ct = np.zeros_like(X_ct)
   for gain_idx, gain_dB in enumerate(gain_dB_list):
     print("Computing gain", gain_dB)
     length_setup = int(fiber_length * 1e-3)
@@ -94,11 +99,7 @@ for fiber_length in fiber_lengths:
     results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
 
     # overall NLIN sum of variances for all m
-    X_ct = np.zeros_like(
-        np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(gain_dB_list)))
-    )
 
-    T_ct = np.zeros_like(X_ct)
     
     '''
     load the fB(z) function and compute the space integral
@@ -118,9 +119,7 @@ for fiber_length in fiber_lengths:
 
       # compute fB squaring
       pump_solution_ct = np.divide(pump_solution_ct, pump_solution_ct[0, :])
-
       sampled_fB_ct = np.divide(signal_solution_ct, signal_solution_ct[0, :])
-
       z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
       # compute the X0mm coefficients given the precompute time integrals
@@ -194,7 +193,6 @@ for fiber_length in fiber_lengths:
                     2 * partial_collision_margin]
             fB_ct = interp1d(z_max, sampled_fB_ct[:, incremental], kind='linear')
 
-
             X0mm_ct = pynlin.nlin.Xhkm_precomputed(z, I, amplification_function=fB_ct(z))
 
             X_ct_pow[coi_idx] += (np.sum(np.abs(X0mm_ct)**2))
@@ -204,6 +202,7 @@ for fiber_length in fiber_lengths:
             
             gamma_srsn = fiber.gamma 
             T_ct_pow[coi_idx] +=   (np.sum(np.abs(2*j*gamma_srsn+c_r[incremental]/2)**2 * np.abs(X0mm_ct)**2))
+      print("\nd'iocan:", X_ct_pow)
       return [[X_ct_pow], [T_ct_pow]]
 
 
@@ -211,8 +210,10 @@ for fiber_length in fiber_lengths:
     with Pool(os.cpu_count()) as p:
       result = p.map(space_integral_power, power_dBm_list)
     for pp_idx, pp in enumerate(power_dBm_list):
-      X_ct[:,   pp_idx, gain_idx] =   result[pp_idx][0][0]
-      T_ct[:,   pp_idx, gain_idx] =   result[pp_idx][1][0]
+      X_ct[:, pp_idx, gain_idx] =   result[pp_idx][0][0]
+      T_ct[:, pp_idx, gain_idx] =   result[pp_idx][1][0]
+    print("\n\t result for gain: ", gain_dB, " = ", X_ct)
+
 
   if "X" in compute:
     np.save(noise_path+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy', X_ct)

@@ -171,9 +171,9 @@ for fiber_length in fiber_lengths:
 
     # Retrieve sum of X0mm^2: noises
     M = 16
+    X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
+    print(X_ct[1, :, :])
     for gain_idx, gain_dB in enumerate(gain_dB_list):
-      X_ct[:, :, gain_idx] =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
-      print(X_ct)
       for pow_idx, power_dBm in enumerate(power_dBm_list):
           average_power = dBm2watt(power_dBm)
           qam = pynlin.constellations.QAM(M)
@@ -218,9 +218,9 @@ for chan_idx, freq in enumerate(freq_list):
     G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
     edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) 
 
-osnr_ct = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
-nlin = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
-ase = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
+osnr_ct = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+nlin = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 # vectorized over power and gain
 for scan in range(len(coi_selection_average)):
   nlin += np.transpose([P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :, ii] for ii in range(len(gain_dB_list))])
@@ -231,10 +231,10 @@ nlin /= len(coi_selection_idx_average)
 ase /= len(coi_selection_idx_average)
 
 print("Plotting...")
-plt.imshow(ase, cmap='hot', interpolation='nearest')
+plt.imshow(osnr_ct, cmap='hot', interpolation='nearest')
 plt.xlabel('input power')
 plt.ylabel('gain')
-plt.xticks(power_dBm_list, power_dBm_list)
-plt.yticks(gain_dB_list, gain_dB_list)
+# plt.xticks(power_dBm_list, power_dBm_list)
+# plt.yticks(gain_dB_list, gain_dB_list)
 plt.show()
 print("Done!")
