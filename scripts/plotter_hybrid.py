@@ -25,6 +25,7 @@ import json
 import pickle
 from matplotlib.lines import Line2D
 
+f = open("./scripts/sim_config.json")
 data = json.load(f)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
@@ -143,20 +144,16 @@ for fiber_length in fiber_lengths:
     )
     
     T_ct = np.zeros_like(X_ct)
-
     ase_ct = np.zeros_like(X_ct)
-
     power_at_receiver_ct = np.zeros_like(X_ct)
-    
     all_ct_pumps = np.zeros((len(power_dBm_list), 4))
-
     avg_pump_dBm_ct = np.zeros((len(power_dBm_list)))
 
 
     for gain_idx, gain_dB in enumerate(gain_dB_list):
       for pow_idx, power_dBm in enumerate(power_dBm_list):
           # PUMP power evolution
-          pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
+          pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_power' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
           # SIGNAL power evolution
           signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
           # ASE power evolution
@@ -173,14 +170,10 @@ for fiber_length in fiber_lengths:
               ase_ct[coi_idx, pow_idx, gain_idx] = ase_solution_ct[-1, coi_idx]
 
     # Retrieve sum of X0mm^2: noises
-    X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_X_ct.npy')
-    
-    # Retrieve sum of X0mm^2: noises
-    T_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + "_opt_gain_" + str(gain_dB) + '_ct_T_ct.npy')
-    # choose modulation format and compute phase noise
     M = 16
-
     for gain_idx, gain_dB in enumerate(gain_dB_list):
+      X_ct[:, :, gain_idx] =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
+      print(X_ct)
       for pow_idx, power_dBm in enumerate(power_dBm_list):
           average_power = dBm2watt(power_dBm)
           qam = pynlin.constellations.QAM(M)
@@ -190,9 +183,8 @@ for fiber_length in fiber_lengths:
           qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power / baud_rate)
           constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
           for coi_idx, coi in enumerate(coi_list):
-              print("\n\nreassinging delta theta")
-              Delta_theta_2_ct[coi_idx,   pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx,   pow_idx, gain_idx])
-              R_ct[coi_idx, pow_idx] = constellation_variance * np.abs(T_ct[coi_idx, pow_idx])
+              #print("\n\nreassinging delta theta")
+              Delta_theta_2_ct[coi_idx, pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx, pow_idx, gain_idx])
 
 # ==============================
 # PLOTTING
@@ -223,16 +215,26 @@ edfa_noise = np.ndarray(shape=(len(coi_list), len(gain_dB_list)))
 NG = 2
 for chan_idx, freq in enumerate(freq_list):
   for gain_idx, gain_dB in enumerate(gain_dB_list):
-    G = 10^((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
+    G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
     edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) 
 
 osnr_ct = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
-
+nlin = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
+ase = np.ndarray(shape=(len(power_dBm_list), len(gain_dB_list)))
 # vectorized over power and gain
 for scan in range(len(coi_selection_average)):
-  osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :, :]/   (P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :, :] + ase_ct[coi_selection_idx_average[scan], :, :]))
+  nlin += np.transpose([P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :, ii] for ii in range(len(gain_dB_list))])
+  ase  += ase_ct[coi_selection_idx_average[scan], :, :]
+  osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :, :]/   (nlin  + ase_ct[coi_selection_idx_average[scan], :, :]))
 osnr_ct /= len(coi_selection_idx_average)
+nlin /= len(coi_selection_idx_average)
+ase /= len(coi_selection_idx_average)
 
-
-plt.imshow(osnr_ct, cmap='hot', interpolation='nearest')
+print("Plotting...")
+plt.imshow(ase, cmap='hot', interpolation='nearest')
+plt.xlabel('input power')
+plt.ylabel('gain')
+plt.xticks(power_dBm_list, power_dBm_list)
+plt.yticks(gain_dB_list, gain_dB_list)
 plt.show()
+print("Done!")
