@@ -47,6 +47,8 @@ num_only_ct_pumps=data['num_only_ct_pumps']
 gain_dB_setup=data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 total_gain_dB = 0.0
+power_dBm_setup=data['power_dBm_list']
+power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
@@ -87,7 +89,6 @@ def EVM_to_BER(evm):
 
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
-power_dBm_list = np.linspace(-20, 0, 11)
 power_list = dBm2watt(power_dBm_list)
 coi_list = [0, 9, 19, 29, 39, 49]
 
@@ -172,7 +173,6 @@ for fiber_length in fiber_lengths:
     # Retrieve sum of X0mm^2: noises
     M = 16
     X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
-    print(X_ct[1, :, :])
     for gain_idx, gain_dB in enumerate(gain_dB_list):
       for pow_idx, power_dBm in enumerate(power_dBm_list):
           average_power = dBm2watt(power_dBm)
@@ -213,28 +213,58 @@ full_coi = [i + 1 for i in range(50)]
 h_planck = 6.626e-34
 edfa_noise = np.ndarray(shape=(len(coi_list), len(gain_dB_list)))
 NG = 2
+B = baud_rate
 for chan_idx, freq in enumerate(freq_list):
   for gain_idx, gain_dB in enumerate(gain_dB_list):
     G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
-    edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) 
+    edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) * B
 
 osnr_ct = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 nlin = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
-# vectorized over power and gain
+edfa_ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+rec_pow_average = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+
+ase_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
+nli_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
+pow_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
+
+# channel selection 
 for scan in range(len(coi_selection_average)):
-  nlin += np.transpose([P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :, ii] for ii in range(len(gain_dB_list))])
-  ase  += ase_ct[coi_selection_idx_average[scan], :, :]
-  osnr_ct += 10 * np.log10(power_at_receiver_ct[coi_selection_idx_average[scan], :, :]/   (nlin  + ase_ct[coi_selection_idx_average[scan], :, :]))
-osnr_ct /= len(coi_selection_idx_average)
-nlin /= len(coi_selection_idx_average)
-ase /= len(coi_selection_idx_average)
+  ase_vec[scan, :, :] = ase_ct[coi_selection_idx_average[scan], :, :]
+  nli_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]
+  pow_vec[scan, :, :] = Delta_theta_2_ct[coi_selection_idx_average[scan], :, :]
+
+for pow_idx, power in enumerate(power_dBm_list):
+  for gain_idx, gain in enumerate(gain_dB_list):
+    nlin[pow_idx, gain_idx]            = np.sum(pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx], axis=0)
+    ase[pow_idx, gain_idx]             = np.sum(ase_vec[:, pow_idx, gain_idx])
+    edfa_ase[pow_idx, gain_idx]        = np.sum(edfa_noise[:, gain_idx])
+    rec_pow_average[pow_idx, gain_idx] = np.sum(pow_vec[:, pow_idx, gain_idx])
+    osnr_ct[pow_idx, gain_idx]         = np.sum(10 * np.log10(pow_vec[:, pow_idx, gain_idx]/(ase_vec[:, pow_idx, gain_idx] + edfa_noise[:, gain_idx] +pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx])))
+
+osnr_ct /=             len(coi_selection_idx_average)
+nlin /=                len(coi_selection_idx_average)
+ase /=                 len(coi_selection_idx_average)
+edfa_ase /=            len(coi_selection_idx_average)
+rec_pow_average /=     len(coi_selection_idx_average)
+
 
 print("Plotting...")
-plt.imshow(osnr_ct, cmap='hot', interpolation='nearest')
-plt.xlabel('input power')
-plt.ylabel('gain')
-# plt.xticks(power_dBm_list, power_dBm_list)
-# plt.yticks(gain_dB_list, gain_dB_list)
+
+#print(nlin)
+# sb.heatmap(nlin, annot=False,  linewidths=0.0)
+# sb.heatmap(nlin, annot=False,  linewidths=0.0)
+fig = plt.imshow(np.flip(nlin, axis=0), extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]), cmap='nipy_spectral', aspect='auto')
+
+# plt.imshow(osnr_ct, cmap='hot', interpolation='nearest')
+plt.ylabel(r"Signal input power [dBm]")
+plt.xlabel(r"DRA gain [dB]")
+plt.colorbar()
+# plt.minorticks_on()
+# plt.tight_layout()
+# # plt.xticks(power_dBm_list, power_dBm_list)
+# # plt.yticks(gain_dB_list, gain_dB_list)
 plt.show()
+
 print("Done!")
