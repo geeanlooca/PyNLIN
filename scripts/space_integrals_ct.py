@@ -45,6 +45,8 @@ num_only_co_pumps=data['num_only_co_pumps']
 num_only_ct_pumps=data['num_only_ct_pumps']
 gain_dB_setup=data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
+power_dBm_setup=data['power_dBm_list']
+power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
 
 plt.rcParams['mathtext.fontset'] = 'stix'
 plt.rcParams['font.family'] = 'STIXGeneral'
@@ -53,8 +55,7 @@ plt.rcParams['font.size'] = '24'
 
 # PLOTTING PARAMETERS
 interfering_grid_index = 1
-#power_dBm_list = [-20, -10, -5, 0]
-power_dBm_list = np.linspace(-20, 0, 11)
+
 arity_list = [16]
 coi_list = [0, 9, 19, 29, 39, 49]
 
