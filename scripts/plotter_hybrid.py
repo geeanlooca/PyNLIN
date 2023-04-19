@@ -24,6 +24,7 @@ from scipy.special import erfc
 import json
 import pickle
 from matplotlib.lines import Line2D
+import plotly.graph_objects as go
 
 f = open("./scripts/sim_config.json")
 data = json.load(f)
@@ -128,63 +129,63 @@ f_39_49 = h5py.File(time_integrals_results_path + '39_49_results.h5', 'r')
 file_length = time_integral_length
 
 for fiber_length in fiber_lengths:
-    length_setup = int(fiber_length * 1e-3)
-    plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_" + \
-        str(length_setup) + '/' + str(num_co) + '_co_' + \
-        str(num_ct) + '_ct_' + special + '/'
-    #
-    if not os.path.exists(plot_save_path):
-        os.makedirs(plot_save_path)
-    #
-    results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
-    noise_path = '../noises/'
+		length_setup = int(fiber_length * 1e-3)
+		plot_save_path = "/home/lorenzi/Scrivania/progetti/NLIN/plots_" + \
+				str(length_setup) + '/' + str(num_co) + '_co_' + \
+				str(num_ct) + '_ct_' + special + '/'
+		#
+		if not os.path.exists(plot_save_path):
+				os.makedirs(plot_save_path)
+		#
+		results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
+		noise_path = '../noises/'
 
-    # retrieve ASE and SIGNAL power at receiver
-    X_ct = np.zeros_like(
-        np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(gain_dB_list)))
-    )
-    
-    T_ct = np.zeros_like(X_ct)
-    ase_ct = np.zeros_like(X_ct)
-    power_at_receiver_ct = np.zeros_like(X_ct)
-    all_ct_pumps = np.zeros((len(power_dBm_list), 4))
-    avg_pump_dBm_ct = np.zeros((len(power_dBm_list)))
+		# retrieve ASE and SIGNAL power at receiver
+		X_ct = np.zeros_like(
+				np.ndarray(shape=(len(coi_list), len(power_dBm_list), len(gain_dB_list)))
+		)
+		
+		T_ct = np.zeros_like(X_ct)
+		ase_ct = np.zeros_like(X_ct)
+		power_at_receiver_ct = np.zeros_like(X_ct)
+		all_ct_pumps = np.zeros((len(power_dBm_list), 4))
+		avg_pump_dBm_ct = np.zeros((len(power_dBm_list)))
 
 
-    for gain_idx, gain_dB in enumerate(gain_dB_list):
-      for pow_idx, power_dBm in enumerate(power_dBm_list):
-          # PUMP power evolution
-          pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_power' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-          # SIGNAL power evolution
-          signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-          # ASE power evolution
-          ase_solution_ct = np.load(results_path_ct + 'ase_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
-          z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
+		for gain_idx, gain_dB in enumerate(gain_dB_list):
+			for pow_idx, power_dBm in enumerate(power_dBm_list):
+					# PUMP power evolution
+					pump_solution_ct = np.load(results_path_ct + 'pump_solution_ct_power' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
+					# SIGNAL power evolution
+					signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
+					# ASE power evolution
+					ase_solution_ct = np.load(results_path_ct + 'ase_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB)  + '.npy')
+					z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
 
-          # compute the X0mm coefficients given the precompute time integrals
-          # FULL X0mm EVALUATION FOR EVERY m =======================
-          all_ct_pumps[pow_idx, :] = watt2dBm(pump_solution_ct[-1, :])
-          avg_pump_dBm_ct[pow_idx] = watt2dBm(np.mean(pump_solution_ct[-1, :]))
+					# compute the X0mm coefficients given the precompute time integrals
+					# FULL X0mm EVALUATION FOR EVERY m =======================
+					all_ct_pumps[pow_idx, :] = watt2dBm(pump_solution_ct[-1, :])
+					avg_pump_dBm_ct[pow_idx] = watt2dBm(np.mean(pump_solution_ct[-1, :]))
 
-          for coi_idx, coi in enumerate(coi_list):
-              power_at_receiver_ct[coi_idx, pow_idx, gain_idx] = signal_solution_ct[-1, coi_idx]
-              ase_ct[coi_idx, pow_idx, gain_idx] = ase_solution_ct[-1, coi_idx]
+					for coi_idx, coi in enumerate(coi_list):
+							power_at_receiver_ct[coi_idx, pow_idx, gain_idx] = signal_solution_ct[-1, coi_idx]
+							ase_ct[coi_idx, pow_idx, gain_idx] = ase_solution_ct[-1, coi_idx]
 
-    # Retrieve sum of X0mm^2: noises
-    M = 16
-    X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
-    for gain_idx, gain_dB in enumerate(gain_dB_list):
-      for pow_idx, power_dBm in enumerate(power_dBm_list):
-          average_power = dBm2watt(power_dBm)
-          qam = pynlin.constellations.QAM(M)
-          qam_symbols = qam.symbols()
+		# Retrieve sum of X0mm^2: noises
+		M = 16
+		X_ct =   np.load('../noises/'+str(length_setup) + '_' + str(num_co) + '_co_' + str(num_ct) + '_ct_X_ct.npy')
+		for gain_idx, gain_dB in enumerate(gain_dB_list):
+			for pow_idx, power_dBm in enumerate(power_dBm_list):
+					average_power = dBm2watt(power_dBm)
+					qam = pynlin.constellations.QAM(M)
+					qam_symbols = qam.symbols()
 
-          # assign specific average optical energy
-          qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power / baud_rate)
-          constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
-          for coi_idx, coi in enumerate(coi_list):
-              #print("\n\nreassinging delta theta")
-              Delta_theta_2_ct[coi_idx, pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx, pow_idx, gain_idx])
+					# assign specific average optical energy
+					qam_symbols = qam_symbols / np.sqrt(np.mean(np.abs(qam_symbols)**2)) * np.sqrt(average_power / baud_rate)
+					constellation_variance = (np.mean(np.abs(qam_symbols)**4) - np.mean(np.abs(qam_symbols)**2) ** 2)
+					for coi_idx, coi in enumerate(coi_list):
+							#print("\n\nreassinging delta theta")
+							Delta_theta_2_ct[coi_idx, pow_idx, gain_idx] =   16/9 * fiber.gamma**2 * constellation_variance * np.abs(X_ct[coi_idx, pow_idx, gain_idx])
 
 # ==============================
 # PLOTTING
@@ -199,9 +200,7 @@ freq_list = [wdm.frequency_grid()[_] for _ in coi_list]
 coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 5]
 coi_selection_average = [0, 9, 19, 29, 39, 49]
-coi_selection_average = [0]
 coi_selection_idx_average = [0, 1, 2, 3, 4, 5]
-coi_selection_idx_average = [0]
 
 
 selected_power = -14.0
@@ -217,14 +216,16 @@ edfa_noise = np.ndarray(shape=(len(coi_list), len(gain_dB_list)))
 NG = 2
 B = baud_rate
 for chan_idx, freq in enumerate(freq_list):
-  for gain_idx, gain_dB in enumerate(gain_dB_list):
-    G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
-    edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) * B
+	for gain_idx, gain_dB in enumerate(gain_dB_list):
+		G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
+		edfa_noise[chan_idx, gain_idx] = h_planck * freq * NG * (G - 1) * B
 
 osnr_ct = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+osnr_ct_no_edfa_noise = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 nlin = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 ase_raman = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+nlin_raman = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 edfa_ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 rec_pow = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 out_pow = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
@@ -235,61 +236,98 @@ pow_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(g
 
 # channel selection 
 for scan in range(len(coi_selection_average)):
-  ase_vec[scan, :, :] = ase_ct[coi_selection_idx_average[scan], :, :]
-  pow_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]
-  nli_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]*Delta_theta_2_ct[coi_selection_idx_average[scan], :, :]
+	ase_vec[scan, :, :] = ase_ct[coi_selection_idx_average[scan], :, :]
+	pow_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]
+	nli_vec[scan, :, :] = np.transpose([P_A * Delta_theta_2_ct[coi_selection_idx_average[scan], :, _] for _ in range(len(gain_dB_list))] )
 
 for pow_idx, power in enumerate(power_dBm_list):
-  for gain_idx, gain in enumerate(gain_dB_list):
-    edfa_gain_dB = -gain
-    edfa_gain_lin = 10**(edfa_gain_dB/10)
-    print("gain         dB : ", gain)
-    print("egain        dB : ", 10*np.log10(edfa_gain_lin))
-    print("overall_gain dB : ", gain+10*np.log10(edfa_gain_lin))
-    nlin[pow_idx, gain_idx]     = edfa_gain_lin* np.sum(nli_vec[:, pow_idx, gain_idx], axis=0)
-    ase[pow_idx, gain_idx]      = edfa_gain_lin* np.sum(ase_vec[:, pow_idx, gain_idx])
-    ase_raman[pow_idx, gain_idx]= np.sum(ase_vec[:, pow_idx, gain_idx])
+	for gain_idx, gain in enumerate(gain_dB_list):
+		edfa_gain_dB = -gain
+		edfa_gain_lin = 10**(edfa_gain_dB/10)
+		print("gain         dB : ", gain)
+		print("egain        dB : ", 10*np.log10(edfa_gain_lin))
+		print("overall_gain dB : ", gain+10*np.log10(edfa_gain_lin))
+		nlin[pow_idx, gain_idx]     = edfa_gain_lin* np.sum(nli_vec[:, pow_idx, gain_idx], axis=0)
+		ase[pow_idx, gain_idx]      = edfa_gain_lin* np.sum(ase_vec[:, pow_idx, gain_idx])
+		ase_raman[pow_idx, gain_idx] = np.sum(ase_vec[:, pow_idx, gain_idx])
+		nlin_raman[pow_idx, gain_idx] = np.sum(nli_vec[:, pow_idx, gain_idx], axis=0)
 
-    edfa_ase[pow_idx, gain_idx] = np.sum(edfa_noise[:, gain_idx])
-    rec_pow[pow_idx, gain_idx]  = np.sum(pow_vec[:, pow_idx, gain_idx])
-    out_pow[pow_idx, gain_idx]  = edfa_gain_lin* np.sum(pow_vec[:, pow_idx, gain_idx])
-    # suppose to have full power restoration
-    #print("edfa residual gain: ", edfa_gain_lin)
-    osnr_ct[pow_idx, gain_idx]  = np.sum(10 * np.log10( (edfa_gain_lin*pow_vec[:, pow_idx, gain_idx])/(edfa_noise[:, gain_idx] + edfa_gain_lin*(ase_vec[:, pow_idx, gain_idx] + nli_vec[:, pow_idx, gain_idx]))  ))
-    #osnr_ct[pow_idx, gain_idx]  = np.sum(10 * np.log10(  dBm2watt(power)/(edfa_gain_lin*(ase_vec[:, pow_idx, gain_idx] + pow_vec[:, pow_idx, gain_idx]*nli_vec[:, pow_idx, gain_idx]))  ))
-    print("In power                 : ", power)
-    print("Raman out power          : ", watt2dBm(sum(pow_vec[:, pow_idx, gain_idx])/len(coi_selection_idx_average)))
-    print("Predicted Raman out power: ", power+gain)
-    print("Out power                : ", watt2dBm(sum(edfa_gain_lin * pow_vec[:, pow_idx, gain_idx]) /len
-    (coi_selection_idx_average)))
-    print("\n")
-osnr_ct /=  len(coi_selection_idx_average)
-nlin /=     len(coi_selection_idx_average)
-ase /=      len(coi_selection_idx_average)
-ase_raman /=      len(coi_selection_idx_average)
+		edfa_ase[pow_idx, gain_idx] = np.sum(edfa_noise[:, gain_idx])
+		rec_pow[pow_idx, gain_idx]  = np.sum(pow_vec[:, pow_idx, gain_idx])
+		out_pow[pow_idx, gain_idx]  = edfa_gain_lin* np.sum(pow_vec[:, pow_idx, gain_idx])
+		print("sum", np.sum(pow_vec[:, pow_idx, gain_idx]))
+		print("non sum", pow_vec[:, pow_idx, gain_idx] )
+
+		# suppose to have full power restoration
+		#print("edfa residual gain: ", edfa_gain_lin)
+		osnr_ct[pow_idx, gain_idx]  = 10 * np.log10( 
+					 np.sum(
+					 (edfa_gain_lin*pow_vec[:, pow_idx, gain_idx]) / (edfa_noise[:, gain_idx]
+																													+ edfa_gain_lin*(ase_vec[:, pow_idx, gain_idx] + nli_vec[:, pow_idx, gain_idx]) )
+																													/len(coi_selection_idx_average) 
+						)
+		)
+		osnr_ct_no_edfa_noise[pow_idx, gain_idx]  = 10 * np.log10( 
+					 np.sum(
+					 (edfa_gain_lin*pow_vec[:, pow_idx, gain_idx]) / (edfa_gain_lin*(ase_vec[:, pow_idx, gain_idx] + nli_vec[:, pow_idx, gain_idx]) )
+																													/len(coi_selection_idx_average) 
+						)
+		)
+		print("In power                 : ", power)
+		print("Raman out power          : ", watt2dBm(sum(pow_vec[:, pow_idx, gain_idx])/len(coi_selection_idx_average)))
+		print("Predicted Raman out power: ", power+gain)
+		print("Out power                : ", watt2dBm(sum(edfa_gain_lin * pow_vec[:, pow_idx, gain_idx]) /len
+		(coi_selection_idx_average)))
+		print("\n")
+nlin /=       len(coi_selection_idx_average)
+ase /=        len(coi_selection_idx_average)
+ase_raman /=  len(coi_selection_idx_average)
 
 edfa_ase /= len(coi_selection_idx_average)
 rec_pow /=  len(coi_selection_idx_average)
 out_pow /=  len(coi_selection_idx_average)
 
-osnr_ct = 10 * np.log10( (out_pow/(edfa_ase + ase + nlin)))
-
 print("Plotting...")
 
-#print(nlin)
-# sb.heatmap(nlin, annot=False,  linewidths=0.0)
-# sb.heatmap(nlin, annot=False,  linewidths=0.0)
-# fig = plt.imshow(np.flip(osnr_ct, axis=0), extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]), cmap='nipy_spectral', aspect='auto')
+# plt.contour(osnr_ct, levels=14, extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]), cm='inferno', label=r"total OSNR [dB]")
+
 # plt.ylabel(r"Signal input power [dBm]")
 # plt.xlabel(r"DRA gain [dB]")
 # plt.colorbar()
 # plt.show()
 
-plt.contour(osnr_ct, levels=30, extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]))
+def contour_plot(z, title):
+	fig = go.Figure(data=
+		go.Contour(z=z,
+							 x=gain_dB_list, 
+							 y=power_dBm_list,
+							line_smoothing=0,
+							contours=dict(
+											showlabels = True, # show labels on contours
+											labelfont = dict( # label font properties
+													size = 20,
+													color = 'black',
+											)
+							),
+							colorbar=dict(
+									title=title, # title here
+									titleside='right'),
+			),
+		)
+	fig.update_layout(
+			autosize=False,
+			width=700,
+			height=700,
+			yaxis=dict(title=r"Input power [dBm]"),
+			xaxis=dict(title=r"DRA gain [dB]")
+	)
+	fig.show()
+	return
 
-plt.ylabel(r"Signal input power [dBm]")
-plt.xlabel(r"DRA gain [dB]")
-plt.colorbar()
-plt.show()
+contour_plot(osnr_ct,        r'total OSNR [dB]')
+contour_plot(watt2dBm(ase+edfa_ase), r'output ASE (DRA+EDFA) [dBm]')
+contour_plot(watt2dBm(nlin), r'output NLIN [dBm]')
+contour_plot(watt2dBm(ase_raman), r'end of Raman span ASE [dBm]')
+contour_plot(watt2dBm(nlin_raman), r'end of Raman span NLIN [dBm]')
 
 print("Done!")
