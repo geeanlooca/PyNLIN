@@ -66,7 +66,7 @@ for fiber_length in fiber_lengths:
     interfering_grid_index = 1
     #power_dBm_list = [-20, -10, -5, 0]
     power_dBm_list = [0.0, -10.0, -20.0]
-    power_dBm_list = [-6.0]
+    power_dBm_list = [-20.0, -10.0, 0.0]
 
     arity_list = [16]
 
@@ -108,6 +108,7 @@ for fiber_length in fiber_lengths:
     coi_list = [0, 24, 49]
     #if input("\nASE-Signal_pump profile plotter: \n\t>Length= " + str(length_setup) + "km \n\t>power list= " + str(power_dBm_list) + "\nAre you sure? (y/[n])") != "y":
     #   exit()
+    gain_dB = 0.0
     configs = [[num_co, num_ct]]
     for config in configs:
         num_co = config[0]
@@ -125,8 +126,8 @@ for fiber_length in fiber_lengths:
 
             pump_solution_ct = np.load(
                 results_path_ct + 'pump_solution_ct_' + str(power_dBm) + '.npy')
-            signal_solution_ct = np.load(
-                results_path_ct + 'signal_solution_ct_' + str(power_dBm) + '.npy')
+            signal_solution_ct = np.load(results_path_ct + 'signal_solution_ct_' + str(power_dBm)+ "_opt_gain_" + str(gain_dB) + '.npy')
+
             ase_solution_ct = np.load(
                 results_path_ct + 'ase_solution_ct_' + str(power_dBm) + '.npy')
 

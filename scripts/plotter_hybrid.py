@@ -196,11 +196,13 @@ aspect_ratio = 10/7
 markers = ["x", "+", "o", "o", "x", "+"]
 wavelength_list = [nu2lambda(wdm.frequency_grid()[_]) * 1e6 for _ in coi_list]
 freq_list = [wdm.frequency_grid()[_] for _ in coi_list]
-
 coi_selection = [0, 19, 49]
 coi_selection_idx = [0, 2, 5]
 coi_selection_average = [0, 9, 19, 29, 39, 49]
+coi_selection_average = [0]
 coi_selection_idx_average = [0, 1, 2, 3, 4, 5]
+coi_selection_idx_average = [0]
+
 
 selected_power = -14.0
 pow_idx = np.where(power_dBm_list == selected_power)[0]
@@ -213,7 +215,7 @@ full_coi = [i + 1 for i in range(50)]
 h_planck = 6.626e-34
 edfa_noise = np.ndarray(shape=(len(coi_list), len(gain_dB_list)))
 NG = 2
-B = channel_spacing
+B = baud_rate
 for chan_idx, freq in enumerate(freq_list):
   for gain_idx, gain_dB in enumerate(gain_dB_list):
     G = 10**((total_gain_dB-gain_dB)/10) # the remaining part of the gain for full compensation
@@ -222,8 +224,10 @@ for chan_idx, freq in enumerate(freq_list):
 osnr_ct = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 nlin = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+ase_raman = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 edfa_ase = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 rec_pow = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
+out_pow = np.zeros(shape=(len(power_dBm_list), len(gain_dB_list)))
 
 ase_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
 nli_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(gain_dB_list)))
@@ -232,24 +236,43 @@ pow_vec = np.zeros(shape=(len(coi_selection_average), len(power_dBm_list), len(g
 # channel selection 
 for scan in range(len(coi_selection_average)):
   ase_vec[scan, :, :] = ase_ct[coi_selection_idx_average[scan], :, :]
-  nli_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]
-  pow_vec[scan, :, :] = Delta_theta_2_ct[coi_selection_idx_average[scan], :, :]
+  pow_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]
+  nli_vec[scan, :, :] = power_at_receiver_ct[coi_selection_idx_average[scan], :, :]*Delta_theta_2_ct[coi_selection_idx_average[scan], :, :]
 
 for pow_idx, power in enumerate(power_dBm_list):
   for gain_idx, gain in enumerate(gain_dB_list):
-    nlin[pow_idx, gain_idx]            = np.sum(pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx], axis=0)
-    ase[pow_idx, gain_idx]             = np.sum(ase_vec[:, pow_idx, gain_idx])
-    edfa_ase[pow_idx, gain_idx]        = np.sum(edfa_noise[:, gain_idx])
-    rec_pow[pow_idx, gain_idx] = np.sum(pow_vec[:, pow_idx, gain_idx])
+    edfa_gain_dB = -gain
+    edfa_gain_lin = 10**(edfa_gain_dB/10)
+    print("gain         dB : ", gain)
+    print("egain        dB : ", 10*np.log10(edfa_gain_lin))
+    print("overall_gain dB : ", gain+10*np.log10(edfa_gain_lin))
+    nlin[pow_idx, gain_idx]     = edfa_gain_lin* np.sum(nli_vec[:, pow_idx, gain_idx], axis=0)
+    ase[pow_idx, gain_idx]      = edfa_gain_lin* np.sum(ase_vec[:, pow_idx, gain_idx])
+    ase_raman[pow_idx, gain_idx]= np.sum(ase_vec[:, pow_idx, gain_idx])
+
+    edfa_ase[pow_idx, gain_idx] = np.sum(edfa_noise[:, gain_idx])
+    rec_pow[pow_idx, gain_idx]  = np.sum(pow_vec[:, pow_idx, gain_idx])
+    out_pow[pow_idx, gain_idx]  = edfa_gain_lin* np.sum(pow_vec[:, pow_idx, gain_idx])
     # suppose to have full power restoration
-    osnr_ct[pow_idx, gain_idx]         = np.sum(10 * np.log10(dBm2watt(power)/(ase_vec[:, pow_idx, gain_idx] + edfa_noise[:, gain_idx] +pow_vec[:, pow_idx, gain_idx] * nli_vec[:, pow_idx, gain_idx])))
+    #print("edfa residual gain: ", edfa_gain_lin)
+    osnr_ct[pow_idx, gain_idx]  = np.sum(10 * np.log10( (edfa_gain_lin*pow_vec[:, pow_idx, gain_idx])/(edfa_noise[:, gain_idx] + edfa_gain_lin*(ase_vec[:, pow_idx, gain_idx] + nli_vec[:, pow_idx, gain_idx]))  ))
+    #osnr_ct[pow_idx, gain_idx]  = np.sum(10 * np.log10(  dBm2watt(power)/(edfa_gain_lin*(ase_vec[:, pow_idx, gain_idx] + pow_vec[:, pow_idx, gain_idx]*nli_vec[:, pow_idx, gain_idx]))  ))
+    print("In power                 : ", power)
+    print("Raman out power          : ", watt2dBm(sum(pow_vec[:, pow_idx, gain_idx])/len(coi_selection_idx_average)))
+    print("Predicted Raman out power: ", power+gain)
+    print("Out power                : ", watt2dBm(sum(edfa_gain_lin * pow_vec[:, pow_idx, gain_idx]) /len
+    (coi_selection_idx_average)))
+    print("\n")
+osnr_ct /=  len(coi_selection_idx_average)
+nlin /=     len(coi_selection_idx_average)
+ase /=      len(coi_selection_idx_average)
+ase_raman /=      len(coi_selection_idx_average)
 
-osnr_ct /=             len(coi_selection_idx_average)
-nlin /=                len(coi_selection_idx_average)
-ase /=                 len(coi_selection_idx_average)
-edfa_ase /=            len(coi_selection_idx_average)
-rec_pow /=     len(coi_selection_idx_average)
+edfa_ase /= len(coi_selection_idx_average)
+rec_pow /=  len(coi_selection_idx_average)
+out_pow /=  len(coi_selection_idx_average)
 
+osnr_ct = 10 * np.log10( (out_pow/(edfa_ase + ase + nlin)))
 
 print("Plotting...")
 
@@ -262,7 +285,8 @@ print("Plotting...")
 # plt.colorbar()
 # plt.show()
 
-plt.contour(osnr_ct, levels=16, extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]))
+plt.contour(osnr_ct, levels=30, extent=(gain_dB_list[0], gain_dB_list[-1], power_dBm_list[0],power_dBm_list[-1]))
+
 plt.ylabel(r"Signal input power [dBm]")
 plt.xlabel(r"DRA gain [dB]")
 plt.colorbar()

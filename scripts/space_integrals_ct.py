@@ -41,7 +41,7 @@ num_ct = data["num_ct"]
 wavelength = data["wavelength"]
 time_integral_length = data['time_integral_length']
 special = data['special']
-num_only_co_pumps=data['num_only_co_pumps']
+num_only_co_pumps=data['num_only_co_pumps'] 
 num_only_ct_pumps=data['num_only_ct_pumps']
 gain_dB_setup=data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
@@ -203,7 +203,6 @@ for fiber_length in fiber_lengths:
             
             gamma_srsn = fiber.gamma 
             T_ct_pow[coi_idx] +=   (np.sum(np.abs(2*j*gamma_srsn+c_r[incremental]/2)**2 * np.abs(X0mm_ct)**2))
-      print("\nd'iocan:", X_ct_pow)
       return [[X_ct_pow], [T_ct_pow]]
 
 
