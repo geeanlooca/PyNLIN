@@ -53,7 +53,7 @@ power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_s
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
 # Pumping scheme choice
-pumping_schemes = ['ct']
+pumping_schemes = ['co']
 num_only_co_pumps = 4
 num_only_ct_pumps = 4
 optimize = True
@@ -84,7 +84,7 @@ partial_collision_margin = 5
 points_per_collision = 10
 
 for fiber_length in fiber_lengths:
-	for gain_dB in gain_dB_list:
+	for gain_dB in gain_dB_list:				
 		length_setup = int(fiber_length * 1e-3)
 		optimization_result_path_co = '../results_' + str(length_setup) + '/optimization_gain_'+ str(gain_dB) + '_scheme__' + str(num_only_co_pumps) + '_co/'
 		optimization_result_path_ct = '../results_' + str(length_setup) + '/optimization_gain_'+ str(gain_dB) + '_scheme__' + str(num_only_ct_pumps) + '_ct/'
@@ -94,10 +94,6 @@ for fiber_length in fiber_lengths:
 		results_path_ct = '../results_' + str(length_setup) + '/' + str(num_only_ct_pumps) + '_ct/'
 		results_path_bi = '../results_' + str(length_setup) + '/' + str(num_co) + '_co_' + str(num_ct) + '_ct_' + special + '/'
 		#
-	#
-
-		
-		
 
 		time_integrals_results_path = '../results/'
 
@@ -220,6 +216,12 @@ for fiber_length in fiber_lengths:
 		Solver for the copropagating case
 		'''
 		def co_solver(power_per_channel_dBm):
+			print("computing co...")
+			if os.path.exists(results_path_co + "pump_solution_co_"   + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy"):
+				print("Result already computed for power: ", power_per_channel_dBm, " and gain: ", gain_dB)
+				return
+			else:
+				print("Computing the power: ", power_per_channel_dBm, " and gain: ", gain_dB)
 			#print("Power per channel: ", power_per_channel_dBm, "dBm")
 			num_pumps = num_only_co_pumps
 			pump_band_b = lambda2nu(1510e-9)
@@ -259,13 +261,13 @@ for fiber_length in fiber_lengths:
 
 			pump_wavelengths_co, pump_powers_co = optimizer.optimize(
 				target_spectrum=target_spectrum,
-				epochs=4000,
+				epochs=700,
 				learning_rate=learning_rate,
 				lock_wavelengths=150
 			)
 
-			np.save(optimization_result_path_co+"opt_wavelengths_co"+str(power_per_channel_dBm)+".npy", pump_wavelengths_co)
-			np.save(optimization_result_path_co+"opt_powers_co"+str(power_per_channel_dBm)+".npy", pump_powers_co)
+			np.save(optimization_result_path_co+"opt_wavelengths_co"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB)+".npy", pump_wavelengths_co)
+			np.save(optimization_result_path_co+"opt_powers_co"+str(power_per_channel_dBm)+ "_opt_gain_" + str(gain_dB)+".npy", pump_powers_co)
 
 			amplifier = NumpyRamanAmplifier(fiber)
 
@@ -287,9 +289,11 @@ for fiber_length in fiber_lengths:
 		Solver for the counterpropagating case
 		'''
 		def ct_solver(power_per_channel_dBm):
-			if not os.path.exists(results_path_ct + "pump_solution_ct_power"   + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy"):
-				print("\tResult already computed!")
+			if os.path.exists(results_path_ct + "pump_solution_ct_power"   + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy"):
+				print("Result already computed for power: ", power_per_channel_dBm, " and gain: ", gain_dB)
 				return
+			else:
+				print("Computing the power: ", power_per_channel_dBm, " and gain: ", gain_dB)
 			#print("Power per channel: ", power_per_channel_dBm, "dBm")
 			num_pumps = num_only_ct_pumps
 			pump_band_b = lambda2nu(1480e-9)
@@ -333,8 +337,8 @@ for fiber_length in fiber_lengths:
 				learning_rate=learning_rate,
 				lock_wavelengths=200,
 			)
-			np.save(optimization_result_path_ct + "opt_wavelengths_ct" + str(power_per_channel_dBm) + ".npy", pump_wavelengths_ct)
-			np.save(optimization_result_path_ct + "opt_powers_ct" + str(power_per_channel_dBm) + ".npy", pump_powers_ct)
+			np.save(optimization_result_path_ct + "opt_wavelengths_ct" + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB)+ ".npy", pump_wavelengths_ct)
+			np.save(optimization_result_path_ct + "opt_powers_ct" + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB)+ ".npy", pump_powers_ct)
 
 			amplifier = NumpyRamanAmplifier(fiber)
 

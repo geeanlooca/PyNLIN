@@ -268,7 +268,7 @@ for fiber_length in fiber_lengths:
                 plt.show()
 
             plt.tight_layout()
-            plt.savefig(plot_save_path + "ct_signals" + str(power_dBm) + ".pdf")
+            plt.savefig(plot_save_path + "ct_signals" + str(power_dBm) + "_gain_" + str(gain_dB)+ ".pdf")
 
             #########
             fig1, (ax) = plt.subplots(nrows=1, figsize=(plot_width, 6))
@@ -361,7 +361,7 @@ for fiber_length in fiber_lengths:
 
             ######### pumps ct
             fig1, (ax) = plt.subplots(nrows=1, figsize=(plot_width, 6))
-            pump_wavelengths_ct = 1e6*np.load(optimized_result_path_ct+'opt_wavelengths_ct' + str(power_dBm) + '.npy')
+            pump_wavelengths_ct = 1e6*np.load(optimized_result_path_ct+'opt_wavelengths_ct' + str(power_dBm)+ "_gain_" + str(gain_dB) + '.npy')
 
             lambda_max = np.max(pump_wavelengths_ct)
             lambda_min = np.min(pump_wavelengths_ct)
@@ -393,7 +393,7 @@ for fiber_length in fiber_lengths:
             # print(pump_wavelengths_ct)
             clb.set_label(r"Pump wavelenght [$\mu$m]", labelpad=5)
 
-            plt.savefig(plot_save_path + "ct_pumps" + str(power_dBm) + ".pdf")
+            plt.savefig(plot_save_path + "ct_pumps" + str(power_dBm) + "_gain_" + str(gain_dB)+ ".pdf")
             
 
             ######### pumps co
