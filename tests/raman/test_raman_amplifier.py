@@ -29,10 +29,10 @@ def test_raman_amplifier():
 
     z = np.linspace(0, fiber_length, num_points)
 
-    pump_solution, signal_solution = amplifier.solve(
+    pump_solution, signal_solution, ase_solution = amplifier.solve(
         signal_powers, signal_wavelengths, pump_powers, pump_wavelengths, z
     )
-    pump_solution_off, signal_solution_off = amplifier.solve(
+    pump_solution_off, signal_solution_off, ase_solution = amplifier.solve(
         signal_powers, signal_wavelengths, 0 * pump_powers, pump_wavelengths, z
     )
 
@@ -53,7 +53,7 @@ def test_raman_amplifier_counterpumping_with_power_at_z0():
 
     z = np.linspace(0, fiber_length, num_points)
 
-    pump_solution, signal_solution = amplifier.solve(
+    pump_solution, signal_solution, ase_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
         pump_powers,
@@ -89,7 +89,7 @@ def test_raman_amplifier_counterpumping_with_power_at_z0_exception():
     z = np.linspace(0, fiber_length, num_points)
 
     with pytest.raises(NotImplementedError):
-        pump_solution, signal_solution = amplifier.solve(
+        pump_solution, signal_solution, ase_solution = amplifier.solve(
             signal_powers,
             signal_wavelengths,
             pump_powers,
