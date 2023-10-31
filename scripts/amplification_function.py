@@ -1,7 +1,4 @@
-import argparse
-import math
 import os
-import wave
 import tqdm
 import pynlin
 import pynlin.wdm
@@ -13,14 +10,11 @@ from multiprocessing import Pool
 import numpy as np
 import torch
 from scipy.constants import lambda2nu, nu2lambda
-from scipy.interpolate import interp1d
 
-from pynlin.fiber import Fiber
 from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
 from pynlin.raman.pytorch.solvers import RamanAmplifier
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
-from pynlin.wdm import WDM
 import pynlin.constellations
 from random import shuffle
 import json

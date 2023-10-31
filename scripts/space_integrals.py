@@ -1,9 +1,6 @@
-import argparse
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import numpy as np
 import h5py
-import math
 import os
 from scipy.interpolate import interp1d
 import tqdm
@@ -12,16 +9,11 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
-from pynlin.fiber import Fiber
-from pynlin.utils import dBm2watt, watt2dBm, nu2lambda
-from pynlin.wdm import WDM
+from pynlin.utils import dBm2watt
 import pynlin.constellations
-from scipy import optimize
-from scipy.special import erfc
 import json
 from multiprocessing import Pool
 
-from pynlin.raman.response import gain_spectrum, impulse_response
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 
 f = open("./scripts/sim_config.json")

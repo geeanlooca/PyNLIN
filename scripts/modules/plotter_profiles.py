@@ -1,22 +1,14 @@
-import argparse
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
-import h5py
-import math
 import os
-from scipy.interpolate import interp1d
-import tqdm
 import pynlin
 import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
-from pynlin.fiber import Fiber
 from pynlin.utils import dBm2watt, watt2dBm
-from pynlin.wdm import WDM
 import pynlin.constellations
-from matplotlib.patches import Arc
 from matplotlib.lines import Line2D
 import matplotlib as mpl
 import json

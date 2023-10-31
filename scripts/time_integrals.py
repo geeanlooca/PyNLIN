@@ -1,22 +1,11 @@
 
 import argparse
-import math
-import os
-import tqdm
 import pynlin
 import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
 
-import matplotlib.pyplot as plt
-import numpy as np
-from scipy.constants import lambda2nu, nu2lambda
-from scipy.interpolate import interp1d
-
-from pynlin.fiber import Fiber
-from pynlin.utils import dBm2watt, watt2dBm
-from pynlin.wdm import WDM
 import pynlin.constellations
 
 parser = argparse.ArgumentParser()

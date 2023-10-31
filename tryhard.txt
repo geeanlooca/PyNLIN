@@ -1,241 +1,0 @@
-
-Amplification function profiles: 
-	>80km 
-	>optimize=True 
-	>profiles=True 
-	>bi setup= (4_co, 8_cnt) 
-Are you sure? (y/[n])4900000000000.0
-  0%|          | 0/11 [00:00<?, ?it/s]Optimizing vs signal power:   0%|          | 0/11 [00:00<?, ?it/s]                                                                  
-Power per channel:  -20.0 dBm
-[ 1.  1.  1.  1. -1. -1. -1. -1. -1. -1. -1. -1.]
-
-Tentative:  1 
-TRYHARD PUMP FREQUENCIES:
-	
-[2.12618765e+14 2.11338700e+14 2.10058635e+14 2.08778570e+14
- 2.07498505e+14 2.06218441e+14 2.04938376e+14 2.03658311e+14
- 2.02378246e+14 2.01098181e+14 1.99818116e+14 1.98538052e+14]
-Traceback (most recent call last):
-  File "/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/bidirectional_tryharder.py", line 203, in <module>
-    pump_wavelengths_bi, pump_powers_bi = optimizer.optimize(
-  File "/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/pynlin/raman/pytorch/gain_optimizer.py", line 92, in optimize
-    loss = loss_function(signal_spectrum, _target_spectrum) + reg_lambda*loss_function(self.pump_powers)
-  File "/home/lorenzi/.local/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1110, in _call_impl
-    return forward_call(*input, **kwargs)
-TypeError: MSELoss.forward() missing 1 required positional argument: 'target'
-
-Amplification function profiles: 
-	>80km 
-	>optimize=True 
-	>profiles=True 
-	>bi setup= (4_co, 8_cnt) 
-Are you sure? (y/[n])4900000000000.0
-  0%|          | 0/11 [00:00<?, ?it/s]Optimizing vs signal power:   0%|          | 0/11 [00:00<?, ?it/s]libGL error: MESA-LOADER: failed to open iris: /home/lorenzi/anaconda3/envs/pynlinenv/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /usr/lib/dri/iris_dri.so) (search paths /usr/lib/dri, suffix _dri)
-libGL error: failed to load driver: iris
-libGL error: MESA-LOADER: failed to open iris: /home/lorenzi/anaconda3/envs/pynlinenv/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /usr/lib/dri/iris_dri.so) (search paths /usr/lib/dri, suffix _dri)
-libGL error: failed to load driver: iris
-libGL error: MESA-LOADER: failed to open swrast: /home/lorenzi/anaconda3/envs/pynlinenv/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /usr/lib/dri/swrast_dri.so) (search paths /usr/lib/dri, suffix _dri)
-libGL error: failed to load driver: swrast
-                                                                  
-Power per channel:  -20.0 dBm
-[ 1.  1.  1.  1. -1. -1. -1. -1. -1. -1. -1. -1.]
-
-Tentative:  1 
-TRYHARD PUMP FREQUENCIES:
-	
-[2.12618765e+14 2.11338700e+14 2.10058635e+14 2.08778570e+14
- 2.07498505e+14 2.06218441e+14 2.04938376e+14 2.03658311e+14
- 2.02378246e+14 2.01098181e+14 1.99818116e+14 1.98538052e+14]
-
-Flatness: 3.31 dB
-
-OPTIMIZED POWERS=  [0.06461972 0.06462796 0.06460369 0.06423172 0.00107977 0.00109167
- 0.00141437 0.0017012  0.00195331 0.00214057 0.00225798 0.00232006] 
-
-
-Satisfaction reached for wavelenfths [1410.         1418.54027862 1427.18464351 1435.9350092  1444.79333745
- 1453.76163873 1462.84197377 1472.03645506 1481.34724858 1490.77657543
- 1500.32671365 1510.        ]
-Traceback (most recent call last):
-  File "/home/lorenzi/Scrivania/progetti/NLIN/PyNLIN/scripts/bidirectional_tryharder.py", line 241, in <module>
-    plt.savefig("tryhard_no_"+str(count)+"pumps"+str(power_dBm)+ "_bi.pdf")
-NameError: name 'power_dBm' is not defined
-
-Amplification function profiles: 
-	>80km 
-	>optimize=True 
-	>profiles=True 
-	>bi setup= (4_co, 8_cnt) 
-Are you sure? (y/[n])4900000000000.0
-  0%|          | 0/11 [00:00<?, ?it/s]Optimizing vs signal power:   0%|          | 0/11 [00:00<?, ?it/s]
-Power per channel:  -20.0 dBm
-[ 1.  1.  1.  1. -1. -1. -1. -1. -1. -1. -1. -1.]
-
-Tentative:  1 
-TRYHARD PUMP FREQUENCIES:
-	
-[2.12618765e+14 2.11338700e+14 2.10058635e+14 2.08778570e+14
- 2.07498505e+14 2.06218441e+14 2.04938376e+14 2.03658311e+14
- 2.02378246e+14 2.01098181e+14 1.99818116e+14 1.98538052e+14]
-
-  0%|          | 0/500 [00:00<?, ?it/s][A
-Loss: 154.0366	Best Loss: inf	Flatness: 0.13 dB:   0%|          | 0/500 [00:00<?, ?it/s][A
-Loss: 154.0366	Best Loss: inf	Flatness: 0.13 dB:   0%|          | 1/500 [00:00<05:40,  1.46it/s][A
-Loss: 2949.9133	Best Loss: 154.0366	Flatness: 57.47 dB:   0%|          | 1/500 [00:01<05:40,  1.46it/s][A
-Loss: 2949.9133	Best Loss: 154.0366	Flatness: 57.47 dB:   0%|          | 2/500 [00:01<05:53,  1.41it/s][A
-Loss: 68.9303	Best Loss: 154.0366	Flatness: 17.68 dB:   0%|          | 2/500 [00:02<05:53,  1.41it/s]  [A
-Loss: 68.9303	Best Loss: 154.0366	Flatness: 17.68 dB:   1%|          | 3/500 [00:02<06:05,  1.36it/s][A
-Loss: 122.3046	Best Loss: 68.9303	Flatness: 22.04 dB:   1%|          | 3/500 [00:03<06:05,  1.36it/s][A
-Loss: 122.3046	Best Loss: 68.9303	Flatness: 22.04 dB:   1%|          | 4/500 [00:03<06:51,  1.21it/s][A
-Loss: 2669.0034	Best Loss: 68.9303	Flatness: 59.98 dB:   1%|          | 4/500 [00:03<06:51,  1.21it/s][A
-Loss: 2669.0034	Best Loss: 68.9303	Flatness: 59.98 dB:   1%|          | 5/500 [00:03<06:41,  1.23it/s][A
-Loss: 11143.5264	Best Loss: 68.9303	Flatness: 67.02 dB:   1%|          | 5/500 [00:04<06:41,  1.23it/s][A
-Loss: 11143.5264	Best Loss: 68.9303	Flatness: 67.02 dB:   1%|          | 6/500 [00:04<06:35,  1.25it/s][A
-Loss: 43.1617	Best Loss: 68.9303	Flatness: 2.31 dB:   1%|          | 6/500 [00:05<06:35,  1.25it/s]    [A
-Loss: 43.1617	Best Loss: 68.9303	Flatness: 2.31 dB:   1%|▏         | 7/500 [00:05<06:32,  1.26it/s][A
-Loss: 98.2340	Best Loss: 43.1617	Flatness: 23.03 dB:   1%|▏         | 7/500 [00:06<06:32,  1.26it/s][A
-Loss: 98.2340	Best Loss: 43.1617	Flatness: 23.03 dB:   2%|▏         | 8/500 [00:06<07:07,  1.15it/s][A
-Loss: 2539.8687	Best Loss: 43.1617	Flatness: 62.62 dB:   2%|▏         | 8/500 [00:07<07:07,  1.15it/s][A
-Loss: 2539.8687	Best Loss: 43.1617	Flatness: 62.62 dB:   2%|▏         | 9/500 [00:07<07:04,  1.16it/s][A
-Loss: 135338.0625	Best Loss: 43.1617	Flatness: 74.74 dB:   2%|▏         | 9/500 [00:08<07:04,  1.16it/s][A
-Loss: 135338.0625	Best Loss: 43.1617	Flatness: 74.74 dB:   2%|▏         | 10/500 [00:08<06:37,  1.23it/s][A
-Loss: 429.8205	Best Loss: 43.1617	Flatness: 40.55 dB:   2%|▏         | 10/500 [00:09<06:37,  1.23it/s]   [A
-Loss: 429.8205	Best Loss: 43.1617	Flatness: 40.55 dB:   2%|▏         | 11/500 [00:09<07:00,  1.16it/s][A
-Loss: 11.8073	Best Loss: 43.1617	Flatness: 12.29 dB:   2%|▏         | 11/500 [00:10<07:00,  1.16it/s] [A
-Loss: 11.8073	Best Loss: 43.1617	Flatness: 12.29 dB:   2%|▏         | 12/500 [00:10<07:25,  1.10it/s][A
-Loss: 48.3040	Best Loss: 11.8073	Flatness: 3.28 dB:   2%|▏         | 12/500 [00:10<07:25,  1.10it/s] [A
-Loss: 48.3040	Best Loss: 11.8073	Flatness: 3.28 dB:   3%|▎         | 13/500 [00:10<07:11,  1.13it/s][A
-Loss: 58.4047	Best Loss: 11.8073	Flatness: 18.39 dB:   3%|▎         | 13/500 [00:11<07:11,  1.13it/s][A
-Loss: 58.4047	Best Loss: 11.8073	Flatness: 18.39 dB:   3%|▎         | 14/500 [00:11<06:58,  1.16it/s][A
-Loss: 364.7460	Best Loss: 11.8073	Flatness: 36.74 dB:   3%|▎         | 14/500 [00:12<06:58,  1.16it/s][A
-Loss: 364.7460	Best Loss: 11.8073	Flatness: 36.74 dB:   3%|▎         | 15/500 [00:12<06:54,  1.17it/s][A
-Loss: 45180.2383	Best Loss: 11.8073	Flatness: 73.10 dB:   3%|▎         | 15/500 [00:13<06:54,  1.17it/s][A
-Loss: 45180.2383	Best Loss: 11.8073	Flatness: 73.10 dB:   3%|▎         | 16/500 [00:13<06:40,  1.21it/s][A
-Loss: 6066.3926	Best Loss: 11.8073	Flatness: 66.06 dB:   3%|▎         | 16/500 [00:14<06:40,  1.21it/s] [A
-Loss: 6066.3926	Best Loss: 11.8073	Flatness: 66.06 dB:   3%|▎         | 17/500 [00:14<06:27,  1.25it/s][A
-Loss: 2574.5923	Best Loss: 11.8073	Flatness: 62.06 dB:   3%|▎         | 17/500 [00:14<06:27,  1.25it/s][A
-Loss: 2574.5923	Best Loss: 11.8073	Flatness: 62.06 dB:   4%|▎         | 18/500 [00:14<06:21,  1.26it/s][A
-Loss: 13280.3828	Best Loss: 11.8073	Flatness: 68.71 dB:   4%|▎         | 18/500 [00:15<06:21,  1.26it/s][A
-Loss: 13280.3828	Best Loss: 11.8073	Flatness: 68.71 dB:   4%|▍         | 19/500 [00:15<06:17,  1.27it/s][A
-Loss: 4477.0229	Best Loss: 11.8073	Flatness: 64.87 dB:   4%|▍         | 19/500 [00:16<06:17,  1.27it/s] [A
-Loss: 4477.0229	Best Loss: 11.8073	Flatness: 64.87 dB:   4%|▍         | 20/500 [00:16<06:17,  1.27it/s][A
-Loss: 86533.0938	Best Loss: 11.8073	Flatness: 75.01 dB:   4%|▍         | 20/500 [00:17<06:17,  1.27it/s][A
-Loss: 86533.0938	Best Loss: 11.8073	Flatness: 75.01 dB:   4%|▍         | 21/500 [00:17<06:26,  1.24it/s][A
-Loss: 170.3902	Best Loss: 11.8073	Flatness: 25.37 dB:   4%|▍         | 21/500 [00:18<06:26,  1.24it/s]  [A
-Loss: 170.3902	Best Loss: 11.8073	Flatness: 25.37 dB:   4%|▍         | 22/500 [00:18<06:22,  1.25it/s][A
-Loss: 13.6623	Best Loss: 11.8073	Flatness: 10.22 dB:   4%|▍         | 22/500 [00:18<06:22,  1.25it/s] [A
-Loss: 13.6623	Best Loss: 11.8073	Flatness: 10.22 dB:   5%|▍         | 23/500 [00:18<06:22,  1.25it/s][A
-Loss: 25.2692	Best Loss: 11.8073	Flatness: 4.36 dB:   5%|▍         | 23/500 [00:19<06:22,  1.25it/s] [A
-Loss: 25.2692	Best Loss: 11.8073	Flatness: 4.36 dB:   5%|▍         | 24/500 [00:19<06:20,  1.25it/s][A
-Loss: 37.7878	Best Loss: 11.8073	Flatness: 8.43 dB:   5%|▍         | 24/500 [00:20<06:20,  1.25it/s][A
-Loss: 37.7878	Best Loss: 11.8073	Flatness: 8.43 dB:   5%|▌         | 25/500 [00:20<06:20,  1.25it/s][A
-Loss: 22.1312	Best Loss: 11.8073	Flatness: 14.45 dB:   5%|▌         | 25/500 [00:21<06:20,  1.25it/s][A
-Loss: 22.1312	Best Loss: 11.8073	Flatness: 14.45 dB:   5%|▌         | 26/500 [00:21<06:20,  1.25it/s][A
-Loss: 30.4011	Best Loss: 11.8073	Flatness: 20.03 dB:   5%|▌         | 26/500 [00:22<06:20,  1.25it/s][A
-Loss: 30.4011	Best Loss: 11.8073	Flatness: 20.03 dB:   5%|▌         | 27/500 [00:22<06:18,  1.25it/s][A
-Loss: 69.8505	Best Loss: 11.8073	Flatness: 25.83 dB:   5%|▌         | 27/500 [00:22<06:18,  1.25it/s][A
-Loss: 69.8505	Best Loss: 11.8073	Flatness: 25.83 dB:   6%|▌         | 28/500 [00:22<06:16,  1.25it/s][A
-Loss: 136.1541	Best Loss: 11.8073	Flatness: 31.64 dB:   6%|▌         | 28/500 [00:23<06:16,  1.25it/s][A
-Loss: 136.1541	Best Loss: 11.8073	Flatness: 31.64 dB:   6%|▌         | 29/500 [00:23<06:15,  1.25it/s][A
-Loss: 224.9164	Best Loss: 11.8073	Flatness: 37.38 dB:   6%|▌         | 29/500 [00:24<06:15,  1.25it/s][A
-Loss: 224.9164	Best Loss: 11.8073	Flatness: 37.38 dB:   6%|▌         | 30/500 [00:24<06:25,  1.22it/s][A
-Loss: 347.2861	Best Loss: 11.8073	Flatness: 43.46 dB:   6%|▌         | 30/500 [00:25<06:25,  1.22it/s][A
-Loss: 347.2861	Best Loss: 11.8073	Flatness: 43.46 dB:   6%|▌         | 31/500 [00:25<06:18,  1.24it/s][A
-Loss: 793.4796	Best Loss: 11.8073	Flatness: 56.01 dB:   6%|▌         | 31/500 [00:26<06:18,  1.24it/s][A
-Loss: 793.4796	Best Loss: 11.8073	Flatness: 56.01 dB:   6%|▋         | 32/500 [00:26<06:19,  1.23it/s][A
-Loss: 120437.2969	Best Loss: 11.8073	Flatness: 81.25 dB:   6%|▋         | 32/500 [00:26<06:19,  1.23it/s][A
-Loss: 120437.2969	Best Loss: 11.8073	Flatness: 81.25 dB:   7%|▋         | 33/500 [00:26<06:09,  1.26it/s][A
-Loss: 304.6650	Best Loss: 11.8073	Flatness: 41.32 dB:   7%|▋         | 33/500 [00:27<06:09,  1.26it/s]   [A
-Loss: 304.6650	Best Loss: 11.8073	Flatness: 41.32 dB:   7%|▋         | 34/500 [00:27<06:09,  1.26it/s][A
-Loss: 145.8297	Best Loss: 11.8073	Flatness: 31.91 dB:   7%|▋         | 34/500 [00:28<06:09,  1.26it/s][A
-Loss: 145.8297	Best Loss: 11.8073	Flatness: 31.91 dB:   7%|▋         | 35/500 [00:28<06:08,  1.26it/s][A
-Loss: 68.3466	Best Loss: 11.8073	Flatness: 25.02 dB:   7%|▋         | 35/500 [00:29<06:08,  1.26it/s] [A
-Loss: 68.3466	Best Loss: 11.8073	Flatness: 25.02 dB:   7%|▋         | 36/500 [00:29<06:15,  1.23it/s][A
-Loss: 31.9617	Best Loss: 11.8073	Flatness: 19.65 dB:   7%|▋         | 36/500 [00:30<06:15,  1.23it/s][A
-Loss: 31.9617	Best Loss: 11.8073	Flatness: 19.65 dB:   7%|▋         | 37/500 [00:30<06:15,  1.23it/s][A
-Loss: 20.5541	Best Loss: 11.8073	Flatness: 15.52 dB:   7%|▋         | 37/500 [00:30<06:15,  1.23it/s][A
-Loss: 20.5541	Best Loss: 11.8073	Flatness: 15.52 dB:   8%|▊         | 38/500 [00:30<06:15,  1.23it/s][A
-Loss: 22.7961	Best Loss: 11.8073	Flatness: 12.23 dB:   8%|▊         | 38/500 [00:31<06:15,  1.23it/s][A
-Loss: 22.7961	Best Loss: 11.8073	Flatness: 12.23 dB:   8%|▊         | 39/500 [00:31<06:17,  1.22it/s][A
-Loss: 31.8796	Best Loss: 11.8073	Flatness: 9.47 dB:   8%|▊         | 39/500 [00:32<06:17,  1.22it/s] [A
-Loss: 31.8796	Best Loss: 11.8073	Flatness: 9.47 dB:   8%|▊         | 40/500 [00:32<06:18,  1.22it/s][A
-Loss: 43.6093	Best Loss: 11.8073	Flatness: 7.08 dB:   8%|▊         | 40/500 [00:33<06:18,  1.22it/s][A
-Loss: 43.6093	Best Loss: 11.8073	Flatness: 7.08 dB:   8%|▊         | 41/500 [00:33<06:12,  1.23it/s][A
-Loss: 54.7644	Best Loss: 11.8073	Flatness: 4.98 dB:   8%|▊         | 41/500 [00:34<06:12,  1.23it/s][A
-Loss: 54.7644	Best Loss: 11.8073	Flatness: 4.98 dB:   8%|▊         | 42/500 [00:34<06:08,  1.24it/s][A
-Loss: 58.4909	Best Loss: 11.8073	Flatness: 3.82 dB:   8%|▊         | 42/500 [00:35<06:08,  1.24it/s][A
-Loss: 58.4909	Best Loss: 11.8073	Flatness: 3.82 dB:   9%|▊         | 43/500 [00:35<06:54,  1.10it/s][A
-Loss: 49.9117	Best Loss: 11.8073	Flatness: 4.58 dB:   9%|▊         | 43/500 [00:36<06:54,  1.10it/s][A
-Loss: 49.9117	Best Loss: 11.8073	Flatness: 4.58 dB:   9%|▉         | 44/500 [00:36<07:15,  1.05it/s][A
-Loss: 39.4041	Best Loss: 11.8073	Flatness: 5.77 dB:   9%|▉         | 44/500 [00:37<07:15,  1.05it/s][A
-Loss: 39.4041	Best Loss: 11.8073	Flatness: 5.77 dB:   9%|▉         | 45/500 [00:37<07:14,  1.05it/s][A
-Loss: 29.4737	Best Loss: 11.8073	Flatness: 7.24 dB:   9%|▉         | 45/500 [00:38<07:14,  1.05it/s][A
-Loss: 29.4737	Best Loss: 11.8073	Flatness: 7.24 dB:   9%|▉         | 46/500 [00:38<06:52,  1.10it/s][A
-Loss: 22.6054	Best Loss: 11.8073	Flatness: 8.60 dB:   9%|▉         | 46/500 [00:38<06:52,  1.10it/s][A
-Loss: 22.6054	Best Loss: 11.8073	Flatness: 8.60 dB:   9%|▉         | 47/500 [00:38<06:46,  1.11it/s][A
-Loss: 18.1267	Best Loss: 11.8073	Flatness: 9.87 dB:   9%|▉         | 47/500 [00:39<06:46,  1.11it/s][A
-Loss: 18.1267	Best Loss: 11.8073	Flatness: 9.87 dB:  10%|▉         | 48/500 [00:39<06:52,  1.10it/s][A
-Loss: 15.4975	Best Loss: 11.8073	Flatness: 11.05 dB:  10%|▉         | 48/500 [00:40<06:52,  1.10it/s][A
-Loss: 15.4975	Best Loss: 11.8073	Flatness: 11.05 dB:  10%|▉         | 49/500 [00:40<06:44,  1.12it/s][A
-Loss: 14.2860	Best Loss: 11.8073	Flatness: 12.13 dB:  10%|▉         | 49/500 [00:41<06:44,  1.12it/s][A
-Loss: 14.2860	Best Loss: 11.8073	Flatness: 12.13 dB:  10%|█         | 50/500 [00:41<06:34,  1.14it/s][A
-Loss: 14.1482	Best Loss: 11.8073	Flatness: 13.13 dB:  10%|█         | 50/500 [00:42<06:34,  1.14it/s][A
-Loss: 14.1482	Best Loss: 11.8073	Flatness: 13.13 dB:  10%|█         | 51/500 [00:42<06:19,  1.18it/s][A
-Loss: 14.8107	Best Loss: 11.8073	Flatness: 14.04 dB:  10%|█         | 51/500 [00:43<06:19,  1.18it/s][A
-Loss: 14.8107	Best Loss: 11.8073	Flatness: 14.04 dB:  10%|█         | 52/500 [00:43<06:11,  1.21it/s][A
-Loss: 16.0576	Best Loss: 11.8073	Flatness: 14.89 dB:  10%|█         | 52/500 [00:43<06:11,  1.21it/s][A
-Loss: 16.0576	Best Loss: 11.8073	Flatness: 14.89 dB:  11%|█         | 53/500 [00:43<06:02,  1.23it/s][A
-Loss: 17.7186	Best Loss: 11.8073	Flatness: 15.66 dB:  11%|█         | 53/500 [00:44<06:02,  1.23it/s][A
-Loss: 17.7186	Best Loss: 11.8073	Flatness: 15.66 dB:  11%|█         | 54/500 [00:44<05:56,  1.25it/s][A
-Loss: 19.6603	Best Loss: 11.8073	Flatness: 16.36 dB:  11%|█         | 54/500 [00:45<05:56,  1.25it/s][A
-Loss: 19.6603	Best Loss: 11.8073	Flatness: 16.36 dB:  11%|█         | 55/500 [00:45<05:52,  1.26it/s][A
-Loss: 21.7789	Best Loss: 11.8073	Flatness: 17.00 dB:  11%|█         | 55/500 [00:46<05:52,  1.26it/s][A
-Loss: 21.7789	Best Loss: 11.8073	Flatness: 17.00 dB:  11%|█         | 56/500 [00:46<05:59,  1.23it/s][A
-Loss: 23.9943	Best Loss: 11.8073	Flatness: 17.59 dB:  11%|█         | 56/500 [00:47<05:59,  1.23it/s][A
-Loss: 23.9943	Best Loss: 11.8073	Flatness: 17.59 dB:  11%|█▏        | 57/500 [00:47<06:09,  1.20it/s][A
-Loss: 26.2449	Best Loss: 11.8073	Flatness: 18.13 dB:  11%|█▏        | 57/500 [00:48<06:09,  1.20it/s][A
-Loss: 26.2449	Best Loss: 11.8073	Flatness: 18.13 dB:  12%|█▏        | 58/500 [00:48<06:08,  1.20it/s][A
-Loss: 28.4846	Best Loss: 11.8073	Flatness: 18.62 dB:  12%|█▏        | 58/500 [00:48<06:08,  1.20it/s][A
-Loss: 28.4846	Best Loss: 11.8073	Flatness: 18.62 dB:  12%|█▏        | 59/500 [00:48<06:19,  1.16it/s][A
-Loss: 30.6791	Best Loss: 11.8073	Flatness: 19.07 dB:  12%|█▏        | 59/500 [00:49<06:19,  1.16it/s][A
-Loss: 30.6791	Best Loss: 11.8073	Flatness: 19.07 dB:  12%|█▏        | 60/500 [00:49<06:15,  1.17it/s][A
-Loss: 32.8036	Best Loss: 11.8073	Flatness: 19.47 dB:  12%|█▏        | 60/500 [00:50<06:15,  1.17it/s][A
-Loss: 32.8036	Best Loss: 11.8073	Flatness: 19.47 dB:  12%|█▏        | 61/500 [00:50<06:21,  1.15it/s][A
-Loss: 34.8405	Best Loss: 11.8073	Flatness: 19.84 dB:  12%|█▏        | 61/500 [00:51<06:21,  1.15it/s][A
-Loss: 34.8405	Best Loss: 11.8073	Flatness: 19.84 dB:  12%|█▏        | 62/500 [00:51<06:37,  1.10it/s][A
-Loss: 36.7784	Best Loss: 11.8073	Flatness: 20.18 dB:  12%|█▏        | 62/500 [00:52<06:37,  1.10it/s][A
-Loss: 36.7784	Best Loss: 11.8073	Flatness: 20.18 dB:  13%|█▎        | 63/500 [00:52<07:04,  1.03it/s][A
-Loss: 38.6103	Best Loss: 11.8073	Flatness: 20.49 dB:  13%|█▎        | 63/500 [00:53<07:04,  1.03it/s][A
-Loss: 38.6103	Best Loss: 11.8073	Flatness: 20.49 dB:  13%|█▎        | 64/500 [00:53<06:47,  1.07it/s][A
-Loss: 40.3327	Best Loss: 11.8073	Flatness: 20.77 dB:  13%|█▎        | 64/500 [00:54<06:47,  1.07it/s][A
-Loss: 40.3327	Best Loss: 11.8073	Flatness: 20.77 dB:  13%|█▎        | 65/500 [00:54<06:34,  1.10it/s][A
-Loss: 41.9448	Best Loss: 11.8073	Flatness: 21.02 dB:  13%|█▎        | 65/500 [00:55<06:34,  1.10it/s][A
-Loss: 41.9448	Best Loss: 11.8073	Flatness: 21.02 dB:  13%|█▎        | 66/500 [00:55<07:00,  1.03it/s][A
-Loss: 43.4478	Best Loss: 11.8073	Flatness: 21.25 dB:  13%|█▎        | 66/500 [00:56<07:00,  1.03it/s][A
-Loss: 43.4478	Best Loss: 11.8073	Flatness: 21.25 dB:  13%|█▎        | 67/500 [00:56<07:34,  1.05s/it][A
-Loss: 44.8446	Best Loss: 11.8073	Flatness: 21.46 dB:  13%|█▎        | 67/500 [00:57<07:34,  1.05s/it][A
-Loss: 44.8446	Best Loss: 11.8073	Flatness: 21.46 dB:  14%|█▎        | 68/500 [00:57<07:31,  1.05s/it][A
-Amplification function profiles: 
-	>80km 
-	>optimize=True 
-	>profiles=True 
-	>bi setup= (4_co, 8_cnt) 
-Are you sure? (y/[n])4900000000000.0
-  0%|          | 0/11 [00:00<?, ?it/s]Optimizing vs signal power:   0%|          | 0/11 [00:00<?, ?it/s]
-Power per channel:  -20.0 dBm
-[ 1.  1.  1.  1. -1. -1. -1. -1. -1. -1. -1. -1.]
-
-Tentative:  1 
-TRYHARD PUMP FREQUENCIES:
-	
-[2.12618765e+14 2.11338700e+14 2.10058635e+14 2.08778570e+14
- 2.07498505e+14 2.06218441e+14 2.04938376e+14 2.03658311e+14
- 2.02378246e+14 2.01098181e+14 1.99818116e+14 1.98538052e+14]
-
-  0%|          | 0/500 [00:00<?, ?it/s][A  0%|          | 0/500 [06:29<?, ?it/s]
-libGL error: MESA-LOADER: failed to open iris: /home/lorenzi/anaconda3/envs/pynlinenv/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /usr/lib/dri/iris_dri.so) (search paths /usr/lib/dri, suffix _dri)
-libGL error: failed to load driver: iris
-libGL error: MESA-LOADER: failed to open iris: /home/lorenzi/anaconda3/envs/pynlinenv/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /usr/lib/dri/iris_dri.so) (search paths /usr/lib/dri, suffix _dri)
-libGL error: failed to load driver: iris
-libGL error: MESA-LOADER: failed to open swrast: /home/lorenzi/anaconda3/envs/pynlinenv/bin/../lib/libstdc++.so.6: version `GLIBCXX_3.4.29' not found (required by /usr/lib/dri/swrast_dri.so) (search paths /usr/lib/dri, suffix _dri)
-libGL error: failed to load driver: swrast

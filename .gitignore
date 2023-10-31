@@ -130,5 +130,9 @@ tests/reports/
 # Numpy caching
 *.npy
 
+# results and media folders
+results 
+media
+
 Pipfile
 Pipfile.lock

@@ -1,9 +1,7 @@
-import argparse
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 import h5py
-import math
 import os
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
@@ -13,11 +11,8 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
-from pynlin.fiber import Fiber
-from pynlin.utils import dBm2watt, watt2dBm
-from pynlin.wdm import WDM
+from pynlin.utils import dBm2watt
 import pynlin.constellations
-from matplotlib.patches import Arc
 import json
 
 f = open("./scripts/sim_config.json")
@@ -51,7 +46,7 @@ plt.rcParams['font.size'] = '24'
 #power_dBm_list = np.linspace(-20, 0, 3)
 power_dBm_list = [-6.0]
 
-# if input("\nSingle channel collision plotter: \n\t>Length= "+str(fiber_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>interfering_grid_index= "+str(interfering_grid_index)+"\nAre you sure? (y/[n])") != "y":
+# if input("\nSingle channel collision plotter: \n\t>Length= "+str(fibear_lengths)+"km \n\t>power list= "+str(power_dBm_list)+" \n\t>interfering_grid_index= "+str(interfering_grid_index)+"\nAre you sure? (y/[n])") != "y":
 #         exit()
 
 for fiber_length in fiber_lengths:

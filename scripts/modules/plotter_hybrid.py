@@ -1,29 +1,19 @@
 # This script plot
 # hybrid OSRN tradeoff vs signal input power, Raman gain
 
-import argparse
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import numpy as np
 import h5py
-import math
 import os
-from scipy.interpolate import interp1d
-import tqdm
 import pynlin
 import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
-from pynlin.fiber import Fiber
 from pynlin.utils import dBm2watt, watt2dBm, nu2lambda
-from pynlin.wdm import WDM
 import pynlin.constellations
-from scipy import optimize
 from scipy.special import erfc
 import json
-import pickle
-from matplotlib.lines import Line2D
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly as ptly
