@@ -422,7 +422,7 @@ def X0mm_time_integral(
     O = 2 * np.pi * channel_spacing
     T = pulse.T0
     beta2 = fiber.beta2
-    time_integrals = np.zeros((npoints_z,), dtype=np.complex)
+    time_integrals = np.zeros((npoints_z,), dtype=complex)
     gf = np.fft.fftshift(np.fft.fft(g))
     max_prop = 0
     for i, L in enumerate(z):
@@ -458,7 +458,7 @@ def Xhkm_time_integral(
     O = 2 * np.pi * channel_spacing
     T = pulse.T0
     beta2 = fiber.beta2
-    time_integrals = np.zeros((npoints_z,), dtype=np.complex)
+    time_integrals = np.zeros((npoints_z,), dtype=complex)
 
     for i, L in enumerate(z):
         # for each point in space, calculate the corresponding time integral
