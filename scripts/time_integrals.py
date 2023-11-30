@@ -5,7 +5,6 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
-
 import pynlin.constellations
 
 parser = argparse.ArgumentParser()
@@ -36,7 +35,7 @@ parser.add_argument(
 parser.add_argument(
     "-C",
     "--channel-count",
-    default=100,
+    default=10,
     type=int,
     help="The number of WDM channels in the grid.",
 )
@@ -75,21 +74,21 @@ wdm = pynlin.wdm.WDM(
     num_channels=num_channels,
     center_frequency=190
 )
-
-
-interfering_grid_index = 38
-# compute the collisions between the two furthest WDM channels
-frequency_of_interest = wdm.frequency_grid()[0]
-interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
-channel_spacing = interfering_frequency - frequency_of_interest
 partial_collision_margin = 5
 points_per_collision = 10
+
+# interfering_grid_index = 2
+# # compute the collisions between the two furthest WDM channels
+# frequency_of_interest = wdm.frequency_grid()[0]
+# interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
+# channel_spacing = interfering_frequency - frequency_of_interest
+
 
 
 # COMPUTATION OF TIME INTEGRALS =================================
 # to be computed once for all, for all channels, and saved to file
 # using X0mm_time_integral_WDM_grid
-m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate)
+# m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate)
 
 # print(m)
 # z, I, m = pynlin.nlin.compute_all_collisions_X0mm_time_integrals(
@@ -130,7 +129,7 @@ m = pynlin.nlin.get_m_values(fiber, fiber_length, channel_spacing, 1 / baud_rate
 # partial_collision_margin = 5
 # points_per_collision = 10
 
-interfering_index = [0, 9]
+interfering_index = [0]
 
 pynlin.nlin.X0mm_time_integral_WDM_selection(
     baud_rate,
@@ -143,7 +142,7 @@ pynlin.nlin.X0mm_time_integral_WDM_selection(
     rolloff_factor=0.1,
     samples_per_symbol=10,
     points_per_collision=points_per_collision,
-    use_multiprocessing=True,
+    use_multiprocessing=False,
     partial_collisions_start=partial_collision_margin,
     partial_collisions_end=partial_collision_margin,
 )

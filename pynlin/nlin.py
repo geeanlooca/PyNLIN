@@ -15,7 +15,6 @@ from pynlin.fiber import Fiber
 from pynlin.pulses import Pulse, RaisedCosinePulse, GaussianPulse, NyquistPulse
 from pynlin.wdm import WDM
 
-
 def apply_chromatic_dispersion(
     pulse: Pulse, fiber: Fiber, z: float, delay: float = None
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -57,7 +56,6 @@ def get_interfering_frequencies(
         if x != channel_of_interest:
             combinations.append(x)
     return combinations
-
 
 
 def X0mm_time_integral_WDM_selection(
@@ -154,6 +152,7 @@ def X0mm_time_integral_WDM_selection(
                 compression="gzip",
                 compression_opts=9,
             )
+
 
 def X0mm_time_integral_WDM_grid(
     baud_rate: float,
@@ -270,6 +269,7 @@ def compute_all_collisions_X0mm_time_integrals(
     use_multiprocessing: bool = False,
     partial_collisions_start: int = 10,
     partial_collisions_end: int = 10,
+    speedup=True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the integrals for all the collisions for the specified pair of
     channels.
@@ -329,11 +329,28 @@ def compute_all_collisions_X0mm_time_integrals(
     interfering_frequency_THz = interfering_frequency * 1e-12
     coi_frequency_THz = frequency_of_interest * 1e-12
 
+    if speedup:
+      g, t = pulse.data()
+      dt = t[1] - t[0]
+      nsamples = len(g)
+      freq = np.fft.fftfreq(nsamples, d=dt)
+      omega = 2 * np.pi * freq
+      omega = np.fft.fftshift(omega)
+      T = pulse.T0
+      beta2 = fiber.beta2
+      gf = np.fft.fftshift(np.fft.fft(g))
+      pulse_matrix = np.zeros((len(t), len(z)), dtype=complex)
+      for i, L in enumerate(z):
+        propagator = -1j * beta2 / 2 * omega**2 * L
+        gf_propagated_1 = gf * np.exp(propagator)
+        pulse_matrix[:, i] = np.fft.ifft(np.fft.fftshift(gf_propagated_1))
+
     pbar_description = (
         f"Collisions between channels at ({coi_frequency_THz}"
         + f" and {interfering_frequency_THz}) THz, spacing {channel_spacing_GHz} GHz"
     )
     if use_multiprocessing:
+        assert False, "Multiprocessing is not supported at the moment"
         # build a partial function otherwise multiprocessing complains about
         # not being able to pickle stuff
         partial_function = functools.partial(
@@ -348,8 +365,23 @@ def compute_all_collisions_X0mm_time_integrals(
         collisions_pbar.set_description(pbar_description)
         time_integrals = []
         for m in collisions_pbar:
-            I = X0mm_time_integral(pulse, fiber, z, channel_spacing, m)
-            time_integrals.append(I)
+          if speedup:
+            I = X0mm_time_integral_precomputed(
+                      pulse_matrix, 
+                      fiber, 
+                      z, 
+                      t, 
+                      channel_spacing, 
+                      m, 
+                      T)
+          else:
+            I = X0mm_time_integral(
+                      pulse, 
+                      fiber, 
+                      z, 
+                      channel_spacing, 
+                      m)
+          time_integrals.append(I)
 
     # convert the list of arrays in a 2d array, since the shape is the same
     I = np.stack(time_integrals)
@@ -439,6 +471,32 @@ def X0mm_time_integral(
         integrand = np.conj(g1) * g1 * np.conj(g3) * g3
         time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
 
+    return time_integrals
+
+# posso precomputare la propagazione e poi usare una lookup table
+def X0mm_time_integral_precomputed(
+    pulse_matrix: np.ndarray,
+    fiber: Fiber,
+    z: np.ndarray,
+    t: np.ndarray,
+    channel_spacing: float,
+    m: int,
+    T: float,
+) -> np.ndarray:
+    """Compute the inner time integral of the expression for the XPM
+    coefficients Xhkm for the specified channel spacing."""
+    npoints_z = len(z)
+    dt = t[1] - t[0]
+    O = 2 * np.pi * channel_spacing
+    beta2 = fiber.beta2
+    time_integrals = np.zeros((npoints_z,), dtype=complex)
+    for i, L in enumerate(z):
+        g1 = pulse_matrix[:, i]
+        delay = (- m * T - beta2 * O * L)
+        shift = int(np.round((delay / dt)))
+        g3 = np.roll(pulse_matrix[:, i], shift)
+        integrand = np.conj(g1) * g1 * np.conj(g3) * g3
+        time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
     return time_integrals
 
 
