@@ -1,0 +1,39 @@
+% This file has been generated automatically by the Mathematica
+% notebook 'bendLP_strain_trans_comp_trans.nb'.
+
+% matrix of the mode incedes
+modeIndeces=[0,1;1,1;2,1;0,2;3,1];
+
+% the perturbation matrix (just for the records)
+perturbation=[(1/2).*c.^(-2).*kappa.^2.*mu0.^(-1).*nav.^4.*q2.*Rcl.^2,0,0;0,( ...
+  1/2).*c.^(-2).*kappa.^2.*mu0.^(-1).*nav.^4.*q1.*Rcl.^2,0;0,0,0];
+
+% normalization factor; this multiplies the coupling matrix
+norm_factor=sqrt(-1).*lambda.^(-2).*nav.^4;
+
+% define the coupling matrix as a cell array
+% only the elements of the upper 'diagonal' are specified
+% only non-zero elements are specified
+Ktt=cell(16,16);
+
+% the non-zero elements
+Ktt{1,1}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(0,1).^(-1);
+Ktt{1,11}=(-1).*kappa.^2.*pi.^2.*q2.*r.*Rcl.^2.*J(0,1,r).*J(0,2,r).*(beta(0, ...
+  1).*Q(0,1)).^(-1/2).*(beta(0,2).*Q(0,2)).^(-1/2);
+Ktt{2,2}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(0,1).^(-1);
+Ktt{2,12}=(-1).*kappa.^2.*pi.^2.*q1.*r.*Rcl.^2.*J(0,1,r).*J(0,2,r).*(beta(0, ...
+  1).*Q(0,1)).^(-1/2).*(beta(0,2).*Q(0,2)).^(-1/2);
+Ktt{3,3}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(1,1).^(-1);
+Ktt{4,4}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(1,1).^(-1);
+Ktt{5,5}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(1,1).^(-1);
+Ktt{6,6}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(1,1).^(-1);
+Ktt{7,7}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(2,1).^(-1);
+Ktt{8,8}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(2,1).^(-1);
+Ktt{9,9}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(2,1).^(-1);
+Ktt{10,10}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(2,1).^(-1);
+Ktt{11,11}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(0,2).^(-1);
+Ktt{12,12}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(0,2).^(-1);
+Ktt{13,13}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(3,1).^(-1);
+Ktt{14,14}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(3,1).^(-1);
+Ktt{15,15}=(-1).*kappa.^2.*pi.^2.*q2.*Rcl.^2.*beta(3,1).^(-1);
+Ktt{16,16}=(-1).*kappa.^2.*pi.^2.*q1.*Rcl.^2.*beta(3,1).^(-1);

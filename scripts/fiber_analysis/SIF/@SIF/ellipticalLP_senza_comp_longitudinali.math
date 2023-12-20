@@ -1,0 +1,39 @@
+% This file has been generated automatically by the Mathematica
+% notebook 'ellipticalLP_senza_comp_longitudinali.nb'.
+
+% matrix of the mode incedes
+modeIndeces=[0,1;1,1;2,1;0,2;3,1];
+
+% the perturbation matrix (just for the records)
+perturbation=[c.^(-2).*delta.*mu0.^(-1).*NA.^2.*cos(2.*phi),0,0;0,c.^(-2).* ...
+  delta.*mu0.^(-1).*NA.^2.*cos(2.*phi),0;0,0,0];
+
+% normalization factor; this multiplies the coupling matrix
+norm_factor=sqrt(-1).*a.*delta.*lambda.^(-2).*NA.^2.*pi.^2;
+
+% define the coupling matrix as a cell array
+% only the elements of the upper 'diagonal' are specified
+% only non-zero elements are specified
+Kt=cell(16,16);
+
+% the non-zero elements
+Kt{1,7}=(-1).*2.^(1/2).*J(0,1,a).*J(2,1,a).*(beta(0,1).*Q(0,1)).^(-1/2).*( ...
+  beta(2,1).*Q(2,1)).^(-1/2);
+Kt{2,8}=(-1).*2.^(1/2).*J(0,1,a).*J(2,1,a).*(beta(0,1).*Q(0,1)).^(-1/2).*( ...
+  beta(2,1).*Q(2,1)).^(-1/2);
+Kt{3,3}=(-1).*beta(1,1).^(-1).*J(1,1,a).^2.*Q(1,1).^(-1);
+Kt{3,13}=(-1).*J(1,1,a).*J(3,1,a).*(beta(1,1).*Q(1,1)).^(-1/2).*(beta(3,1) ...
+  .*Q(3,1)).^(-1/2);
+Kt{4,4}=(-1).*beta(1,1).^(-1).*J(1,1,a).^2.*Q(1,1).^(-1);
+Kt{4,14}=(-1).*J(1,1,a).*J(3,1,a).*(beta(1,1).*Q(1,1)).^(-1/2).*(beta(3,1) ...
+  .*Q(3,1)).^(-1/2);
+Kt{5,5}=beta(1,1).^(-1).*J(1,1,a).^2.*Q(1,1).^(-1);
+Kt{5,15}=(-1).*J(1,1,a).*J(3,1,a).*(beta(1,1).*Q(1,1)).^(-1/2).*(beta(3,1) ...
+  .*Q(3,1)).^(-1/2);
+Kt{6,6}=beta(1,1).^(-1).*J(1,1,a).^2.*Q(1,1).^(-1);
+Kt{6,16}=(-1).*J(1,1,a).*J(3,1,a).*(beta(1,1).*Q(1,1)).^(-1/2).*(beta(3,1) ...
+  .*Q(3,1)).^(-1/2);
+Kt{7,11}=(-1).*2.^(1/2).*J(0,2,a).*J(2,1,a).*(beta(0,2).*Q(0,2)).^(-1/2).*( ...
+  beta(2,1).*Q(2,1)).^(-1/2);
+Kt{8,12}=(-1).*2.^(1/2).*J(0,2,a).*J(2,1,a).*(beta(0,2).*Q(0,2)).^(-1/2).*( ...
+  beta(2,1).*Q(2,1)).^(-1/2);
