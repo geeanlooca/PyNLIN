@@ -294,7 +294,6 @@ def compute_all_collisions_X0mm_time_integrals(
         partial_collisions_start=partial_collisions_start,
     )
     # first, create the Pulse object with the appropriate parameters
-
     # compute the maximum delay between pulses and use it to set
     # the number of symbols in the rcos signal
     tau_max = fiber.beta2 * fiber_length * 2 * np.pi * channel_spacing
@@ -350,16 +349,22 @@ def compute_all_collisions_X0mm_time_integrals(
         + f" and {interfering_frequency_THz}) THz, spacing {channel_spacing_GHz} GHz"
     )
     if use_multiprocessing:
-        assert False, "Multiprocessing is not supported at the moment"
         # build a partial function otherwise multiprocessing complains about
         # not being able to pickle stuff
-        partial_function = functools.partial(
-            X0mm_time_integral_multiprocessing_wrapper, pulse, fiber, z, channel_spacing
-        )
-        time_integrals = process_map(
-            partial_function, M, leave=False, desc=pbar_description, chunksize=1
-        )
-
+        if speedup:
+          partial_function = functools.partial(
+              X0mm_time_integral_multiprocessing_wrapper, pulse, fiber, z, channel_spacing
+          )
+          time_integrals = process_map(
+              partial_function, M, leave=False, desc=pbar_description, chunksize=1
+          )
+        else:
+          partial_function = functools.partial(
+              X0mm_time_integral_precomputed_multiprocessing_wrapper, pulse_matrix, fiber, z, t, channel_spacing, T
+          )
+          time_integrals = process_map(
+              partial_function, M, leave=False, desc=pbar_description, chunksize=1
+          )
     else:
         collisions_pbar = tqdm.tqdm(M, leave=False)
         collisions_pbar.set_description(pbar_description)
@@ -395,6 +400,12 @@ def X0mm_time_integral_multiprocessing_wrapper(
     `functool.partial` and enable multiprocessing."""
     return X0mm_time_integral(pulse, fiber, z, channel_spacing, m)
 
+def X0mm_time_integral_precomputed_multiprocessing_wrapper(
+    pulse_matrix: np.ndarray, fiber: Fiber, z: np.ndarray, t:np.ndarray, channel_spacing: float, m: int, T: float
+    ):
+    """A wrapper for the `X0mm_time_integral` function to easily
+    `functool.partial` and enable multiprocessing."""
+    return X0mm_time_integral_precomputed(pulse_matrix, fiber, z, t, channel_spacing, m, T)
 
 def Xhkm_time_integral_multiprocessing_wrapper(
     pulse: Pulse, fiber: Fiber, z: np.ndarray, channel_spacing: float, m: int
