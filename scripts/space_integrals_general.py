@@ -66,8 +66,8 @@ def get_space_integral_approximation(intf):
   beta2 = -pynlin.utils.dispersion_to_beta2(
       dispersion * 1e-12 / (1e-9 * 1e3), wavelength
   )
-  print("beta2:", beta2)
-  print(channel_spacing*1e-9)
+  # print("beta2:", beta2)
+  # # print(channel_spacing*1e-9)
   wdm = pynlin.wdm.WDM(
       spacing=channel_spacing * 1e-9,
       num_channels=num_channels,
@@ -75,23 +75,19 @@ def get_space_integral_approximation(intf):
   )
   freqs = wdm.frequency_grid()
   (m, z, I) = get_space(intf)
-  X0mm_ana = np.ones_like(m)
+  X0mm_ana = np.ones_like(m, dtype=np.float64)
   L_d = 1/(baud_rate**2 *np.abs(beta2))
   Omega = 2*np.pi*(freqs[intf+1]-freqs[0])
   z_w = L_d * baud_rate / Omega
   print("z_w walkoff:", z_w)
   # maybe incorrect
-  m_offset = 5
-  z_centers = np.linspace(0.0, L, len(m)-10)
-  Delta_z = z_centers[1]-z_centers[0]
-  z_all = np.linspace(-Delta_z*m_offset, L+Delta_z*m_offset, len(m))
-  ## TODO improve and go beyond limit
+  z_all = get_zm(m, Omega, beta2, baud_rate)
   for zx, z_m in enumerate(z_all):
     # implement a simple 
     # print((L-z_m))
     # TODO check correctness of the formula
     z_w_site = z_w * np.sqrt(1 + (z_m/L_d)**2)
-    print(z_w_site)
+    # print(z_w_site)
     X0mm_ana[zx] = 1/(beta2*Omega) * (1-(1-erf((L-z_m)/z_w_site))/2-(1-erf((z_m)/z_w_site))/2)
   # print("X ana = ", X0mm_ana)
   return X0mm_ana
@@ -110,10 +106,15 @@ def compare_interferent(interfering_channels = []):
     (m, z, I) = get_space(intf)
     X0mm = get_space_integrals(intf)
     X0mm_ana = get_space_integral_approximation(intf)
+    print(X0mm**2)
+    print(X0mm_ana**2)
+    print("NOISE numerical  :             {:4.3e}".format(np.real(np.sum(X0mm**2))))
+    print("NOISE analytical :             {:4.3e}".format(-2*np.real(np.sum(X0mm_ana**2))))
+    print("RELATIVE ERROR on noise term : {:4.3e}".format(np.real((np.sum(X0mm_ana**2))/np.sum(X0mm**2))-1.0))
     beta2 = -pynlin.utils.dispersion_to_beta2(
         dispersion * 1e-12 / (1e-9 * 1e3), wavelength
     )
-    plt.clf()    
+    plt.clf() 
     for mx in m:
       plt.axvline(x=mx, lw=0.3, color="gray", ls="dotted")
       plt.plot(m, np.real(X0mm_ana), color="gray", ls="dashed")
@@ -121,8 +122,8 @@ def compare_interferent(interfering_channels = []):
       plt.xlabel(r"$m$")
       plt.ylabel(r"$X_{\mathrm{0mm}}$")
       plt.tight_layout()
-      plt.savefig('media/interferent_'+str(intf)+'.pdf')
-    
+      plt.savefig('media/Interferent_'+str(intf)+'.pdf')
+  
   # for intf in interfering_channels:
   #   (m, z, I) = get_space(intf)
   #   X0mm = np.zeros_like(m)
@@ -155,11 +156,12 @@ def get_space(intf):
   f_general = h5py.File(time_integrals_results_path + 'general_results_alt.h5', 'r')
   for key in f_general.keys():
     print(key)
-  print("_________________ WDM _________________")
+  # print("_________________ WDM _________________")
   m = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/m'])
   z = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/z'])
   I = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/integrals'])
   return (m, z, I)
 
-
-
+def get_zm(m, Omega, beta2, baud_rate):
+  return m/(baud_rate*beta2*Omega)
+  
