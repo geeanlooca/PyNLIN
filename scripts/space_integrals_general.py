@@ -106,11 +106,9 @@ def compare_interferent(interfering_channels = []):
     (m, z, I) = get_space(intf)
     X0mm = get_space_integrals(intf)
     X0mm_ana = get_space_integral_approximation(intf)
-    print(X0mm**2)
-    print(X0mm_ana**2)
-    print("NOISE numerical  :             {:4.3e}".format(np.real(np.sum(X0mm**2))))
-    print("NOISE analytical :             {:4.3e}".format(-2*np.real(np.sum(X0mm_ana**2))))
-    print("RELATIVE ERROR on noise term : {:4.3e}".format(np.real((np.sum(X0mm_ana**2))/np.sum(X0mm**2))-1.0))
+    print("NOISE numerical         = {:4.3e}".format(np.real(np.sum(X0mm**2))))
+    print("NOISE analytical        = {:4.3e}".format(-2*np.real(np.sum(X0mm_ana**2))))
+    print("RELATIVE ERROR on noise = {:4.3e}".format(np.real((np.sum(X0mm_ana**2))/np.sum(X0mm**2))-1.0))
     beta2 = -pynlin.utils.dispersion_to_beta2(
         dispersion * 1e-12 / (1e-9 * 1e3), wavelength
     )
