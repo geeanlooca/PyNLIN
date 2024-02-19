@@ -68,7 +68,6 @@ def get_space_integral_approximation(intf):
     X0mm_ana = np.ones_like(m, dtype=np.float64)
     L_d = 1/(baud_rate**2 *np.abs(beta2))
     Omega = 2*np.pi*(freqs[intf+1]-freqs[0])
-    assert(Omega == channel_spacing*2*np.pi)
     z_w = L_d * baud_rate / Omega
     print("z_walkoff:", z_w)
     

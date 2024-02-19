@@ -310,7 +310,6 @@ for fiber_length in fiber_lengths:
 						ax4.plot(power_dBm_list, 10 * np.log10(Delta_theta_2_none[coi_selection_idx[scan], :]) + power_dBm_list-3, marker=markers[scan],
 										markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
 				ax1.grid(which="both")
-				#plt.annotate("ciao", (0, 0))
 				ax2.grid(which="both")
 				ax3.grid(which="both")
 				ax4.grid(which="both")
@@ -348,7 +347,6 @@ for fiber_length in fiber_lengths:
 						ax4.plot(power_dBm_list, 10 * np.log10(R_none[coi_selection_idx[scan], :]) + power_dBm_list-3, marker=markers[scan],
 										markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
 				ax1.grid(which="both")
-				#plt.annotate("ciao", (0, 0))
 				ax2.grid(which="both")
 				ax3.grid(which="both")
 				ax4.grid(which="both")
@@ -417,7 +415,6 @@ for fiber_length in fiber_lengths:
 				plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2],
 										markersize=7, color='orange')
 				ax1.grid(which="both")
-				#plt.annotate("ciao", (0, 0))
 				plt.grid(which="both")
 				custom_lines = [Line2D([0], [0], color='green', linestyle='dotted'),
 								Line2D([0], [0], color='blue', linestyle='dashed'),
@@ -455,7 +452,6 @@ for fiber_length in fiber_lengths:
 				# plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_ct[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='blue')
 				# plt.plot(power_dBm_list, 30 + 10 * np.log10(np.average([ase_bi[coi_idx, :] for coi_idx in coi_selection_idx_average], axis=axis_num)), marker=markers[2], markersize=10, color='orange')
 				ax1.grid(which="both")
-				#plt.annotate("ciao", (0, 0))
 				plt.grid(which="both")
 
 				plt.xlabel(r"Signal input power [dBm]")
@@ -643,7 +639,6 @@ for fiber_length in fiber_lengths:
 		# 				ax4.semilogy(power_dBm_list, bers[3], marker=markers[scan],
 		# 										 markersize=10, color='grey', label="ch." + str(coi_selection[scan] + 1))
 		# 		ax1.grid(which="both")
-		# 		#plt.annotate("ciao", (0, 0))
 		# 		ax2.grid(which="both")
 		# 		ax3.grid(which="both")
 		# 		ax4.grid(which="both")
