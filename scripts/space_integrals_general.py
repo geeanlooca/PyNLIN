@@ -121,7 +121,7 @@ def compare_interferent(interfering_channels = []):
       plt.ylabel(r"$X_{\mathrm{0mm}}$")
       plt.tight_layout()
       plt.savefig('media/Interferent_'+str(intf)+'.pdf')
-  
+    plt.show()
   # for intf in interfering_channels:
   #   (m, z, I) = get_space(intf)
   #   X0mm = np.zeros_like(m)
@@ -152,8 +152,8 @@ def get_space(intf):
   # 
   time_integrals_results_path = 'results/'
   f_general = h5py.File(time_integrals_results_path + 'general_results_alt.h5', 'r')
-  for key in f_general.keys():
-    print(key)
+  # for key in f_general.keys():
+  #   print(key)
   # print("_________________ WDM _________________")
   m = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/m'])
   z = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/z'])

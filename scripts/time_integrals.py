@@ -9,7 +9,7 @@ import pynlin.constellations
 import json
 import numpy as np
 
-def do_time_integrals(fiber_length):
+def do_time_integrals(fiber_length, pulse_shape="Nyquist"):
   f = open("./scripts/sim_config.json")
   data = json.load(f)
   dispersion = data["dispersion"]
@@ -62,7 +62,7 @@ def do_time_integrals(fiber_length):
       fiber,
       fiber_length,
       "results/general_results_alt.h5",
-      pulse_shape="Nyquist",
+      pulse_shape=pulse_shape,
       rolloff_factor=0.0,
       samples_per_symbol=10,
       points_per_collision=points_per_collision,
