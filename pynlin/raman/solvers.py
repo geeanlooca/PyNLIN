@@ -554,3 +554,6 @@ class RamanAmplifier:
                 break
 
         return solve_system(x0)
+
+class MMFAmplifier:
+    pass
