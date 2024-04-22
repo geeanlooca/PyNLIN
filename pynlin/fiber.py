@@ -39,3 +39,44 @@ class Fiber:
 
     def __repr__(self):
         return self.__str__()
+    
+class MMFiber:
+    def __init__(
+        self,
+        losses=0.2,
+        raman_coefficient=7e-14,
+        effective_area=80e-12,
+        modes=1,
+        overlap_integrals=None,
+        mode_names=None,
+    ):
+        self.effective_area = effective_area
+        self.raman_coefficient = raman_coefficient
+
+        try:
+            self.losses = list(losses)
+        except:
+            self.losses = [losses]
+
+        self.raman_efficiency = self.raman_coefficient / self.effective_area
+        self.modes = modes
+
+        ## Structure of the overlap integrals
+        # They are weakly frequency dependent: 
+        # we write a quadratic fit, with 3 parameters, for each mode coupling 
+
+        self.overlap_integrals = overlap_integrals
+        self.mode_names = mode_names
+        
+        super().__init__()
+
+    def loss_profile(self, wavelengths):
+        """Get the fiber losses (in dB/km) at the specified wavelengths (in
+        meters)."""
+        return polyval(self.losses, wavelengths * 1e9)
+
+    def __str__(self):
+        return str(self.__dict__)
+
+    def __repr__(self):
+        return self.__str__()
