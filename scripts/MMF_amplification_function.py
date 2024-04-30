@@ -44,7 +44,7 @@ gain_dB_setup=data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup=data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
-
+oi_file="oi.npy"
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list

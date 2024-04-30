@@ -130,6 +130,9 @@ tests/reports/
 # Numpy caching
 *.npy
 
+# Matlab data files
+*.mat 
+
 # results and media folders
 results 
 media
