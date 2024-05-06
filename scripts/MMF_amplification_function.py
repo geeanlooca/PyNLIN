@@ -12,7 +12,7 @@ import torch
 from scipy.constants import lambda2nu, nu2lambda
 
 from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
-from pynlin.raman.pytorch.solvers import RamanAmplifier
+from pynlin.raman.pytorch.solvers import MMFRamanAmplifier
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
 import pynlin.constellations
@@ -44,7 +44,7 @@ gain_dB_setup=data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup=data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
-oi_file="oi.npy"
+oi=np.load('oi.npy')
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
@@ -62,9 +62,11 @@ beta2 = pynlin.utils.dispersion_to_beta2(
 	dispersion * 1e-12 / (1e-9 * 1e3), wavelength
 )
 ref_bandwidth = baud_rate
-fiber = pynlin.fiber.Fiber(
+fiber = pynlin.fiber.MMFiber(
 	effective_area=80e-12,
-	beta2=beta2
+	beta2=beta2,
+  modes=4,
+  overlap_integrals=oi
 )
 wdm = pynlin.wdm.WDM(
 	spacing=channel_spacing * 1e-9,
@@ -161,7 +163,7 @@ for fiber_length in fiber_lengths:
 
 			#pump_powers = dBm2watt(np.array([10, 10, 10, 10, -60, -60, -50, -40]))
 			pump_powers = np.array(pump_powers)
-			torch_amplifier = RamanAmplifier(
+			torch_amplifier = MMFRamanAmplifier(
 				fiber_length,
 				integration_steps,
 				num_pumps,
@@ -233,7 +235,7 @@ for fiber_length in fiber_lengths:
 
 			signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
 			pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-			torch_amplifier = RamanAmplifier(
+			torch_amplifier = MMFRamanAmplifier(
 				fiber_length,
 				integration_steps,
 				num_pumps,
@@ -305,7 +307,7 @@ for fiber_length in fiber_lengths:
 			num_pumps = len(pump_wavelengths)
 			signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
 			pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
-			torch_amplifier_ct = RamanAmplifier(
+			torch_amplifier_ct = MMFRamanAmplifier(
 				fiber_length,
 				integration_steps,
 				num_pumps,

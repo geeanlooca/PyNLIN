@@ -6,6 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 import torch
 from scipy.constants import speed_of_light
+from scipy import polyval
 
 from pynlin.fiber import Fiber
 from pynlin.raman.pytorch._torch_ode import torch_rk4
@@ -422,7 +423,7 @@ class MMFRamanAmplifier(torch.nn.Module):
         # Normalize the peak to the raman coefficient of the fiber
         gain_spectrum /= np.max(np.abs(gain_spectrum))
         gain_spectrum *= self.raman_coefficient
-
+        
         # Transform it to torch.Tensor, reshape it, and register as a buffer
         raman_response = torch.from_numpy(gain_spectrum).float()
         # Reshape the Tensor in a format accepted by grid_sample
@@ -640,10 +641,7 @@ class MMFRamanAmplifier(torch.nn.Module):
         gain = gain.repeat_interleave(self.modes, dim=1).repeat_interleave(
             self.modes, dim=2
         )
-
-        oi = self.overlap_integrals.expand((batch_size, self.modes, self.modes)).repeat(
-            1, num_freqs, num_freqs
-        )
+        oi = self.overlap_integrals
 
         G = gain * oi
 

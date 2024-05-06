@@ -140,7 +140,6 @@ for gain_dB in gain_dB_list:
 
         z_max = np.linspace(0, fiber_length, np.shape(pump_solution_ct)[0])
       else:
-        # TODO
         assert False
       # compute the X0mm coefficients given the precompute time integrals
       # FULL X0mm EVALUATION FOR EVERY m =======================

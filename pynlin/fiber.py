@@ -1,5 +1,5 @@
 from scipy import polyval
-
+from pynlin.utils import oi_law
 
 class Fiber:
     """Object collecting parameters of an optical fiber."""
@@ -46,13 +46,14 @@ class MMFiber:
         losses=0.2,
         raman_coefficient=7e-14,
         effective_area=80e-12,
+        beta2=20 * 1e-24 / 1e3,
         modes=1,
         overlap_integrals=None,
         mode_names=None,
     ):
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
-
+        self.beta2 = beta2
         try:
             self.losses = list(losses)
         except:
@@ -62,14 +63,22 @@ class MMFiber:
         self.modes = modes
 
         ## Structure of the overlap integrals
-        # They are weakly frequency dependent: 
-        # we write a quadratic fit, with 3 parameters, for each mode coupling 
+        # overlap_integrals[i, j] = [a1, b1, a2, b2, x, c] 
+        # i, j mode indexes, 
+        # all the quadratic fit parameters are used in oi_law
 
         self.overlap_integrals = overlap_integrals
         self.mode_names = mode_names
         
         super().__init__()
-
+    
+    """
+    i, j are mode indexes
+    wl1, wl2 are the respective wavelengths
+    """
+    def overlap_integral(self, i, j, wavelengths):
+      return oi_law(wavelengths, self.overlap_integrals[i, j]) # original data were in um
+        
     def loss_profile(self, wavelengths):
         """Get the fiber losses (in dB/km) at the specified wavelengths (in
         meters)."""
