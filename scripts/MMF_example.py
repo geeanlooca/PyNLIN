@@ -5,6 +5,12 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
+import pynlin.fiber
+import matplotlib.pyplot as plt
+plt.rcParams.update({
+    "text.usetex": False,
+})
+
 # from multiprocessing import Pool
 
 import numpy as np
@@ -19,9 +25,9 @@ import pynlin.constellations
 # from random import shuffle
 import json
 
+
 f = open("./scripts/sim_config.json")
 data = json.load(f)
-print(data)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
 baud_rate = data["baud_rate"]
@@ -44,7 +50,8 @@ gain_dB_setup = data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup = data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
-oi = np.load('oi.npy')
+oi = np.load('oi_fit.npy')
+print(np.shape(oi))
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
@@ -58,6 +65,7 @@ profiles = True
 ###########################################
 #  COMPUTATION OF AMPLITUDE FUNCTIONS
 ###########################################
+num_modes = 4
 beta2 = pynlin.utils.dispersion_to_beta2(
     dispersion * 1e-12 / (1e-9 * 1e3), wavelength
 )
@@ -66,7 +74,7 @@ ref_bandwidth = baud_rate
 fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
-    modes=4,
+    modes=num_modes,
     overlap_integrals=oi
 )
 wdm = pynlin.wdm.WDM(
@@ -75,6 +83,7 @@ wdm = pynlin.wdm.WDM(
     center_frequency=190
 )
 
+# print(np.shape(fiber.overlap_integrals))
 # comute the collisions between the two furthest WDM channels
 frequency_of_interest = wdm.frequency_grid()[0]
 interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
@@ -124,20 +133,29 @@ power_per_pump = dBm2watt(-10)
 signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
 num_pumps = len(pump_wavelengths)
-signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
-pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
+signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
+pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel*1000
 
 
 amplifier = MMFRamanAmplifier(fiber)
 
-pump_solution_ct, signal_solution_ct, ase_solution_ct = amplifier.solve(
+pump_solution_ct, signal_solution_ct = amplifier.solve(
     signal_powers,
     signal_wavelengths,
-    dBm2watt(np.ones(num_pumps) * 0),
-    nu2lambda(initial_pump_frequencies),
+    pump_powers,
+    pump_wavelengths,
     z_max,
     fiber,
+    counterpumping = True,
     # pump_direction=-1,
     # use_power_at_fiber_start=True,
     reference_bandwidth=ref_bandwidth
 )
+print(np.shape(pump_solution_ct))
+print(np.shape(signal_solution_ct))
+
+### fixed mode
+plt.clf()
+for i in range(52):
+  plt.plot(range(500), signal_solution_ct[:, i, 1])
+plt.show()

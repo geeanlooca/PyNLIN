@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import plotly.graph_objects as go
-from pynlin.utils import oi_law
+from pynlin.utils import oi_law_fit
 
 rc('text', usetex=False)
 
@@ -14,7 +14,7 @@ oi_full = mat['OI']
 wl = mat['wavelenght_array'][0] * 1e-3
 # average over the polarizations
 oi = np.ndarray((21, 21, 4, 4))
-print(wl)
+# print(wl)
 
 # return starting and ending index of the polarization
 
@@ -32,20 +32,21 @@ for i in range(4):
 np.save('oi.npy', oi)
 
 # quadratic fit of the OI in frequency
-oi_fit = -1 * np.ones((6, 4, 4))
+oi_fit = np.ndarray((6, 4, 4))
 
 x, y = np.meshgrid(wl, wl)
 for i in range(4):
     for j in range(4):
         oi_fit[:, i, j] = curve_fit(
-            oi_law, (x, y), oi[:, :, 1, 1].ravel(), p0=[0, 1, 0, 1, 0, 1])[0]
+            oi_law_fit, (x, y), oi[:, :, 1, 1].ravel(), p0=[0, 1, 0, 1, 0, 1])[0].T
+print(np.shape(oi_fit))
 np.save('oi_fit.npy', oi_fit)
 
 
 # =========
 # PLOTTING
 # =========
-plot = True
+plot = False
 if plot:
     modes = ["01", "11", "21", "02"]
     n_modes = 4

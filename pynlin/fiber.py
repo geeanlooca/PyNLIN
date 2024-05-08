@@ -1,6 +1,6 @@
 from scipy import polyval
 from pynlin.utils import oi_law
-
+import numpy as np
 class Fiber:
     """Object collecting parameters of an optical fiber."""
 
@@ -78,8 +78,11 @@ class MMFiber:
     TODO rename
     """
     def overlap_integral(self, i, j, wavelengths):
-      print(self.overlap_integrals[i, j])
-      return oi_law(wavelengths, *self.overlap_integrals[i, j]) # original data were in um
+      # print("____________")
+      # print(np.shape(self.overlap_integrals[:, i, j]))
+      # print(np.shape(wavelengths[1][None, :, :, :, :]))
+      # print(np.shape(wavelengths[0][None, :, :, :, :]))
+      return oi_law(wavelengths[0][None, :, :, :, :], wavelengths[1][None, :, :, :, :], self.overlap_integrals[:, i, j]) # original data were in um
         
     def loss_profile(self, wavelengths):
         """Get the fiber losses (in dB/km) at the specified wavelengths (in

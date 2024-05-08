@@ -9,7 +9,7 @@ from scipy import polyval
 from scipy.constants import nu2lambda, lambda2nu
 
 import pynlin.utils
-from pynlin.fiber import Fiber
+from pynlin.fiber import Fiber, MMFiber
 from pynlin.pulses import Pulse
 from pynlin.raman.response import gain_spectrum, impulse_response
 from pynlin.utils import (
@@ -630,24 +630,24 @@ class MMFRamanAmplifier(RamanAmplifier):
                https://www.osapublishing.org/abstract.cfm?uri=OFC-2012-OW1D.2
                (June 5, 2019).
         """
+        
         num_signals = signal_power.shape[0]
         num_pumps = pump_power.shape[0]
 
         total_wavelengths = num_signals + num_pumps
-
-        total_signals = num_pumps + num_signals
-
+        num_modes = signal_power.shape[1]
+        total_signals = num_modes * (num_pumps + num_signals)
+        pump_power_ = pump_power.reshape((num_modes*num_pumps))
+        signal_power_ = signal_power.reshape((num_modes*num_signals))
+        print()
         # Structure of the waves: modes and frequencies
         # - waves: | (pumps)
         #          | freq1                        | freqn                      |
         # array:   | LP01                LPxx     | LP01                LPxx   |
 
-        pump_power_ = pump_power.flatten()
-        signal_power_ = signal_power.flatten()
-
         wavelengths = np.concatenate((pump_wavelength, signal_wavelength))
         input_power = np.concatenate((pump_power_, signal_power_))
-
+        print(len(input_power))
         frequencies = wavelength_to_frequency(wavelengths)
 
         loss_coeffs = fiber.losses
@@ -658,8 +658,8 @@ class MMFRamanAmplifier(RamanAmplifier):
         losses_linear = np.repeat(losses_linear, fiber.modes)
 
         # Compute the frequency shifts for each signal
-        frequency_shifts = np.zeros((total_signals, total_signals))
-        for i in range(total_signals):
+        frequency_shifts = np.zeros((total_wavelengths, total_wavelengths))
+        for i in range(total_wavelengths):
             frequency_shifts[i, :] = frequencies - frequencies[i]
 
         gains = self._interpolate_gain(frequency_shifts)
@@ -687,19 +687,22 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         gain_matrix = freq_scaling * gains
 
-        gain_matrix = gain_matrix.repeat_interleave(fiber.modes, dim=1).repeat_interleave(
-            fiber.modes, dim=2
+        print("===== WARN: probably wrong")
+        gain_matrix = gain_matrix.repeat(fiber.modes, axis=0).repeat(
+            fiber.modes, axis=1
         )
         
         gains_mmf = gain_matrix * oi
-
+        
         if not ase:
-            if direction is not None:
-                direction = np.ones((total_wavelengths * fiber.modes,))
-            elif counterpumping or shooting:
-                direction[: num_pumps * fiber.modes] = -1
+            if direction is None:
+              direction = np.ones((total_wavelengths * fiber.modes,))
 
+            if counterpumping or shooting:
+                direction[: num_pumps * fiber.modes] = -1
+              
             if not shooting:
+              # print(direction)
                 sol = scipy.integrate.odeint(
                     MMFRamanAmplifier.raman_ode,
                     input_power,
@@ -866,9 +869,7 @@ class MMFRamanAmplifier(RamanAmplifier):
     @staticmethod
     def raman_ode(P, z, losses, gain_matrix, direction):
         """Integration step of the multimode Raman system."""
-        dPdz = (-losses[:, np.newaxis] + np.matmul(gain_matrix, P[:, np.newaxis])) * P[
-            :, np.newaxis
-        ]
+        dPdz = (-losses[:, np.newaxis] + np.matmul(gain_matrix, P[:, np.newaxis])) * P[:, np.newaxis]
 
         return np.squeeze(dPdz) * direction
 
