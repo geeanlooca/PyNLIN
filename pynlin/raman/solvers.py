@@ -564,10 +564,10 @@ class RamanAmplifier:
         return solve_system(x0)
 
 
-class MMFRamanAmplifier:
-    def __init__(self, bandwidth=40e12):
+class MMFRamanAmplifier(RamanAmplifier):
+    # def __init__(self, bandwidth=40e12):
 
-        super().__init__()
+    #     super().__init__()
 
     def solve(
         self,
@@ -637,12 +637,11 @@ class MMFRamanAmplifier:
 
         total_signals = num_pumps + num_signals
 
-
         # Structure of the waves: modes and frequencies
-        # - waves: | (pumps)                                              
+        # - waves: | (pumps)
         #          | freq1                        | freqn                      |
         # array:   | LP01                LPxx     | LP01                LPxx   |
-        
+
         pump_power_ = pump_power.flatten()
         signal_power_ = signal_power.flatten()
 
@@ -676,16 +675,23 @@ class MMFRamanAmplifier:
         # compute the frequency scaling factor
         freqs = np.expand_dims(frequencies, axis=-1)
         freq_scaling = np.maximum(1, freqs * (1 / freqs.T))
-        
-  
-        oi = np.map(fiber.overlap_integral(), (wavelengths, wavelengths))
+
+        # WORK IN PROGRESS
+        mode_list = np.array(range(fiber.modes))
+        oi = fiber.overlap_integral(mode_list[:, None, None, None], mode_list[None, :, None, None],
+                                     (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
+        oi = np.reshape(oi, (total_wavelengths * fiber.modes, total_wavelengths*fiber.modes), order='F')
 
         M = np.ones((fiber.modes, fiber.modes))
 
-        # gain matrix
+
         gain_matrix = freq_scaling * gains
 
-        gains_mmf = np.kron(gain_matrix, M) * oi
+        gain_matrix = gain_matrix.repeat_interleave(fiber.modes, dim=1).repeat_interleave(
+            fiber.modes, dim=2
+        )
+        
+        gains_mmf = gain_matrix * oi
 
         if not ase:
             if direction is not None:

@@ -75,9 +75,11 @@ class MMFiber:
     """
     i, j are mode indexes
     wl1, wl2 are the respective wavelengths
+    TODO rename
     """
     def overlap_integral(self, i, j, wavelengths):
-      return oi_law(wavelengths, self.overlap_integrals[i, j]) # original data were in um
+      print(self.overlap_integrals[i, j])
+      return oi_law(wavelengths, *self.overlap_integrals[i, j]) # original data were in um
         
     def loss_profile(self, wavelengths):
         """Get the fiber losses (in dB/km) at the specified wavelengths (in

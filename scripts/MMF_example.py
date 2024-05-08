@@ -62,6 +62,7 @@ beta2 = pynlin.utils.dispersion_to_beta2(
     dispersion * 1e-12 / (1e-9 * 1e3), wavelength
 )
 ref_bandwidth = baud_rate
+
 fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
