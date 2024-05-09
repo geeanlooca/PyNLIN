@@ -638,10 +638,18 @@ class MMFRamanAmplifier(torch.nn.Module):
         #        +---------+---------+
         #### mantain the same topology?
 
-        gain = gain.repeat_interleave(self.modes, dim=1).repeat_interleave(
-            self.modes, dim=2
+        # gain = gain.repeat_interleave(self.modes, dim=1).repeat_interleave(
+            # self.modes, dim=2
+        # )
+        gain = gain.repeat(self.modes, axis=0).repeat(
+            self.modes, axis=1
         )
-        oi = self.overlap_integrals
+        mode_list = np.array(range(self.modes))
+        oi = self.overlap_integral(mode_list[:, None, None, None], mode_list[None, :, None, None],
+                                     (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
+        oi = np.reshape(oi, (total_wavelengths * fiber.modes, total_wavelengths*fiber.modes), order='F')
+        
+        # oi = self.overlap_integrals
 
         G = gain * oi
 

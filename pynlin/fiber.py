@@ -77,7 +77,7 @@ class MMFiber:
     wl1, wl2 are the respective wavelengths
     TODO rename
     """
-    def overlap_integral(self, i, j, wavelengths):
+    def evaluate_oi(self, i, j, wavelengths):
       # print("____________")
       # print(np.shape(self.overlap_integrals[:, i, j]))
       # print(np.shape(wavelengths[1][None, :, :, :, :]))

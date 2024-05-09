@@ -26,7 +26,6 @@ class TimeOut(Exception):
     """Raise a timeout exception to stop the shooting algorithm."""
     pass
 
-
 class RamanAmplifier:
     def __init__(
         self, fiber: Fiber, response_bandwidth: float = 40e12, viz: bool = False
@@ -563,7 +562,6 @@ class RamanAmplifier:
 
         return solve_system(x0)
 
-
 class MMFRamanAmplifier(RamanAmplifier):
     # def __init__(self, bandwidth=40e12):
 
@@ -678,11 +676,11 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         # WORK IN PROGRESS
         mode_list = np.array(range(fiber.modes))
-        oi = fiber.overlap_integral(mode_list[:, None, None, None], mode_list[None, :, None, None],
+        oi = fiber.evaluate_oi(mode_list[:, None, None, None], mode_list[None, :, None, None],
                                      (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
         oi = np.reshape(oi, (total_wavelengths * fiber.modes, total_wavelengths*fiber.modes), order='F')
 
-        M = np.ones((fiber.modes, fiber.modes))
+        # M = np.ones((fiber.modes, fiber.modes))
 
 
         gain_matrix = freq_scaling * gains
