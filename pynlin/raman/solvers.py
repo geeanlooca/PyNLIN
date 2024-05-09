@@ -639,7 +639,7 @@ class MMFRamanAmplifier(RamanAmplifier):
         total_signals = num_modes * (num_pumps + num_signals)
         pump_power_ = pump_power.reshape((num_modes*num_pumps))
         signal_power_ = signal_power.reshape((num_modes*num_signals))
-        print()
+        
         # Structure of the waves: modes and frequencies
         # - waves: | (pumps)
         #          | freq1                        | freqn                      |
@@ -686,8 +686,8 @@ class MMFRamanAmplifier(RamanAmplifier):
 
 
         gain_matrix = freq_scaling * gains
-
         print("===== WARN: gain and oi product probably wrond ")
+        
         gain_matrix = gain_matrix.repeat(fiber.modes, axis=0).repeat(
             fiber.modes, axis=1
         )

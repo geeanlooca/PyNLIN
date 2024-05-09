@@ -134,7 +134,7 @@ signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies)
 num_pumps = len(pump_wavelengths)
 signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
-pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel
+pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel * 10
 
 
 amplifier = MMFRamanAmplifier(fiber)

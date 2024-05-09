@@ -10,7 +10,8 @@ rc('text', usetex=False)
 
 oi_file = 'oi.mat'
 mat = scipy.io.loadmat(oi_file)
-oi_full = mat['OI']
+print("Convert OI in m^-2 instead of um^-2?")
+oi_full = mat['OI'] * 1e12
 wl = mat['wavelenght_array'][0] * 1e-3
 # average over the polarizations
 oi = np.ndarray((21, 21, 4, 4))
@@ -39,9 +40,8 @@ for i in range(4):
     for j in range(4):
         oi_fit[:, i, j] = curve_fit(
             oi_law_fit, (x, y), oi[:, :, 1, 1].ravel(), p0=[0, 1, 0, 1, 0, 1])[0].T
-print(np.shape(oi_fit))
+# print(np.shape(oi_fit))
 np.save('oi_fit.npy', oi_fit)
-
 
 # =========
 # PLOTTING
