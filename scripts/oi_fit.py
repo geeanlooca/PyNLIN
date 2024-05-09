@@ -10,11 +10,11 @@ rc('text', usetex=False)
 
 oi_file = 'oi.mat'
 mat = scipy.io.loadmat(oi_file)
-print("Convert OI in m^-2 instead of um^-2?")
 oi_full = mat['OI'] * 1e12
 wl = mat['wavelenght_array'][0] * 1e-3
 # average over the polarizations
 oi = np.ndarray((21, 21, 4, 4))
+oi_avg = np.ndarray((4, 4))
 # print(wl)
 
 # return starting and ending index of the polarization
@@ -28,9 +28,11 @@ def polix(f):
 
 for i in range(4):
     for j in range(4):
-        oi[:, :, i, j] = np.average(oi_full[:, :, polix(i)[0]:polix(i)[
-                                    1], polix(j)[0]:polix(j)[1]], axis=(2, 3))
+        oi[:, :, i, j] = np.mean(oi_full[:, :, polix(i)[0]:polix(i)[
+            1], polix(j)[0]:polix(j)[1]], axis=(2, 3))
+        oi_avg[i, j] = np.mean(oi[:, :, i, j])
 np.save('oi.npy', oi)
+np.save('oi_avg.npy', oi_avg)
 
 # quadratic fit of the OI in frequency
 oi_fit = np.ndarray((6, 4, 4))
@@ -68,7 +70,7 @@ if plot:
         for j in range(i, n_modes):
             oi_slice = oi[:, :, i, j]
             print(str(modes[i]) + '/' + str(modes[j]) + " | %2.2e" %
-                  (np.max(oi_slice) - np.min(oi_slice)/np.average(oi_slice)))
+                  (np.max(oi_slice) - np.min(oi_slice) / np.average(oi_slice)))
             fig = go.Figure(data=go.Contour(z=oi_slice * 1e3,
                                             x=wl,
                                             y=wl,

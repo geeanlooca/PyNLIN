@@ -49,8 +49,13 @@ class MMFiber:
         beta2=20 * 1e-24 / 1e3,
         modes=1,
         overlap_integrals=None,
+        overlap_integrals_avg=None,
         mode_names=None,
     ):
+        """
+        overlap_integrals     : 6 quadratic fit parameters for each mode family pair
+        overlap_integrals_avg : 1 oi for each mode family pair
+        """
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
         self.beta2 = beta2
@@ -68,6 +73,7 @@ class MMFiber:
         # all the quadratic fit parameters are used in oi_law
 
         self.overlap_integrals = overlap_integrals
+        self.overlap_integrals_avg = overlap_integrals_avg
         self.mode_names = mode_names
         
         super().__init__()

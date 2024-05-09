@@ -81,15 +81,18 @@ class GainOptimizer(nn.Module):
         # pbar = tqdm.trange(epochs)
         pbar = tqdm.trange(epochs)
         for epoch in pbar:
-            if best_loss>1 or flatness>1:
+            if best_loss > 1 or flatness > 1:
                 if epoch > lock_wavelengths:
                     self.pump_wavelengths.requires_grad = True
-
                 pump_wavelengths = self.unscale(
                     self.pump_wavelengths, *self.wavelength_scaling
                 )
-                signal_spectrum = self.forward(pump_wavelengths * 1e-9, self.pump_powers)
-                loss = loss_function(signal_spectrum, _target_spectrum) #+ reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
+                print("HIT______________________________________")
+                # print("len", .shape)
+                signal_spectrum = self.forward(
+                    pump_wavelengths * 1e-9, self.pump_powers)
+                # + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
+                loss = loss_function(signal_spectrum, _target_spectrum)
                 loss.backward()
                 torch_optimizer.step()
                 torch_optimizer.zero_grad()
@@ -103,7 +106,7 @@ class GainOptimizer(nn.Module):
                     + f"\tBest Loss: {best_loss:.4f}"
                     + f"\tFlatness: {flatness:.2f} dB"
                 )
-                #print(f"\nWavel. : {pump_wavelengths}"+f"\nPow. : {self.pump_powers}")
+                # print(f"\nWavel. : {pump_wavelengths}"+f"\nPow. : {self.pump_powers}")
                 # pbar.set_description(
                 #     f"Loss: {loss.item():.4f}"
                 #     + f"\tBest Loss: {best_loss:.4f}"
@@ -118,7 +121,7 @@ class GainOptimizer(nn.Module):
                     best_powers = torch.clone(self.pump_powers)
                     best_loss = loss.item()
 
-        #print(f"\nFlatness: {flatness:.2f} dB")
+        # print(f"\nFlatness: {flatness:.2f} dB")
         return (
             best_wavelengths.detach().numpy().squeeze() * 1e-9,
             torch.abs(best_powers).detach().numpy().squeeze(),

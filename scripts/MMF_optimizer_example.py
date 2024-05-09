@@ -44,7 +44,8 @@ gain_dB_setup = data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup = data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
-oi = np.load('oi.npy')
+oi_fit = np.load('oi.npy')
+oi_avg = np.load('oi_avg.npy')
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
@@ -66,7 +67,8 @@ fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
     modes=4,
-    overlap_integrals=oi
+    overlap_integrals=oi_fit,
+    overlap_integrals_avg=oi_avg,
 )
 wdm = pynlin.wdm.WDM(
     spacing=channel_spacing * 1e-9,
@@ -189,11 +191,4 @@ def ct_solver(power_per_channel_dBm):
     return
 
 
-# OPTIMIZER COUNTER =================================
-if 'ct' in pumping_schemes:
-    if not os.path.exists(results_path_ct):
-        os.makedirs(results_path_ct)
-    if not os.path.exists(optimization_result_path_ct):
-        os.makedirs(optimization_result_path_ct)
-    with Pool(os.cpu_count()) as p:
-        p.map(ct_solver, power_per_channel_dBm_list)
+ct_solver(-30.0)
