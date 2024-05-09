@@ -131,15 +131,20 @@ initial_pump_frequencies = np.array(
 power_per_channel = dBm2watt(-30)
 power_per_pump = dBm2watt(-10)
 signal_wavelengths = wdm.wavelength_grid()
-pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+pump_wavelengths = nu2lambda(initial_pump_frequencies)
 num_pumps = len(pump_wavelengths)
 signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
-pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel*1000
+pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel
 
 
 amplifier = MMFRamanAmplifier(fiber)
-
-pump_solution_ct, signal_solution_ct = amplifier.solve(
+print("________ parameters")
+print(signal_wavelengths)
+print(watt2dBm(signal_powers))
+print(pump_wavelengths)
+print(watt2dBm(pump_powers))
+print("________ end parameters")
+pump_solution, signal_solution = amplifier.solve(
     signal_powers,
     signal_wavelengths,
     pump_powers,
@@ -151,11 +156,13 @@ pump_solution_ct, signal_solution_ct = amplifier.solve(
     # use_power_at_fiber_start=True,
     reference_bandwidth=ref_bandwidth
 )
-print(np.shape(pump_solution_ct))
-print(np.shape(signal_solution_ct))
+print(np.shape(pump_solution))
+print(np.shape(signal_solution))
 
 ### fixed mode
 plt.clf()
-for i in range(52):
-  plt.plot(range(500), signal_solution_ct[:, i, 1])
+for i in range(1):
+  plt.plot(np.linspace(0, fiber_length, 500)*1e-3, watt2dBm(signal_solution[:, i*10, 1]), label="sign")
+  plt.plot(np.linspace(0, fiber_length, 500)*1e-3, watt2dBm(pump_solution[:, i, :]), label="pump")
+plt.legend()
 plt.show()

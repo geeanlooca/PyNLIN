@@ -687,7 +687,7 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         gain_matrix = freq_scaling * gains
 
-        print("===== WARN: probably wrong")
+        print("===== WARN: gain and oi product probably wrond ")
         gain_matrix = gain_matrix.repeat(fiber.modes, axis=0).repeat(
             fiber.modes, axis=1
         )
