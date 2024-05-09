@@ -8,7 +8,7 @@ import pynlin.utils
 import pynlin.fiber
 import matplotlib.pyplot as plt
 plt.rcParams.update({
-    "text.usetex": False,
+	"text.usetex": False,
 })
 
 # from multiprocessing import Pool
@@ -67,20 +67,20 @@ profiles = True
 ###########################################
 num_modes = 4
 beta2 = pynlin.utils.dispersion_to_beta2(
-    dispersion * 1e-12 / (1e-9 * 1e3), wavelength
+	dispersion * 1e-12 / (1e-9 * 1e3), wavelength
 )
 ref_bandwidth = baud_rate
 
 fiber = pynlin.fiber.MMFiber(
-    effective_area=80e-12,
-    beta2=beta2,
-    modes=num_modes,
-    overlap_integrals=oi
+	effective_area=80e-12,
+	beta2=beta2,
+	modes=num_modes,
+	overlap_integrals=oi
 )
 wdm = pynlin.wdm.WDM(
-    spacing=channel_spacing * 1e-9,
-    num_channels=num_channels,
-    center_frequency=190
+	spacing=channel_spacing * 1e-9,
+	num_channels=num_channels,
+	center_frequency=190
 )
 
 # print(np.shape(fiber.overlap_integrals))
@@ -100,12 +100,12 @@ print("Warning: selecting only the first gain")
 max_channel_spacing = wdm.frequency_grid(
 )[num_channels - 1] - wdm.frequency_grid()[0]
 max_num_collisions = len(pynlin.nlin.get_m_values(
-    fiber,
-    fiber_length,
-    max_channel_spacing,
-    1 / baud_rate,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin)
+	fiber,
+	fiber_length,
+	max_channel_spacing,
+	1 / baud_rate,
+	partial_collisions_start=partial_collision_margin,
+	partial_collisions_end=partial_collision_margin)
 )
 integration_steps = max_num_collisions * points_per_collision
 # Suggestion: 100m step is sufficient
@@ -126,7 +126,7 @@ pump_band_a = lambda2nu(1400e-9)
 initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 # --- BROMAGE pump frequencies
 initial_pump_frequencies = np.array(
-    lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
+	lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
 
 power_per_channel = dBm2watt(-30)
 power_per_pump = dBm2watt(-10)
@@ -145,16 +145,16 @@ print(pump_wavelengths)
 print(watt2dBm(pump_powers))
 print("________ end parameters")
 pump_solution, signal_solution = amplifier.solve(
-    signal_powers,
-    signal_wavelengths,
-    pump_powers,
-    pump_wavelengths,
-    z_max,
-    fiber,
-    counterpumping = True,
-    # pump_direction=-1,
-    # use_power_at_fiber_start=True,
-    reference_bandwidth=ref_bandwidth
+	signal_powers,
+	signal_wavelengths,
+	pump_powers,
+	pump_wavelengths,
+	z_max,
+	fiber,
+	counterpumping = True,
+	# pump_direction=-1,
+	# use_power_at_fiber_start=True,
+	reference_bandwidth=ref_bandwidth
 )
 print(np.shape(pump_solution))
 print(np.shape(signal_solution))
