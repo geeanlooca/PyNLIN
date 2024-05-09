@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from scipy.constants import lambda2nu, nu2lambda
 
-from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
+from pynlin.raman.pytorch.gain_optimizer import GainOptimizer
 from pynlin.raman.pytorch.solvers import RamanAmplifier
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
@@ -169,7 +169,7 @@ for fiber_length in fiber_lengths:
 				pump_direction=pump_directions
 			)
 
-			optimizer = CopropagatingOptimizer(
+			optimizer = GainOptimizer(
 				torch_amplifier,
 				torch.from_numpy(pump_wavelengths),
 				torch.from_numpy(pump_powers),
@@ -239,7 +239,7 @@ for fiber_length in fiber_lengths:
 				power_per_channel,
 				fiber,
 			)
-			optimizer = CopropagatingOptimizer(
+			optimizer = GainOptimizer(
 				torch_amplifier,
 				torch.from_numpy(pump_wavelengths),
 				torch.from_numpy(pump_powers),
@@ -313,7 +313,7 @@ for fiber_length in fiber_lengths:
 				pump_direction=-1,
 			)
 
-			optimizer = CopropagatingOptimizer(
+			optimizer = GainOptimizer(
 				torch_amplifier_ct,
 				torch.from_numpy(pump_wavelengths),
 				torch.from_numpy(pump_powers),

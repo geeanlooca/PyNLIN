@@ -15,7 +15,7 @@ def dBm(x: torch.Tensor) -> torch.Tensor:
     return 10 * torch.log10(x) + 30
 
 
-class CopropagatingOptimizer(nn.Module):
+class GainOptimizer(nn.Module):
     """PyTorch module for finding the power and wavelength of each pump of a
     Raman amplifier to obtain a target output signal spectrum."""
 
@@ -25,7 +25,7 @@ class CopropagatingOptimizer(nn.Module):
         initial_pump_wavelengths: torch.Tensor,
         initial_pump_powers: torch.Tensor,
     ):
-        super(CopropagatingOptimizer, self).__init__()
+        super(GainOptimizer, self).__init__()
         self.raman_solver = raman_torch_solver
         scaled_wavelengths, self.wavelength_scaling = self.scale(
             initial_pump_wavelengths.float()

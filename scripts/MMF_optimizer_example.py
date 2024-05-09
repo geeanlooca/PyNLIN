@@ -11,7 +11,7 @@ import numpy as np
 import torch
 from scipy.constants import lambda2nu, nu2lambda
 
-from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
+from pynlin.raman.pytorch.gain_optimizer import GainOptimizer
 from pynlin.raman.pytorch.solvers import MMFRamanAmplifier
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
@@ -144,7 +144,7 @@ def ct_solver(power_per_channel_dBm):
         fiber,
     )
 
-    optimizer = CopropagatingOptimizer(
+    optimizer = GainOptimizer(
         torch_amplifier_ct,
         torch.from_numpy(pump_wavelengths),
         torch.from_numpy(pump_powers),

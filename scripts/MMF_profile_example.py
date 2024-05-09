@@ -17,7 +17,7 @@ import numpy as np
 # import torch
 from scipy.constants import lambda2nu, nu2lambda
 
-# from pynlin.raman.pytorch.gain_optimizer import CopropagatingOptimizer
+# from pynlin.raman.pytorch.gain_optimizer import GainOptimizer
 from pynlin.raman.solvers import MMFRamanAmplifier
 # from pynlin.raman.solvers import RamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
