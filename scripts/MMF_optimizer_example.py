@@ -6,22 +6,26 @@ import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
 from multiprocessing import Pool
-
+from matplotlib import pyplot as plt
 import numpy as np
 import torch
 from scipy.constants import lambda2nu, nu2lambda
 
 from pynlin.raman.pytorch.gain_optimizer import GainOptimizer
 from pynlin.raman.pytorch.solvers import MMFRamanAmplifier
-from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
+from pynlin.raman.solvers import MMFRamanAmplifier as NumpyMMFRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
 import pynlin.constellations
 from random import shuffle
 import json
 
+plt.rcParams.update({
+	"text.usetex": False,
+})
+
 f = open("./scripts/sim_config.json")
 data = json.load(f)
-print(data)
+# print(data)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
 baud_rate = data["baud_rate"]
@@ -45,7 +49,7 @@ gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup = data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
 num_modes = data['num_modes']
-oi_fit = np.load('oi.npy')
+oi_fit = np.load('oi_fit.npy')
 oi_avg = np.load('oi_avg.npy')
 
 # Manual configuration
@@ -117,8 +121,8 @@ pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
 pbar.set_description(pbar_description)
 
 
-def ct_solver(power_per_channel_dBm):
-    if os.path.exists(results_path_ct + "pump_solution_ct_power" + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy"):
+def ct_solver(power_per_channel_dBm, use_precomputed=False):
+    if use_precomputed and os.path.exists(results_path_ct + "pump_solution_ct_power" + str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy"):
         print("Result already computed for power: ",
               power_per_channel_dBm, " and gain: ", gain_dB)
         return
@@ -126,18 +130,18 @@ def ct_solver(power_per_channel_dBm):
         print("Computing the power: ", power_per_channel_dBm, " and gain: ", gain_dB)
     # print("Power per channel: ", power_per_channel_dBm, "dBm")
     num_pumps = num_only_ct_pumps
-    pump_band_b = lambda2nu(1480e-9)
-    pump_band_a = lambda2nu(1400e-9)
     # initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
     # BROMAGE
     initial_pump_frequencies = np.array(lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
     power_per_channel = dBm2watt(power_per_channel_dBm)
-    power_per_pump = dBm2watt(-10)
+    power_per_pump = dBm2watt(-30)
     signal_wavelengths = wdm.wavelength_grid()
-    pump_wavelengths = nu2lambda(initial_pump_frequencies)
-    num_pumps = len(pump_wavelengths)
-    signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
-    pump_powers = np.ones_like(pump_wavelengths) * power_per_pump
+    print("WARN: pump wavelengths are in meters, but they are later on used in um")
+    initial_pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    num_pumps = len(initial_pump_wavelengths)  # is intended as "per mode"
+
+    initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
+    initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0)
     torch_amplifier_ct = MMFRamanAmplifier(
         fiber_length,
         integration_steps,
@@ -149,19 +153,20 @@ def ct_solver(power_per_channel_dBm):
 
     optimizer = GainOptimizer(
         torch_amplifier_ct,
-        torch.from_numpy(pump_wavelengths),
-        torch.from_numpy(pump_powers),
+        torch.from_numpy(initial_pump_wavelengths),
+        torch.from_numpy(initial_pump_powers),
     )
 
-    target_spectrum = watt2dBm(signal_powers) + gain_dB
-    target_spectrum = target_spectrum[:, None].repeat(num_modes, axis=1)
+    signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
+    signal_powers = signal_powers[:, None].repeat(num_modes, axis=1)
+    target_spectrum = watt2dBm(signal_powers)[None, :, :] + gain_dB
     print(np.shape(target_spectrum))
     if power_per_channel > -6.0:
         learning_rate = 1e-4
     else:
         learning_rate = 1e-3
 
-    pump_wavelengths, pump_powers = optimizer.optimize(
+    pump_wavelengths, initial_pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
         epochs=500,
         learning_rate=learning_rate,
@@ -170,35 +175,46 @@ def ct_solver(power_per_channel_dBm):
     np.save(optimization_result_path_ct + "opt_wavelengths_ct" +
             str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_wavelengths)
     np.save(optimization_result_path_ct + "opt_powers_ct" +
-            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_powers)
+            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", initial_pump_powers)
 
-    amplifier = NumpyRamanAmplifier(fiber)
+    amplifier = NumpyMMFRamanAmplifier(fiber)
 
-    print("============ results ==============")
+    print("\n============ results ==============")
     print("Pump powers")
-    print(pump_powers)
+    print(watt2dBm(initial_pump_powers.reshape((num_pumps, num_modes))))
     print("Pump frequency")
     print(lambda2nu(pump_wavelengths))
-    print("=========== end ===================")
+    print("Pump wavelenghts")
+    print(pump_wavelengths)
+    print("Initial pump wavelenghts")
+    print(initial_pump_wavelengths * 1e-9)
+    print("=========== end ===================\n")
     
-    pump_solution, signal_solution, ase_solution = amplifier.solve(
+    print("WARN: converting the inlined pump_powers into a matrix")
+    initial_pump_powers = initial_pump_powers.reshape((num_pumps, num_modes))
+    pump_solution, signal_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
-        pump_powers,
+        initial_pump_powers,
         pump_wavelengths,
         z_max,
-        pump_direction=-1,
-        use_power_at_fiber_start=True,
+        fiber,
+        counterpumping=True,
+        # pump_direction=-1,
+        # use_power_at_fiber_start=True,
         reference_bandwidth=ref_bandwidth
     )
-    
-    np.save(results_path_ct + "pump_solution_ct_power" + str(power_per_channel_dBm) +
-            "_opt_gain_" + str(gain_dB) + ".npy", pump_solution)
-    np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) +
-            "_opt_gain_" + str(gain_dB) + ".npy", signal_solution)
-    np.save(results_path_ct + "ase_solution_ct_" + str(power_per_channel_dBm) +
-            "_opt_gain_" + str(gain_dB) + ".npy", ase_solution)
-    print(pump_solution[-1])
+
+    # fixed mode
+    plt.clf()
+    for i in range(1):
+        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3,
+                 watt2dBm(signal_solution[:, i * 10, 1]), label="sign")
+        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3,
+                 watt2dBm(pump_solution[:, i, :]), label="pump")
+    plt.legend()
+    plt.show()
     return
+
 
 ct_solver(-30.0)
