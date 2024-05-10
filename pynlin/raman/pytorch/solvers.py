@@ -375,8 +375,8 @@ class MMFRamanAmplifier(torch.nn.Module):
     self.length = length
     self.steps = steps
 
-    self.overlap_integrals_avg = fiber.overlap_integrals_avg
-    overlap_integrals = torch.Tensor(fiber.overlap_integrals_avg)
+    self.overlap_integrals_avg = fiber.overlap_integrals_avg[:self.modes, :self.modes]
+    overlap_integrals = torch.Tensor(fiber.overlap_integrals_avg).float()
 
     z = torch.linspace(0, self.length, self.steps)
 
@@ -525,6 +525,7 @@ class MMFRamanAmplifier(torch.nn.Module):
     """
 
     batch_size = P.shape[0]
+
     dPdz = (
       (
         -losses.view(batch_size, -1, 1)
@@ -644,18 +645,19 @@ class MMFRamanAmplifier(torch.nn.Module):
     """
     gain = gain.repeat_interleave(self.modes, dim=1).repeat_interleave(
      self.modes, dim=2
-    )
-    oi = self.overlap_integrals_avg
-    oi = self.overlap_integrals.expand((batch_size, self.modes, self.modes)).repeat(
-      1, num_freqs, num_freqs
-    )
+    ).float()
+    oi = torch.from_numpy(self.overlap_integrals_avg[None, :, :].repeat(num_freqs, axis=1).repeat(num_freqs, axis=2)).float()
+    # oi = self.overlap_integrals_avg.expand((batch_size, self.modes, self.modes)).repeat(
+    #   1, num_freqs, num_freqs
+    # )
+    
     # mode_list = np.array(range(self.modes))
     # oi = self.overlap_integral(mode_list[:, None, None, None], mode_list[None, :, None, None],
     # 						   (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
     # oi = np.reshape(oi, (total_wavelengths * fiber.modes,
     # 				total_wavelengths * fiber.modes), order='F')
     G = gain * oi
-
+    
     solution = torch_rk4(
       MMFRamanAmplifier.ode, total_power, self.z, losses, G, self.direction,
     ).view(-1, num_freqs, self.modes)

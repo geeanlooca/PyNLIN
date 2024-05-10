@@ -16,8 +16,8 @@ from pynlin.raman.pytorch.solvers import MMFRamanAmplifier
 from pynlin.raman.solvers import MMFRamanAmplifier as NumpyMMFRamanAmplifier
 from pynlin.utils import dBm2watt, watt2dBm
 import pynlin.constellations
-from random import shuffle
 import json
+from matplotlib.cm import viridis
 
 plt.rcParams.update({
 	"text.usetex": False,
@@ -141,7 +141,8 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     num_pumps = len(initial_pump_wavelengths)  # is intended as "per mode"
 
     initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
-    initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0)
+    initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0) + 0.0001 * np.random.rand(num_pumps * num_modes)
+    initial_pump_powers = initial_pump_powers
     torch_amplifier_ct = MMFRamanAmplifier(
         fiber_length,
         integration_steps,
@@ -207,14 +208,22 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     # fixed mode
     plt.clf()
-    for i in range(1):
+    cmap = viridis
+    for i in range(num_pumps):
+      if i ==1:
         plt.plot(np.linspace(0, fiber_length, 500) * 1e-3,
-                 watt2dBm(signal_solution[:, i * 10, 1]), label="sign")
-        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3,
-                 watt2dBm(pump_solution[:, i, :]), label="pump")
+                 watt2dBm(pump_solution[:, i, :]), label="pump",  color=cmap(i/num_pumps),ls="--")
+      else:
+        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3, 
+                 watt2dBm(pump_solution[:, i, :]), color=cmap(i/num_pumps),ls="--")
+    for i in range(num_channels):
+      if i==1:
+        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3, watt2dBm(signal_solution[:, i, :]),  color=cmap(i/num_channels),label="signal")
+      else:
+        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3, 
+                   watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
     plt.legend()
     plt.show()
     return
-
 
 ct_solver(-30.0)
