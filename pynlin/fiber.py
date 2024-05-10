@@ -81,7 +81,6 @@ class MMFiber:
     """
     i, j are mode indexes
     wl1, wl2 are the respective wavelengths
-    TODO rename
     """
     def evaluate_oi(self, i, j, wavelengths):
       # print("____________")

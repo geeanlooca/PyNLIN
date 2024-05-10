@@ -161,7 +161,6 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     signal_powers = signal_powers[:, None].repeat(num_modes, axis=1)
     target_spectrum = watt2dBm(signal_powers)[None, :, :] + gain_dB
-    print(np.shape(target_spectrum))
     if power_per_channel > -6.0:
         learning_rate = 1e-4
     else:
@@ -205,22 +204,22 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         # use_power_at_fiber_start=True,
         reference_bandwidth=ref_bandwidth
     )
-
+    print(np.shape(pump_solution))
     # fixed mode
     plt.clf()
     cmap = viridis
     for i in range(num_pumps):
       if i ==1:
-        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3,
+        plt.plot(z_max * 1e-3,
                  watt2dBm(pump_solution[:, i, :]), label="pump",  color=cmap(i/num_pumps),ls="--")
       else:
-        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3, 
+        plt.plot(z_max * 1e-3, 
                  watt2dBm(pump_solution[:, i, :]), color=cmap(i/num_pumps),ls="--")
     for i in range(num_channels):
       if i==1:
-        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3, watt2dBm(signal_solution[:, i, :]),  color=cmap(i/num_channels),label="signal")
+        plt.plot(z_max* 1e-3, watt2dBm(signal_solution[:, i, :]),  color=cmap(i/num_channels),label="signal")
       else:
-        plt.plot(np.linspace(0, fiber_length, 500) * 1e-3, 
+        plt.plot(z_max * 1e-3, 
                    watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
     plt.legend()
     plt.show()

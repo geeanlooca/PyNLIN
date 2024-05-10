@@ -637,8 +637,8 @@ class MMFRamanAmplifier(RamanAmplifier):
         num_pumps = pump_power.shape[0]
 
         total_wavelengths = num_signals + num_pumps
-        num_modes = signal_power.shape[1]
-        total_signals = num_modes * (num_pumps + num_signals)
+        num_modes = fiber.modes
+        total_signals = num_modes * total_wavelengths
         pump_power_ = pump_power.reshape((num_modes * num_pumps))
         signal_power_ = signal_power.reshape((num_modes * num_signals))
 
@@ -649,7 +649,6 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         wavelengths = np.concatenate((pump_wavelength, signal_wavelength))
         input_power = np.concatenate((pump_power_, signal_power_))
-        print(len(input_power))
         frequencies = wavelength_to_frequency(wavelengths)
 
         loss_coeffs = fiber.losses
@@ -678,7 +677,6 @@ class MMFRamanAmplifier(RamanAmplifier):
         freqs = np.expand_dims(frequencies, axis=-1)
         freq_scaling = np.maximum(1, freqs * (1 / freqs.T))
 
-        # WORK IN PROGRESS
         mode_list = np.array(range(fiber.modes))
         oi = fiber.evaluate_oi(mode_list[:, None, None, None], mode_list[None, :, None, None],
                                (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
@@ -695,7 +693,6 @@ class MMFRamanAmplifier(RamanAmplifier):
         )
 
         gains_mmf = gain_matrix * oi
-
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))
@@ -857,7 +854,6 @@ class MMFRamanAmplifier(RamanAmplifier):
             )
 
             sol = sol.reshape((-1, total_signals + num_signals, fiber.modes))
-
             power_solution = sol[:, :total_signals, :]
             pump_solution = power_solution[:, :num_pumps, :]
             signal_solution = power_solution[:, num_pumps:, :]
