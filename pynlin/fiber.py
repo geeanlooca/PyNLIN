@@ -72,8 +72,8 @@ class MMFiber:
         # i, j mode indexes, 
         # all the quadratic fit parameters are used in oi_law
 
-        self.overlap_integrals = overlap_integrals
-        self.overlap_integrals_avg = overlap_integrals_avg
+        self.overlap_integrals = overlap_integrals[:, :modes, :modes]
+        self.overlap_integrals_avg = overlap_integrals_avg[:modes, :modes]
         self.mode_names = mode_names
         
         super().__init__()
