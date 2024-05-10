@@ -66,7 +66,9 @@ class GainOptimizer(nn.Module):
                 * torch.ones_like(self.raman_solver.signal_wavelengths).view(1, -1)
             ).float()
         else:
-            _target_spectrum = torch.from_numpy(target_spectrum).view(1, -1).float()
+            print("Overriding the loading of the target spectrum")
+            _target_spectrum = torch.from_numpy(target_spectrum).float()
+            # _target_spectrum = torch.from_numpy(target_spectrum).view(1, -1).float()
 
         torch_optimizer = Adam(self.parameters(), lr=learning_rate)
         loss_function = MSELoss()
@@ -87,11 +89,12 @@ class GainOptimizer(nn.Module):
                 pump_wavelengths = self.unscale(
                     self.pump_wavelengths, *self.wavelength_scaling
                 )
-                print("HIT______________________________________")
-                # print("len", .shape)
+                # TODO add the power dependency on the modes? No, we do not tune the modes 
+                # TODO adapt this whole method to MMF
                 signal_spectrum = self.forward(
-                    pump_wavelengths * 1e-9, self.pump_powers)
+                    pump_wavelengths * 1e-9, self.pump_powers.repeat(4))
                 # + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
+                
                 loss = loss_function(signal_spectrum, _target_spectrum)
                 loss.backward()
                 torch_optimizer.step()

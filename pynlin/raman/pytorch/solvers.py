@@ -525,7 +525,6 @@ class MMFRamanAmplifier(torch.nn.Module):
     """
 
     batch_size = P.shape[0]
-    print(P.view(1, -1, 1).shape)
     dPdz = (
       (
         -losses.view(batch_size, -1, 1)
@@ -551,7 +550,6 @@ class MMFRamanAmplifier(torch.nn.Module):
     """
 
     batch_size = x.shape[0]
-    print("hit______________")
     num_freqs = self.num_channels + self.num_pumps
 
     # This will be the input to the interpolation function

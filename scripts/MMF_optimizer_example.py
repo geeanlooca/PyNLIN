@@ -44,6 +44,7 @@ gain_dB_setup = data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup = data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
+num_modes = data['num_modes']
 oi_fit = np.load('oi.npy')
 oi_avg = np.load('oi_avg.npy')
 
@@ -66,7 +67,7 @@ ref_bandwidth = baud_rate
 fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
-    modes=4,
+    modes=num_modes,
     overlap_integrals=oi_fit,
     overlap_integrals_avg=oi_avg,
 )
@@ -153,42 +154,51 @@ def ct_solver(power_per_channel_dBm):
     )
 
     target_spectrum = watt2dBm(signal_powers) + gain_dB
+    target_spectrum = target_spectrum[:, None].repeat(num_modes, axis=1)
+    print(np.shape(target_spectrum))
     if power_per_channel > -6.0:
         learning_rate = 1e-4
     else:
         learning_rate = 1e-3
 
-    pump_wavelengths_ct, pump_powers_ct = optimizer.optimize(
+    pump_wavelengths, pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
         epochs=500,
         learning_rate=learning_rate,
         lock_wavelengths=200,
     )
     np.save(optimization_result_path_ct + "opt_wavelengths_ct" +
-            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_wavelengths_ct)
+            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_wavelengths)
     np.save(optimization_result_path_ct + "opt_powers_ct" +
-            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_powers_ct)
+            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_powers)
 
     amplifier = NumpyRamanAmplifier(fiber)
 
-    pump_solution_ct, signal_solution_ct, ase_solution_ct = amplifier.solve(
+    print("============ results ==============")
+    print("Pump powers")
+    print(pump_powers)
+    print("Pump frequency")
+    print(lambda2nu(pump_wavelengths))
+    print("=========== end ===================")
+    
+    pump_solution, signal_solution, ase_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
-        pump_powers_ct,
-        pump_wavelengths_ct,
+        pump_powers,
+        pump_wavelengths,
         z_max,
         pump_direction=-1,
         use_power_at_fiber_start=True,
         reference_bandwidth=ref_bandwidth
     )
+    
     np.save(results_path_ct + "pump_solution_ct_power" + str(power_per_channel_dBm) +
-            "_opt_gain_" + str(gain_dB) + ".npy", pump_solution_ct)
+            "_opt_gain_" + str(gain_dB) + ".npy", pump_solution)
     np.save(results_path_ct + "signal_solution_ct_" + str(power_per_channel_dBm) +
-            "_opt_gain_" + str(gain_dB) + ".npy", signal_solution_ct)
+            "_opt_gain_" + str(gain_dB) + ".npy", signal_solution)
     np.save(results_path_ct + "ase_solution_ct_" + str(power_per_channel_dBm) +
-            "_opt_gain_" + str(gain_dB) + ".npy", ase_solution_ct)
-    print(pump_solution_ct[-1])
+            "_opt_gain_" + str(gain_dB) + ".npy", ase_solution)
+    print(pump_solution[-1])
     return
-
 
 ct_solver(-30.0)
