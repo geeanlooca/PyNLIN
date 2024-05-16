@@ -85,7 +85,7 @@ def test_raman_amplifier_counterpumping_with_power_at_z0_exception():
     wdm = pynlin.wdm.WDM(num_channels=50, spacing=200)
     signal_wavelengths = wdm.wavelength_grid()
     signal_powers = np.ones_like(signal_wavelengths) * Ps0
-    pump_wavelengths = np.array([1411.0216, 1418.8397, 1429.0806, 1445.8669]) * 1e-12
+    pump_wavelengths = np.array([1411.0216, 1418.8397, 1429.0806, 1445.8669]) * 1e-9
     pump_powers = np.ones_like(pump_wavelengths) * Pp0
     amplifier = pynlin.raman.solvers.RamanAmplifier(fiber)
 

@@ -446,7 +446,7 @@ class MMFRamanAmplifier(torch.nn.Module):
     self.register_buffer("raman_response", raman_response)
 
     # Doesn't matter, the pumps are turned off
-    pump_lambda = torch.linspace(1420, 1480, self.num_pumps) * 1e-12
+    pump_lambda = torch.linspace(1420, 1480, self.num_pumps) * 1e-9
     pump_power = torch.zeros((num_pumps * self.modes))
     x = torch.cat((pump_lambda, pump_power)).float().view(1, -1)
 
