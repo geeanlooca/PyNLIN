@@ -49,7 +49,7 @@ class Fiber:
 class MMFiber:
     def __init__(
         self,
-        losses=0.2 * 1e-3,
+        losses=None,
         raman_coefficient=7e-14,
         effective_area=80e-12,
         beta2=20 * 1e-24 / 1e3,
@@ -66,10 +66,16 @@ class MMFiber:
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
         self.beta2 = beta2
-        try:
-            self.losses = list(losses)
-        except:
-            self.losses = [losses]
+        if losses:
+            try:
+                self.losses = list(losses)
+            except:
+                self.losses = [losses]
+        else:
+            # coefficients of the [0, 1, 2]-th order coefficients of a quadratic fit in
+            # powers of wavelength (in m). Result in units of dB/m
+            self.losses = np.array([2.26786883e-06 * 1e18, -
+                           7.12461042e-03 * 1e9, 5.78789219e00]) * 1e-3
 
         self.raman_efficiency = self.raman_coefficient / self.effective_area
         self.modes = modes

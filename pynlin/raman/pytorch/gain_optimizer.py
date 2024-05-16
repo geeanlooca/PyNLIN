@@ -95,6 +95,9 @@ class GainOptimizer(nn.Module):
                     pump_wavelengths, self.pump_powers)
                 # + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
                 
+                print(signal_spectrum)
+                print(_target_spectrum)
+                
                 loss = loss_function(signal_spectrum, _target_spectrum)
                 loss.backward()
                 torch_optimizer.step()

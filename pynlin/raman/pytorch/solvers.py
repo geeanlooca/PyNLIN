@@ -394,12 +394,8 @@ class MMFRamanAmplifier(torch.nn.Module):
     for i in range(np.minimum(3, num_loss_coeffs)):
       loss_coeffs[i] = fiber.losses[i]
 
-    # Compute the attenuation for each signal
-    signal_loss = self._alpha_to_linear(
-      loss_coeffs[2]
-      + loss_coeffs[1] * (signal_wavelength)
-      + loss_coeffs[0] * (signal_wavelength) ** 2
-    )
+    # Compute the attenuation for each signal 
+    signal_loss = self._alpha_to_linear(polyval(loss_coeffs, signal_wavelength))
 
     if isinstance(signal_loss, np.ndarray):
       signal_loss = torch.from_numpy(signal_loss)

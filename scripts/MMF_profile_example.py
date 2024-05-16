@@ -7,6 +7,8 @@ import pynlin.nlin
 import pynlin.utils
 import pynlin.fiber
 import matplotlib.pyplot as plt
+from matplotlib.cm import viridis
+
 plt.rcParams.update({
 	"text.usetex": False,
 })
@@ -134,7 +136,7 @@ signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies)
 num_pumps = len(pump_wavelengths)
 signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
-pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel
+pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel * 0.001
 
 
 amplifier = MMFRamanAmplifier(fiber)
@@ -161,10 +163,23 @@ print(np.shape(signal_solution))
 
 ### fixed mode
 plt.clf()
-for i in range(1):
-  plt.plot(np.linspace(0, fiber_length, len(signal_solution[:, 0, 0])) * 1e-3, watt2dBm(signal_solution[:, i*10, 1]), label="sign")
-  plt.plot(np.linspace(0, fiber_length, len(signal_solution[:, 0, 0])) * 1e-3, watt2dBm(pump_solution[:, i, :]), label="pump")
+cmap = viridis
+z_plot = np.linspace(0, fiber_length, len(pump_solution[:, 1, 1])) * 1e-3
+for i in range(num_pumps):
+  if i ==1:
+    plt.plot(z_plot,
+             watt2dBm(pump_solution[:, i, :]), label="pump",  color=cmap(i/num_pumps),ls="--")
+  else:
+    plt.plot(z_plot, 
+             watt2dBm(pump_solution[:, i, :]), color=cmap(i/num_pumps),ls="--")
+for i in range(num_channels):
+  if i==1:
+    plt.plot(z_plot, watt2dBm(signal_solution[:, i, :]),  color=cmap(i/num_channels),label="signal")
+  else:
+    plt.plot(z_plot, 
+               watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
 plt.legend()
 plt.grid()
 plt.show()
-plt.imsave("profiles.pdf")
+plt.clf()
+plt.savefig("profiles.pdf")

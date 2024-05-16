@@ -15,6 +15,8 @@ wl = mat['wavelenght_array'][0] * 1e-3
 # average over the polarizations
 oi = np.ndarray((21, 21, 4, 4))
 oi_avg = np.ndarray((4, 4))
+oi_max = np.zeros_like(oi_avg)
+oi_min = np.zeros_like(oi_avg)
 # print(wl)
 
 # return starting and ending index of the polarization
@@ -31,8 +33,13 @@ for i in range(4):
         oi[:, :, i, j] = np.mean(oi_full[:, :, polix(i)[0]:polix(i)[
             1], polix(j)[0]:polix(j)[1]], axis=(2, 3))
         oi_avg[i, j] = np.mean(oi[:, :, i, j])
+        oi_max[i, j] = np.max(oi[:, :, i, j])
+        oi_min[i, j] = np.min(oi[:, :, i, j])
+        
 np.save('oi.npy', oi)
 np.save('oi_avg.npy', oi_avg)
+np.save('oi_max.npy', oi_max)
+np.save('oi_min.npy', oi_min)
 
 # quadratic fit of the OI in frequency
 oi_fit = np.ndarray((6, 4, 4))

@@ -96,7 +96,7 @@ partial_collision_margin = 5
 points_per_collision = 10
 print("Warning: select only first lenfth and gain")
 fiber_length = fiber_lengths[0]
-gain_dB = gain_dB_list[0]
+gain_dB = -33
 
 length_setup = int(fiber_length * 1e-3)
 optimization_result_path_ct = '../results_' + \
@@ -148,7 +148,6 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
     initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0) + 0.0001 * np.random.rand(num_pumps * num_modes)
-    initial_pump_powers = initial_pump_powers
     torch_amplifier_ct = MMFRamanAmplifier(
         fiber_length,
         integration_steps,
@@ -167,22 +166,15 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     signal_powers = signal_powers[:, None].repeat(num_modes, axis=1)
     target_spectrum = watt2dBm(signal_powers)[None, :, :] + gain_dB
-    if power_per_channel > -6.0:
-        learning_rate = 1e-4
-    else:
-        learning_rate = 1e-3
+    learning_rate = 1e-4
 
     pump_wavelengths, initial_pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=10,
+        epochs=1,
         learning_rate=learning_rate,
-        lock_wavelengths=200,
-    )
-    # np.save(optimization_result_path_ct + "opt_wavelengths_ct" +
-    #         str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_wavelengths)
-    # np.save(optimization_result_path_ct + "opt_powers_ct" +
-    #         str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", initial_pump_powers)
-
+        lock_wavelengths=5,
+        )
+    
     amplifier = NumpyMMFRamanAmplifier(fiber)
 
     print("\n============ results ==============")
@@ -228,6 +220,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         plt.plot(z_max * 1e-3, 
                    watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
     plt.legend()
+    plt.grid()
     plt.show()
     return
 

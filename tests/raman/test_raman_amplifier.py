@@ -105,9 +105,8 @@ def test_raman_amplifier_MMF():
     Ps0 = pynlin.utils.dBm2watt(-5)
     Pp0 = 500e-3
 
-    oi = np.load('oi_fit.npy')
     fiber = pynlin.fiber.MMFiber(modes=4,
-        overlap_integrals=oi,
+        overlap_integrals=np.array([1e-9, 0, 0])[:, None, None].repeat(4, axis=1).repeat(4, axis=2),
         mode_names=None,)
     fiber_length = 50e3
     num_points = 1000
@@ -139,7 +138,6 @@ def test_torch_raman_amplifier():
     # Ps0 = pynlin.utils.dBm2watt(-5)
     # Pp0 = 500e-3
 
-    # oi = np.load('oi_fit.npy')
     # fiber = pynlin.fiber.MMFiber(modes=4,
     #     overlap_integrals=oi,
     #     mode_names=None,)
