@@ -23,6 +23,11 @@ plt.rcParams.update({
 	"text.usetex": False,
 })
 
+import logging
+logging.basicConfig(filename='MMF_optimizer.log', encoding='utf-8', level=logging.DEBUG)
+log = logging.getLogger(__name__)
+log.debug("starting to load sim_config.json")
+
 f = open("./scripts/sim_config.json")
 data = json.load(f)
 # print(data)
@@ -60,6 +65,8 @@ num_only_co_pumps = 4
 num_only_ct_pumps = 4
 optimize = True
 profiles = True
+
+log.debug("end loading of parameters")
 
 ###########################################
 #  COMPUTATION OF AMPLITUDE FUNCTIONS

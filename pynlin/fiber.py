@@ -23,16 +23,18 @@ class Fiber:
             except:
                 self.losses = [losses]
         else:
-            self.losses = [2.26786883e-06, -7.12461042e-03, 5.78789219e00]
+            # coefficients of the [0, 1, 2]-th order coefficients of a quadratic fit in 
+            # powers of wavelength (in m). Result in units of dB/m
+            self.losses = [2.26786883e-06*1e18, -7.12461042e-03*1e9, 5.78789219e00] * 1e-3
 
         self.raman_efficiency = self.raman_coefficient / self.effective_area
 
         super().__init__()
 
     def loss_profile(self, wavelengths):
-        """Get the fiber losses (in dB/km) at the specified wavelengths (in
+        """Get the fiber losses (in dB/m) at the specified wavelengths (in
         meters)."""
-        return polyval(self.losses, wavelengths * 1e9)
+        return polyval(self.losses, wavelengths)
 
     def __str__(self):
         return str(self.__dict__)
@@ -43,7 +45,7 @@ class Fiber:
 class MMFiber:
     def __init__(
         self,
-        losses=0.2,
+        losses=0.2*1e-3,
         raman_coefficient=7e-14,
         effective_area=80e-12,
         beta2=20 * 1e-24 / 1e3,
@@ -52,6 +54,7 @@ class MMFiber:
         overlap_integrals_avg=None,
         mode_names=None,
     ):
+        print()
         """
         overlap_integrals     : 6 quadratic fit parameters for each mode family pair
         overlap_integrals_avg : 1 oi for each mode family pair
@@ -90,9 +93,9 @@ class MMFiber:
       return oi_law(wavelengths[0][None, :, :, :, :], wavelengths[1][None, :, :, :, :], self.overlap_integrals[:, i, j]) # original data were in um
         
     def loss_profile(self, wavelengths):
-        """Get the fiber losses (in dB/km) at the specified wavelengths (in
+        """Get the fiber losses (in dB/m) at the specified wavelengths (in
         meters)."""
-        return polyval(self.losses, wavelengths * 1e9)
+        return polyval(self.losses, wavelengths)
 
     def __str__(self):
         return str(self.__dict__)

@@ -397,8 +397,8 @@ class MMFRamanAmplifier(torch.nn.Module):
     # Compute the attenuation for each signal
     signal_loss = self._alpha_to_linear(
       loss_coeffs[2]
-      + loss_coeffs[1] * (signal_wavelength * 1e9)
-      + loss_coeffs[0] * (signal_wavelength * 1e9) ** 2
+      + loss_coeffs[1] * (signal_wavelength)
+      + loss_coeffs[0] * (signal_wavelength) ** 2
     )
 
     if isinstance(signal_loss, np.ndarray):
@@ -474,8 +474,8 @@ class MMFRamanAmplifier(torch.nn.Module):
     self.register_buffer("off_gain", off_gain)
 
   def _alpha_to_linear(self, alpha):
-    """Convert attenuation constant from dB to linear units."""
-    return alpha * 1e-3 * np.log(10) / 10
+    """Convert attenuation constant from dB/m to linear units."""
+    return alpha * np.log(10) / 10
 
   def _lambda2frequency(self, wavelength):
     """Convert wavelength in frequency."""
