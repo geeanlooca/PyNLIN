@@ -1,4 +1,4 @@
-from scipy import polyval
+from numpy import polyval
 from pynlin.utils import oi_law
 import numpy as np
 class Fiber:

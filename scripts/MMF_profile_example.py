@@ -166,3 +166,4 @@ for i in range(1):
   plt.plot(np.linspace(0, fiber_length, 500)*1e-3, watt2dBm(pump_solution[:, i, :]), label="pump")
 plt.legend()
 plt.show()
+plt.imsave("profiles.pdf")

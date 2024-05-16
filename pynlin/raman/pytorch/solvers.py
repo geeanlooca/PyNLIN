@@ -6,7 +6,7 @@ import numpy as np
 from numpy.typing import NDArray
 import torch
 from scipy.constants import speed_of_light
-from scipy import polyval
+from numpy import polyval
 
 from pynlin.fiber import Fiber, MMFiber
 from pynlin.raman.pytorch._torch_ode import torch_rk4

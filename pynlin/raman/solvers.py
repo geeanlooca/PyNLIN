@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate
 import scipy.optimize
-from scipy import polyval
+from numpy import polyval
 from scipy.constants import nu2lambda, lambda2nu
 
 import pynlin.utils
