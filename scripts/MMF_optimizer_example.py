@@ -172,10 +172,10 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         learning_rate=learning_rate,
         lock_wavelengths=200,
     )
-    np.save(optimization_result_path_ct + "opt_wavelengths_ct" +
-            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_wavelengths)
-    np.save(optimization_result_path_ct + "opt_powers_ct" +
-            str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", initial_pump_powers)
+    # np.save(optimization_result_path_ct + "opt_wavelengths_ct" +
+    #         str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", pump_wavelengths)
+    # np.save(optimization_result_path_ct + "opt_powers_ct" +
+    #         str(power_per_channel_dBm) + "_opt_gain_" + str(gain_dB) + ".npy", initial_pump_powers)
 
     amplifier = NumpyMMFRamanAmplifier(fiber)
 
