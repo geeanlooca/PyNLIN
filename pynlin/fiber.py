@@ -27,8 +27,8 @@ class Fiber:
         else:
             # coefficients of the [0, 1, 2]-th order coefficients of a quadratic fit in
             # powers of wavelength (in m). Result in units of dB/m
-            self.losses = [2.26786883e-06 * 1e18, -
-                           7.12461042e-03 * 1e9, 5.78789219e00] * 1e-3
+            self.losses = np.array([2.26786883e-06 * 1e18, -
+                           7.12461042e-03 * 1e9, 5.78789219e00]) * 1e-3
 
         self.raman_efficiency = self.raman_coefficient / self.effective_area
 
