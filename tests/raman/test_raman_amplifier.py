@@ -161,8 +161,7 @@ def test_torch_raman_amplifier():
          fiber=fiber,
          integration_steps=100, 
          num_pumps=10,
-         signal_wavelengths=1000,
-         num_pumps=4)
+         signal_wavelengths=1000)
 
     z = np.linspace(0, fiber_length, num_points)
 
