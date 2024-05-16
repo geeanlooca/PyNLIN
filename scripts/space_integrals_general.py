@@ -56,12 +56,12 @@ def get_space_integral_approximation(intf):
     L = data["fiber_length"][0]
 
     beta2 = -pynlin.utils.dispersion_to_beta2(
-        dispersion * 1e-12 / (1e-9 * 1e3), wavelength
+        dispersion, wavelength
     )
     wdm = pynlin.wdm.WDM(
-        spacing=channel_spacing * 1e-9,
+        spacing=channel_spacing,
         num_channels=num_channels,
-        center_frequency=190
+        center_frequency=190e12
     )
     freqs = wdm.frequency_grid()
     (m, z, I) = get_space(intf)

@@ -73,8 +73,8 @@ class RamanAmplifier(torch.nn.Module):
     # Compute the attenuation for each signal
     signal_loss = self._alpha_to_linear(
       loss_coeffs[2]
-      + loss_coeffs[1] * (signal_wavelengths * 1e9)
-      + loss_coeffs[0] * (signal_wavelengths * 1e9) ** 2
+      + loss_coeffs[1] * (signal_wavelengths)
+      + loss_coeffs[0] * (signal_wavelengths) ** 2
     )
 
     if isinstance(signal_loss, np.ndarray):
@@ -247,8 +247,8 @@ class RamanAmplifier(torch.nn.Module):
     # Compute the loss for each pump wavelength/mode
     pump_loss = self._alpha_to_linear(
       self.loss_coefficients[2]
-      + self.loss_coefficients[1] * pump_wavelengths * 1e9
-      + self.loss_coefficients[0] * (pump_wavelengths * 1e9) ** 2
+      + self.loss_coefficients[1] * pump_wavelengths
+      + self.loss_coefficients[0] * (pump_wavelengths) ** 2
     )
 
     # Concatenate the pump losses to the signal losses
@@ -446,7 +446,7 @@ class MMFRamanAmplifier(torch.nn.Module):
     self.register_buffer("raman_response", raman_response)
 
     # Doesn't matter, the pumps are turned off
-    pump_lambda = torch.linspace(1420, 1480, self.num_pumps) * 1e-9
+    pump_lambda = torch.linspace(1420, 1480, self.num_pumps) * 1e-12
     pump_power = torch.zeros((num_pumps * self.modes))
     x = torch.cat((pump_lambda, pump_power)).float().view(1, -1)
 
@@ -563,8 +563,8 @@ class MMFRamanAmplifier(torch.nn.Module):
     # Compute the loss for each pump wavelength/mode
     pump_loss = self._alpha_to_linear(
       self.loss_coefficients[2]
-      + self.loss_coefficients[1] * pump_wavelengths * 1e9
-      + self.loss_coefficients[0] * (pump_wavelengths * 1e9) ** 2
+      + self.loss_coefficients[1] * pump_wavelengths
+      + self.loss_coefficients[0] * (pump_wavelengths) ** 2
     ).repeat_interleave(self.modes, dim=1)
 
     # Concatenate the pump losses to the signal losses

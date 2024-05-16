@@ -67,7 +67,7 @@ profiles = True
 ###########################################
 num_modes = 4
 beta2 = pynlin.utils.dispersion_to_beta2(
-	dispersion * 1e-12 / (1e-9 * 1e3), wavelength
+	dispersion, wavelength
 )
 ref_bandwidth = baud_rate
 
@@ -78,9 +78,9 @@ fiber = pynlin.fiber.MMFiber(
 	overlap_integrals=oi
 )
 wdm = pynlin.wdm.WDM(
-	spacing=channel_spacing * 1e-9,
+	spacing=channel_spacing,
 	num_channels=num_channels,
-	center_frequency=190
+	center_frequency=190e12
 )
 
 # print(np.shape(fiber.overlap_integrals))

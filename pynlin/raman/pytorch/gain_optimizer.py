@@ -92,7 +92,7 @@ class GainOptimizer(nn.Module):
                 # TODO add the power dependency on the modes? No, we do not tune the modes 
                 # TODO adapt this whole method to MMF
                 signal_spectrum = self.forward(
-                    pump_wavelengths * 1e-9, self.pump_powers)
+                    pump_wavelengths, self.pump_powers)
                 # + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
                 
                 loss = loss_function(signal_spectrum, _target_spectrum)
@@ -126,6 +126,6 @@ class GainOptimizer(nn.Module):
 
         # print(f"\nFlatness: {flatness:.2f} dB")
         return (
-            best_wavelengths.detach().numpy().squeeze() * 1e-9,
+            best_wavelengths.detach().numpy().squeeze(),
             torch.abs(best_powers).detach().numpy().squeeze(),
         )

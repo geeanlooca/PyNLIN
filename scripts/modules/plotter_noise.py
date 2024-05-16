@@ -88,16 +88,16 @@ coi_list = [0, 9, 19, 29, 39, 49]
 wavelength = 1550
 
 beta2 = -pynlin.utils.dispersion_to_beta2(
-		dispersion * 1e-12 / (1e-9 * 1e3), wavelength * 1e-9
+		dispersion, wavelength
 )
 fiber = pynlin.fiber.Fiber(
 		effective_area=80e-12,
 		beta2=beta2
 )
 wdm = pynlin.wdm.WDM(
-		spacing=channel_spacing * 1e-9,
+		spacing=channel_spacing,
 		num_channels=num_channels,
-		center_frequency=190
+		center_frequency=190e12
 )
 points_per_collision = 10
 

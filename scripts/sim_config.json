@@ -1,5 +1,5 @@
 {
-  "dispersion":18, 
+  "dispersion":18e-6, 
   "effective_area":80e-12,
   "baud_rate":10e9,
   "fiber_length": [200e3],

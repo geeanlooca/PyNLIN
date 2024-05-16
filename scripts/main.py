@@ -15,26 +15,26 @@ from scipy.constants import lambda2nu
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-R", "--baud-rate", default=10, help="The baud rate of each WDM channel in GHz."
+    "-R", "--baud-rate", default=10e9, help="The baud rate of each WDM channel in GHz."
 )
 parser.add_argument(
     "-D",
     "--dispersion",
-    default=18,
+    default=18 * 1e-12 / (1e-9 * 1e3),
     type=float,
     help="The dispersion coefficient of the fiber in ps/nm km.",
 )
 parser.add_argument(
     "-L",
     "--fiber-length",
-    default=100,
+    default=100e3,
     type=float,
     help="The length of the fiber in kilometers.",
 )
 parser.add_argument(
     "-c",
     "--channel-spacing",
-    default=100,
+    default=100e9,
     type=float,
     help="The spacing between neighboring WDM channels in GHz.",
 )
@@ -54,25 +54,25 @@ parser.add_argument(
 parser.add_argument(
     "-W",
     "--wavelength",
-    default=1550,
+    default=1550e-12,
     type=float,
-    help="The wavelength at which the dispersion coefficient is given (in nanometers).",
+    help="The wavelength at which the dispersion coefficient is given (in m).",
 )
 
 args = parser.parse_args()
 
 print(args)
 beta2 = pynlin.utils.dispersion_to_beta2(
-    args.dispersion * 1e-12 / (1e-9 * 1e3), args.wavelength * 1e-9
+    args.dispersion, args.wavelength
 )
-fiber_length = args.fiber_length * 1e3
-channel_spacing = args.channel_spacing * 1e9
+fiber_length = args.fiber_length
+channel_spacing = args.channel_spacing
 num_channels = args.channel_count
-baud_rate = args.baud_rate * 1e9
+baud_rate = args.baud_rate
 
 fiber = pynlin.fiber.Fiber(effective_area=80e-12, beta2=beta2)
 wdm = pynlin.wdm.WDM(
-    spacing=args.channel_spacing, num_channels=num_channels, center_frequency=190
+    spacing=args.channel_spacing, num_channels=num_channels, center_frequency=190e12
 )
 
 fig, ax = plt.subplots()

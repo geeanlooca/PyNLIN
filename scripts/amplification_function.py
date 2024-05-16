@@ -57,7 +57,7 @@ profiles = True
 #  COMPUTATION OF AMPLITUDE FUNCTIONS
 ###########################################
 beta2 = pynlin.utils.dispersion_to_beta2(
-	dispersion * 1e-12 / (1e-9 * 1e3), wavelength
+	dispersion, wavelength
 )
 ref_bandwidth = baud_rate
 fiber = pynlin.fiber.Fiber(
@@ -65,9 +65,9 @@ fiber = pynlin.fiber.Fiber(
 	beta2=beta2
 )
 wdm = pynlin.wdm.WDM(
-	spacing=channel_spacing * 1e-9,
+	spacing=channel_spacing,
 	num_channels=num_channels,
-	center_frequency=190
+	center_frequency=190e12
 )
 
 # comute the collisions between the two furthest WDM channels
@@ -133,7 +133,7 @@ for fiber_length in fiber_lengths:
 			power_per_pump = dBm2watt(-10)
 			# signal carriers: 1.558 -> 1.599
 			signal_wavelengths = wdm.wavelength_grid()
-			pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+			pump_wavelengths = nu2lambda(initial_pump_frequencies)
 			num_pumps = len(pump_wavelengths)
 
 			signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
@@ -226,7 +226,7 @@ for fiber_length in fiber_lengths:
 			power_per_channel = dBm2watt(power_per_channel_dBm)
 			power_per_pump = np.array([dBm2watt(21.5), dBm2watt(21.5), dBm2watt(20), dBm2watt(20)])
 			signal_wavelengths = wdm.wavelength_grid()
-			pump_wavelengths = nu2lambda(initial_pump_frequencies)*1e9
+			pump_wavelengths = nu2lambda(initial_pump_frequencies)
 			num_pumps = len(pump_wavelengths)
 
 			signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
@@ -299,7 +299,7 @@ for fiber_length in fiber_lengths:
 			power_per_channel = dBm2watt(power_per_channel_dBm)
 			power_per_pump = dBm2watt(-10)
 			signal_wavelengths = wdm.wavelength_grid()
-			pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+			pump_wavelengths = nu2lambda(initial_pump_frequencies)
 			num_pumps = len(pump_wavelengths)
 			signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
 			pump_powers = np.ones_like(pump_wavelengths) * power_per_pump

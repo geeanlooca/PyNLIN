@@ -581,7 +581,7 @@ class MMFRamanAmplifier(RamanAmplifier):
         fiber,
         counterpumping=False,
         ase=False,
-        reference_bandwidth=0.1,
+        reference_bandwidth=0.1 * 1e-9,
         temperature=300,
         shooting=None,
         initial_guesses=None,
@@ -653,7 +653,7 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         loss_coeffs = fiber.losses
 
-        losses_ = polyval(loss_coeffs, wavelengths * 1e9)
+        losses_ = polyval(loss_coeffs, wavelengths)
 
         losses_linear = alpha_to_linear(losses_)
         losses_linear = np.repeat(losses_linear, fiber.modes)
@@ -819,7 +819,6 @@ class MMFRamanAmplifier(RamanAmplifier):
             # Convert reference bandwidth in hertz using the
             # central signal wavelength as reference
             central_wavelength = (signal_wavelength.max() + signal_wavelength.min()) / 2
-            reference_bandwidth *= 1e-9  # Convert in meters
             w_a = central_wavelength - reference_bandwidth / 2
             w_b = central_wavelength + reference_bandwidth / 2
             f_a = lambda2nu(w_a)

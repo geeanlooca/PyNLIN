@@ -24,7 +24,7 @@ plt.rcParams.update({
 })
 
 import logging
-logging.basicConfig(filename='MMF_optimizer.log', encoding='utf-8', level=logging.DEBUG)
+logging.basicConfig(filename='MMF_optimizer.log', encoding='utf-8', level=logging.INFO)
 log = logging.getLogger(__name__)
 log.debug("starting to load sim_config.json")
 
@@ -66,13 +66,13 @@ num_only_ct_pumps = 4
 optimize = True
 profiles = True
 
-log.debug("end loading of parameters")
+log.warning("end loading of parameters")
 
 ###########################################
 #  COMPUTATION OF AMPLITUDE FUNCTIONS
 ###########################################
 beta2 = pynlin.utils.dispersion_to_beta2(
-    dispersion * 1e-12 / (1e-9 * 1e3), wavelength
+    dispersion, wavelength
 )
 ref_bandwidth = baud_rate
 fiber = pynlin.fiber.MMFiber(
@@ -83,9 +83,9 @@ fiber = pynlin.fiber.MMFiber(
     overlap_integrals_avg=oi_avg,
 )
 wdm = pynlin.wdm.WDM(
-    spacing=channel_spacing * 1e-9,
+    spacing=channel_spacing,
     num_channels=num_channels,
-    center_frequency=190
+    center_frequency=190e12
 )
 
 # comute the collisions between the two furthest WDM channels
@@ -144,7 +144,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     power_per_pump = dBm2watt(-30)
     signal_wavelengths = wdm.wavelength_grid()
     print("WARN: pump wavelengths are in meters, but they are later on used in um")
-    initial_pump_wavelengths = nu2lambda(initial_pump_frequencies) * 1e9
+    initial_pump_wavelengths = nu2lambda(initial_pump_frequencies)
     num_pumps = len(initial_pump_wavelengths)  # is intended as "per mode"
 
     initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
@@ -194,7 +194,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     print("Pump wavelenghts")
     print(pump_wavelengths)
     print("Initial pump wavelenghts")
-    print(initial_pump_wavelengths * 1e-9)
+    print(initial_pump_wavelengths)
     print("=========== end ===================\n")
     
     print("WARN: converting the inlined pump_powers into a matrix")

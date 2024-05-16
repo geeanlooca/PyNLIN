@@ -1,7 +1,3 @@
-from operator import mod
-from typing import List
-
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import nu2lambda
 
@@ -19,7 +15,10 @@ class WDM:
         Params
         ------
         spacing: float
-            The spacing between the center frequencies of the WDM channels (GHz).
+            The spacing between the center frequencies of the WDM channels (Hz).
+        num_channels: int
+        central_frequency: float
+            Frequency in Hz
         """
         self.spacing = spacing
         self.num_channels = num_channels
@@ -41,7 +40,7 @@ class WDM:
         else:
             freqs = np.arange(-num_channels / 2, num_channels / 2)
 
-        return freqs * self.spacing * 1e9 + self.central_frequency * 1e12
+        return freqs * self.spacing + self.central_frequency
 
     def wavelength_grid(self) -> np.ndarray:
         """Generate the wavelength grid.

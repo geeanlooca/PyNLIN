@@ -20,7 +20,7 @@ def do_time_integrals(fiber_length, pulse_shape="Nyquist"):
   wavelength = data["wavelength"]
 
   beta2 = pynlin.utils.dispersion_to_beta2(
-      dispersion * 1e-12 / (1e-9 * 1e3), wavelength
+      dispersion, wavelength
   )
 
   channel_spacing = channel_spacing
@@ -32,9 +32,9 @@ def do_time_integrals(fiber_length, pulse_shape="Nyquist"):
       beta2=beta2
   )
   wdm = pynlin.wdm.WDM(
-      spacing=channel_spacing * 1e-9,
+      spacing=channel_spacing,
       num_channels=num_channels,
-      center_frequency=190
+      center_frequency=190e12
   )
   partial_collision_margin = 5
   points_per_collision = 10
