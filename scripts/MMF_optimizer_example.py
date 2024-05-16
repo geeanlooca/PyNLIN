@@ -143,7 +143,6 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     power_per_channel = dBm2watt(power_per_channel_dBm)
     power_per_pump = dBm2watt(-30)
     signal_wavelengths = wdm.wavelength_grid()
-    print("WARN: pump wavelengths are in meters, but they are later on used in um")
     initial_pump_wavelengths = nu2lambda(initial_pump_frequencies)
     num_pumps = len(initial_pump_wavelengths)  # is intended as "per mode"
 
@@ -175,7 +174,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     pump_wavelengths, initial_pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=500,
+        epochs=10,
         learning_rate=learning_rate,
         lock_wavelengths=200,
     )

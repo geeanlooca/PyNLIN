@@ -151,8 +151,8 @@ class RamanAmplifier(torch.nn.Module):
     # self.register_buffer("off_gain", off_gain)
 
   def _alpha_to_linear(self, alpha: NDArray) -> NDArray:
-    """Convert attenuation constant from dB to linear units."""
-    return alpha * 1e-3 * np.log(10) / 10
+    """Convert attenuation constant from dB/m to linear units."""
+    return alpha * np.log(10) / 10
 
   def _lambda2frequency(self, wavelength: NDArray) -> NDArray:
     """Convert wavelength in frequency."""

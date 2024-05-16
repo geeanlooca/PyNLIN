@@ -134,7 +134,7 @@ signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies)
 num_pumps = len(pump_wavelengths)
 signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
-pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel * 10
+pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel
 
 
 amplifier = MMFRamanAmplifier(fiber)
@@ -162,8 +162,9 @@ print(np.shape(signal_solution))
 ### fixed mode
 plt.clf()
 for i in range(1):
-  plt.plot(np.linspace(0, fiber_length, 500)*1e-3, watt2dBm(signal_solution[:, i*10, 1]), label="sign")
-  plt.plot(np.linspace(0, fiber_length, 500)*1e-3, watt2dBm(pump_solution[:, i, :]), label="pump")
+  plt.plot(np.linspace(0, fiber_length, len(signal_solution[:, 0, 0])) * 1e-3, watt2dBm(signal_solution[:, i*10, 1]), label="sign")
+  plt.plot(np.linspace(0, fiber_length, len(signal_solution[:, 0, 0])) * 1e-3, watt2dBm(pump_solution[:, i, :]), label="pump")
 plt.legend()
+plt.grid()
 plt.show()
 plt.imsave("profiles.pdf")

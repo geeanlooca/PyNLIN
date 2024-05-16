@@ -18,8 +18,8 @@ def frequency_to_wavelength(freqs):
 
 
 def alpha_to_linear(alpha):
-    """Convert attenuation constant from dB/km to neper/m."""
-    return alpha * 1e-3 * np.log(10) / 10
+    """Convert attenuation constant from dB/m to neper/m."""
+    return alpha * np.log(10) / 10
 
 
 def alpha2linear(alpha):
