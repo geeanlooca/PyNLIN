@@ -172,7 +172,6 @@ def X0mm_time_integral_WDM_grid(
 
     # get the WDM comb frequencies and set up the progress bar
     frequency_grid = wdm.frequency_grid()
-    print(frequency_grid)
     coi_frequency_grid_pbar = tqdm.tqdm(
         [frequency_grid[0],
          frequency_grid[9],

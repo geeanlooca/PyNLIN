@@ -239,7 +239,6 @@ if __name__ == "__main__":
 
     n2 = 2.6e-20
     gamma = n2 * lambda2nu(wavelength) * 2 * np.pi / c0
-    print(gamma)
 
     copolarized, t = agrawal_copolarized_response(duration, fs)
     crosspolarized, t = agrawal_crosspolarized_response(duration, fs)

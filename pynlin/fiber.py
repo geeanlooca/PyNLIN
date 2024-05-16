@@ -58,7 +58,6 @@ class MMFiber:
         overlap_integrals_avg=None,
         mode_names=None,
     ):
-        print()
         """
         overlap_integrals     : 6 quadratic fit parameters for each mode family pair
         overlap_integrals_avg : 1 oi for each mode family pair
@@ -84,7 +83,14 @@ class MMFiber:
         # overlap_integrals[i, j] = [a1, b1, a2, b2, x, c]
         # i, j mode indexes,
         # all the quadratic fit parameters are used in oi_law
-
+        if overlap_integrals is None:
+          # default super-approximated case: all the modes overlap as the fundamental one.
+          # No cross-overlap
+          overlap_integrals = 1/effective_area * np.identity(modes)[None, :, :].repeat(6, axis=0)
+          print(np.shape(overlap_integrals))
+          for i in range(5):
+            overlap_integrals[i, :, :] *= 0.0
+          
         self.overlap_integrals = overlap_integrals[:, :modes, :modes]
         try:
             self.overlap_integrals_avg = overlap_integrals_avg[:modes, :modes]
@@ -100,10 +106,6 @@ class MMFiber:
     """
 
     def evaluate_oi(self, i, j, wavelengths):
-        # print("____________")
-        # print(np.shape(self.overlap_integrals[:, i, j]))
-        # print(np.shape(wavelengths[1][None, :, :, :, :]))
-        # print(np.shape(wavelengths[0][None, :, :, :, :]))
         # original data were in um
         return oi_law(wavelengths[0][None, :, :, :, :], wavelengths[1][None, :, :, :, :], self.overlap_integrals[:, i, j])
 

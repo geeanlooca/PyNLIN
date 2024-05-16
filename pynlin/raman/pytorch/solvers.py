@@ -453,21 +453,21 @@ class MMFRamanAmplifier(torch.nn.Module):
     if counterpumping:
       self.counterpumping = True
       direction[: self.num_pumps * self.modes] = -1
+      print(direction)
     else:
       self.counterpumping = False
 
     self.register_buffer("direction", direction)
 
     # Propagate the pumps to compute the output spectrum
+    # if counterpumping:
+    #   off_gain, _ = self.forward(x)
+    #   off_gain = off_gain.view(1, -1)
+    # else:
+    #   off_gain = self.forward(x).view(1, -1)
 
-    if counterpumping:
-      off_gain, _ = self.forward(x)
-      off_gain = off_gain.view(1, -1)
-    else:
-      off_gain = self.forward(x).view(1, -1)
-
-    # Save it in a buffer
-    self.register_buffer("off_gain", off_gain)
+    # # Save it in a buffer
+    # self.register_buffer("off_gain", off_gain)
 
   def _alpha_to_linear(self, alpha):
     """Convert attenuation constant from dB/m to linear units."""
@@ -538,32 +538,29 @@ class MMFRamanAmplifier(torch.nn.Module):
     Parameters
     ----------
     x : torch.Tensor
-      pump wavelength and pump power, size (N_batch, N_pumps * (N_modes + 1))
+      pump wavelength and pump power, size (N_batch, N_pumps * (N_modes + 1)) all in (W)
 
     Returns
     -------
-    torch.Tensor
-      Gain on each mode (B, N_signals, N_modes)
+    signal_spectrum: torch.Tensor
+      signal powers on each mode (B, N_signals, N_modes)
     """
 
     batch_size = x.shape[0]
     num_freqs = self.num_channels + self.num_pumps
 
-    # This will be the input to the interpolation function
     interpolation_grid = torch.zeros(
       (batch_size, 1, num_freqs ** 2, 2), dtype=x.dtype, device=x.device,
     )
 
     pump_wavelengths = x[:, : self.num_pumps]
 
-    # Compute the loss for each pump wavelength/mode
     pump_loss = self._alpha_to_linear(
       self.loss_coefficients[2]
       + self.loss_coefficients[1] * pump_wavelengths
       + self.loss_coefficients[0] * (pump_wavelengths) ** 2
     ).repeat_interleave(self.modes, dim=1)
 
-    # Concatenate the pump losses to the signal losses
     losses = torch.cat(
       (
         pump_loss,
@@ -581,7 +578,6 @@ class MMFRamanAmplifier(torch.nn.Module):
       dim=1,
     )
 
-    # Concatenate input pump power and signal power
     total_power = torch.cat(
       (
         torch.nn.functional.relu(x[:, self.num_pumps:]),
@@ -589,11 +585,7 @@ class MMFRamanAmplifier(torch.nn.Module):
       ),
       1,
     )
-    
-    # Compute the difference in frequencies
     freqs_diff = self._batch_diff(total_freqs)
-
-    # Collapse matrix of differences in a vector
     interpolation_grid[:, 0, :, 0] = freqs_diff.view(batch_size, -1)
 
     # Compute the raman gain between the signals and pumps
@@ -660,8 +652,9 @@ class MMFRamanAmplifier(torch.nn.Module):
 
     signal_spectrum = solution[:, self.num_pumps:, :].clone()
 
-    if self.counterpumping:
-      pump_initial_power = solution[:, : self.num_pumps, :].clone()
-      return signal_spectrum, pump_initial_power
-    else:
-      return signal_spectrum
+    # if self.counterpumping:
+    #   pump_initial_power = solution[:, : self.num_pumps, :].clone()
+    #   return signal_spectrum, pump_initial_power
+    # else:
+    # print("signal_spectrum", signal_spectrum)
+    return signal_spectrum

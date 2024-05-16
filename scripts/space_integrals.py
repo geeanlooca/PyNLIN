@@ -9,6 +9,7 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
+import pynlin.fiber
 from pynlin.utils import dBm2watt
 import pynlin.constellations
 import json

@@ -11,7 +11,7 @@ from pynlin.raman.pytorch.solvers import RamanAmplifier
 
 
 def dBm(x: torch.Tensor) -> torch.Tensor:
-    """Convert a tensor from watt to dBm."""
+    """Convert a tensor from Watt to dBm."""
     return 10 * torch.log10(x) + 30
 
 
@@ -91,12 +91,9 @@ class GainOptimizer(nn.Module):
                 )
                 # TODO add the power dependency on the modes? No, we do not tune the modes 
                 # TODO adapt this whole method to MMF
+                # print("pump_powers: ", self.pump_powers)
                 signal_spectrum = self.forward(
-                    pump_wavelengths, self.pump_powers)
-                # + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
-                
-                print(signal_spectrum)
-                print(_target_spectrum)
+                    pump_wavelengths, self.pump_powers) + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:])*1e3)
                 
                 loss = loss_function(signal_spectrum, _target_spectrum)
                 loss.backward()

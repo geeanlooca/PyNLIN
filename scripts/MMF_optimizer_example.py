@@ -5,6 +5,7 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
+import pynlin.fiber
 from multiprocessing import Pool
 from matplotlib import pyplot as plt
 import numpy as np
@@ -66,6 +67,10 @@ num_only_ct_pumps = 4
 optimize = True
 profiles = True
 
+fiber_length = fiber_lengths[0]
+gain_dB = -10
+power_per_pump = dBm2watt(-50)
+
 log.warning("end loading of parameters")
 
 ###########################################
@@ -79,7 +84,7 @@ fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
     modes=num_modes,
-    overlap_integrals=oi_fit,
+    overlap_integrals=None,
     overlap_integrals_avg=oi_avg,
 )
 wdm = pynlin.wdm.WDM(
@@ -94,10 +99,8 @@ interfering_frequency = wdm.frequency_grid()[interfering_grid_index]
 channel_spacing = interfering_frequency - frequency_of_interest
 partial_collision_margin = 5
 points_per_collision = 10
-print("Warning: select only first lenfth and gain")
-fiber_length = fiber_lengths[0]
-gain_dB = -33
 
+log.warning("select only first lenfth and gain")
 length_setup = int(fiber_length * 1e-3)
 optimization_result_path_ct = '../results_' + \
     str(length_setup) + '/optimization_gain_' + str(gain_dB) + \
@@ -141,7 +144,6 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     # BROMAGE
     initial_pump_frequencies = np.array(lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
     power_per_channel = dBm2watt(power_per_channel_dBm)
-    power_per_pump = dBm2watt(-30)
     signal_wavelengths = wdm.wavelength_grid()
     initial_pump_wavelengths = nu2lambda(initial_pump_frequencies)
     num_pumps = len(initial_pump_wavelengths)  # is intended as "per mode"
@@ -155,6 +157,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         signal_wavelengths,
         power_per_channel,
         fiber,
+        counterpumping=True
     )
 
     optimizer = GainOptimizer(
@@ -166,11 +169,11 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     signal_powers = signal_powers[:, None].repeat(num_modes, axis=1)
     target_spectrum = watt2dBm(signal_powers)[None, :, :] + gain_dB
-    learning_rate = 1e-4
+    learning_rate = 1e-6
 
     pump_wavelengths, initial_pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=1,
+        epochs=5,
         learning_rate=learning_rate,
         lock_wavelengths=5,
         )
@@ -198,26 +201,25 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         z_max,
         fiber,
         counterpumping=True,
-        # pump_direction=-1,
-        # use_power_at_fiber_start=True,
         reference_bandwidth=ref_bandwidth
     )
     print(np.shape(pump_solution))
     # fixed mode
     plt.clf()
     cmap = viridis
+    z_plot = np.linspace(0, fiber_length, len(pump_solution[:, 0, 0])) * 1e-3
     for i in range(num_pumps):
       if i ==1:
-        plt.plot(z_max * 1e-3,
+        plt.plot(z_plot,
                  watt2dBm(pump_solution[:, i, :]), label="pump",  color=cmap(i/num_pumps),ls="--")
       else:
-        plt.plot(z_max * 1e-3, 
+        plt.plot(z_plot, 
                  watt2dBm(pump_solution[:, i, :]), color=cmap(i/num_pumps),ls="--")
     for i in range(num_channels):
       if i==1:
-        plt.plot(z_max* 1e-3, watt2dBm(signal_solution[:, i, :]),  color=cmap(i/num_channels),label="signal")
+        plt.plot(z_plot, watt2dBm(signal_solution[:, i, :]),  color=cmap(i/num_channels),label="signal")
       else:
-        plt.plot(z_max * 1e-3, 
+        plt.plot(z_plot, 
                    watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
     plt.legend()
     plt.grid()
