@@ -59,8 +59,26 @@ class MMFiber:
         mode_names=None,
     ):
         """
+        
+        Params
+        
+        ======
+        
         overlap_integrals     : 6 quadratic fit parameters for each mode family pair
+        
         overlap_integrals_avg : 1 oi for each mode family pair
+        
+        Strategy: if overlap_integrals is none, go to default case to overlap_integrals_avg
+        both of them can be used with polyval (of course using the average is inefficient)
+        
+        Attributes
+        
+        =======
+         
+        self.overlap_integrals : (6, modes, modes) used only in the Numpy solver: can also contain also the average if needed!
+        
+        self.overlap_integrals_avg : (modes, modes), symmetric, used in the Torch solver. Torch solver do not support wavelength-dependent oi. 
+        
         """
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
@@ -83,19 +101,30 @@ class MMFiber:
         # overlap_integrals[i, j] = [a1, b1, a2, b2, x, c]
         # i, j mode indexes,
         # all the quadratic fit parameters are used in oi_law
+        
         if overlap_integrals is None:
           # default super-approximated case: all the modes overlap as the fundamental one.
           # No cross-overlap
-          overlap_integrals = 1/effective_area * np.identity(modes)[None, :, :].repeat(6, axis=0)
-          print(np.shape(overlap_integrals))
-          for i in range(5):
-            overlap_integrals[i, :, :] *= 0.0
-          
-        self.overlap_integrals = overlap_integrals[:, :modes, :modes]
-        try:
-            self.overlap_integrals_avg = overlap_integrals_avg[:modes, :modes]
-        except:
+        
+          if overlap_integrals_avg is None: 
+            self.overlap_integrals_avg = 1/effective_area * np.identity(modes)
+            self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
+            for i in range(5):
+              self.overlap_integrals[i, :, :] *= 0.0
+          else:
             self.overlap_integrals_avg = overlap_integrals_avg
+        
+        else:
+          self.overlap_integrals = overlap_integrals
+          self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
+          self.overlap_integrals_avg = self.overlap_integrals[0, :, :]
+          
+        # adjust for mismatches of OI matrix and selected mode number 
+        print(np.shape(self.overlap_integrals))
+        print(np.shape(self.overlap_integrals_avg))  
+        self.overlap_integrals_avg = self.overlap_integrals_avg[:modes, :modes]
+        self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
+        
         self.mode_names = mode_names
 
         super().__init__()

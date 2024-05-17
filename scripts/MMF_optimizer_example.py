@@ -173,9 +173,9 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     pump_wavelengths, initial_pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=5,
+        epochs=600,
         learning_rate=learning_rate,
-        lock_wavelengths=5,
+        lock_wavelengths=100,
         )
     
     amplifier = NumpyMMFRamanAmplifier(fiber)
