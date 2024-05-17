@@ -176,7 +176,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     
     amplifier = NumpyMMFRamanAmplifier(fiber)
 
-    print("\n============ results ==============")
+    "\n\n============ results ==============")
     print("Pump powers")
     print(watt2dBm(initial_pump_powers.reshape((num_pumps, num_modes))))
     print("Pump frequency")
@@ -185,7 +185,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     print(pump_wavelengths)
     print("Initial pump wavelenghts")
     print(initial_pump_wavelengths)
-    print("=========== end ===================\n")
+    print("=========== end ===================\n\n")
     
     print("WARN: converting the inlined pump_powers into a matrix")
     initial_pump_powers = initial_pump_powers.reshape((num_pumps, num_modes))

@@ -14,8 +14,8 @@ from pynlin.pulses import Pulse
 from pynlin.raman.response import gain_spectrum, impulse_response
 from pynlin.utils import (
     alpha_to_linear,
-    dBm_to_watt,
-    watt_to_dBm,
+    dBm2watt,
+    watt2dBm,
     wavelength_to_frequency,
 )
 from scipy.constants import Boltzmann as kB
@@ -117,8 +117,8 @@ class RamanAmplifier:
         temperature=300,
     ):
 
-        raman_coefficient = self.fiber.raman_coefficient
-        effective_core_area = self.fiber.effective_area
+        # raman_coefficient = self.fiber.raman_coefficient
+        # effective_core_area = self.fiber.effective_area
 
         num_signals = signal_power.shape[0]
         num_pumps = pump_power.shape[0]
@@ -147,7 +147,7 @@ class RamanAmplifier:
 
         num_ase = num_signals
 
-        input_power = np.concatenate((self.pump_power, self.signal_power))
+        # input_power = np.concatenate((self.pump_power, self.signal_power))
         input_power_with_ase = np.concatenate(
             (self.pump_power, self.signal_power, np.zeros(num_ase)))
 
@@ -199,7 +199,6 @@ class RamanAmplifier:
             pump_solution = sol[:, :num_pumps]
             signal_solution = sol[:, num_pumps:num_pumps + num_signals]
             ase_solution = sol[:, -num_ase:]
-
         if check_photon_count:
             photon_count = np.sum(sol / frequencies, axis=1)
             return pump_solution, signal_solution, photon_count
@@ -638,7 +637,7 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         total_wavelengths = num_signals + num_pumps
         num_modes = fiber.modes
-        total_signals = num_modes * total_wavelengths
+        total_signals = total_wavelengths
         pump_power_ = pump_power.reshape((num_modes * num_pumps))
         signal_power_ = signal_power.reshape((num_modes * num_signals))
 
@@ -708,9 +707,10 @@ class MMFRamanAmplifier(RamanAmplifier):
                     z,
                     args=(losses_linear, gains_mmf, direction),
                 )
-
-                sol = sol.reshape((-1, total_signals, fiber.modes))
-
+                print(watt2dBm(sol[-1, :]))
+                print(sol.shape)
+                sol = sol.reshape((len(z), total_signals, fiber.modes))
+                print(np.shape(sol))
                 pump_solution = sol[:, :num_pumps, :]
                 signal_solution = sol[:, num_pumps:, :]
             else:
@@ -749,7 +749,7 @@ class MMFRamanAmplifier(RamanAmplifier):
                         args=(losses_linear, gains_mmf, direction),
                     )
 
-                    sol = sol.reshape((-1, total_signals, fiber.modes))
+                    sol = sol.reshape((len(z), total_signals, fiber.modes))
 
                     pump_solution = sol[-1, :num_pumps, :].flatten()
 
@@ -766,7 +766,7 @@ class MMFRamanAmplifier(RamanAmplifier):
 
                     return cost
 
-                bounds = [(0, None) for _ in range(num_pumps * fiber.modes)]
+                # bounds = [(0, None) for _ in range(num_pumps * fiber.modes)]
 
                 try:
                     result = scipy.optimize.minimize(
@@ -796,12 +796,10 @@ class MMFRamanAmplifier(RamanAmplifier):
                     z,
                     args=(losses_linear, gains_mmf, direction),
                 )
-
-                sol = sol.reshape((-1, total_signals, fiber.modes))
+                sol = sol.reshape((len(z), total_signals, fiber.modes))
 
                 pump_solution = sol[:, :num_pumps, :]
                 signal_solution = sol[:, num_pumps:, :]
-
             return pump_solution, signal_solution
         else:
             direction = np.ones(((total_wavelengths + num_signals) * fiber.modes,))
@@ -852,7 +850,7 @@ class MMFRamanAmplifier(RamanAmplifier):
                 ),
             )
 
-            sol = sol.reshape((-1, total_signals + num_signals, fiber.modes))
+            sol = sol.reshape((len(z), total_signals + num_signals, fiber.modes))
             power_solution = sol[:, :total_signals, :]
             pump_solution = power_solution[:, :num_pumps, :]
             signal_solution = power_solution[:, num_pumps:, :]

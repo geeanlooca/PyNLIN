@@ -120,8 +120,8 @@ class MMFiber:
           self.overlap_integrals_avg = self.overlap_integrals[0, :, :]
           
         # adjust for mismatches of OI matrix and selected mode number 
-        print(np.shape(self.overlap_integrals))
-        print(np.shape(self.overlap_integrals_avg))  
+        # print(np.shape(self.overlap_integrals))
+        # print(np.shape(self.overlap_integrals_avg))  
         self.overlap_integrals_avg = self.overlap_integrals_avg[:modes, :modes]
         self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
         

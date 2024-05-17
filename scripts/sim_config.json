@@ -20,5 +20,5 @@
   "pump_direction":"direct",
   "gain_dB_list":[-6.0, 0.0, 2],
   "power_dBm_list":[-20.0, 0.0, 2],
-  "num_modes":1
+  "num_modes": 2
 } 

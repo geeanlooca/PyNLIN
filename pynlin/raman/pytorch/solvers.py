@@ -453,7 +453,6 @@ class MMFRamanAmplifier(torch.nn.Module):
     if counterpumping:
       self.counterpumping = True
       direction[: self.num_pumps * self.modes] = -1
-      print(direction)
     else:
       self.counterpumping = False
 
