@@ -108,12 +108,12 @@ class MMFiber:
         
           if overlap_integrals_avg is None: 
             self.overlap_integrals_avg = 1/effective_area * np.identity(modes)
-            self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
             for i in range(5):
               self.overlap_integrals[i, :, :] *= 0.0
           else:
             self.overlap_integrals_avg = overlap_integrals_avg
         
+          self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
         else:
           self.overlap_integrals = overlap_integrals
           self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]

@@ -375,7 +375,7 @@ class MMFRamanAmplifier(torch.nn.Module):
     self.length = length
     self.steps = steps
 
-    self.overlap_integrals_avg = fiber.overlap_integrals_avg[:, :self.modes, :self.modes]
+    self.overlap_integrals_avg = fiber.overlap_integrals_avg[:self.modes, :self.modes]
     overlap_integrals = torch.Tensor(fiber.overlap_integrals_avg).float()
 
     z = torch.linspace(0, self.length, self.steps)

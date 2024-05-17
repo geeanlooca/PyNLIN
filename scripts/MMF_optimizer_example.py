@@ -73,9 +73,6 @@ power_per_pump = dBm2watt(-50)
 
 log.warning("end loading of parameters")
 
-###########################################
-#  COMPUTATION OF AMPLITUDE FUNCTIONS
-###########################################
 beta2 = pynlin.utils.dispersion_to_beta2(
     dispersion, wavelength
 )
@@ -146,10 +143,9 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     power_per_channel = dBm2watt(power_per_channel_dBm)
     signal_wavelengths = wdm.wavelength_grid()
     initial_pump_wavelengths = nu2lambda(initial_pump_frequencies)
-    num_pumps = len(initial_pump_wavelengths)  # is intended as "per mode"
 
     initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
-    initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0) + 0.0001 * np.random.rand(num_pumps * num_modes)
+    initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0)
     torch_amplifier_ct = MMFRamanAmplifier(
         fiber_length,
         integration_steps,
@@ -173,7 +169,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     pump_wavelengths, initial_pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=600,
+        epochs=1,
         learning_rate=learning_rate,
         lock_wavelengths=100,
         )
@@ -203,11 +199,11 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         counterpumping=True,
         reference_bandwidth=ref_bandwidth
     )
-    print(np.shape(pump_solution))
     # fixed mode
     plt.clf()
     cmap = viridis
     z_plot = np.linspace(0, fiber_length, len(pump_solution[:, 0, 0])) * 1e-3
+    print(np.shape(pump_solution))
     for i in range(num_pumps):
       if i ==1:
         plt.plot(z_plot,

@@ -52,8 +52,9 @@ gain_dB_setup = data['gain_dB_list']
 gain_dB_list = np.linspace(gain_dB_setup[0], gain_dB_setup[1], gain_dB_setup[2])
 power_dBm_setup = data['power_dBm_list']
 power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_setup[2])
-oi = np.load('oi_fit.npy')
-print(np.shape(oi))
+oi_fit = np.load('oi_fit.npy')
+oi_max = np.load('oi_max.npy')
+oi_min = np.load('oi_min.npy')
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
@@ -64,10 +65,8 @@ num_only_ct_pumps = 4
 optimize = True
 profiles = True
 
-###########################################
-#  COMPUTATION OF AMPLITUDE FUNCTIONS
-###########################################
 num_modes = 4
+
 beta2 = pynlin.utils.dispersion_to_beta2(
 	dispersion, wavelength
 )
@@ -77,7 +76,8 @@ fiber = pynlin.fiber.MMFiber(
 	effective_area=80e-12,
 	beta2=beta2,
 	modes=num_modes,
-	overlap_integrals=oi
+	overlap_integrals=None, 
+  overlap_integrals_avg=oi_min
 )
 wdm = pynlin.wdm.WDM(
 	spacing=channel_spacing,
@@ -98,46 +98,43 @@ print("Warning: selecting only the first fiber length")
 gain_dB = gain_dB_list[0]
 print("Warning: selecting only the first gain")
 
-# PRECISION REQUIREMENTS ESTIMATION =================================
-max_channel_spacing = wdm.frequency_grid(
-)[num_channels - 1] - wdm.frequency_grid()[0]
-max_num_collisions = len(pynlin.nlin.get_m_values(
-	fiber,
-	fiber_length,
-	max_channel_spacing,
-	1 / baud_rate,
-	partial_collisions_start=partial_collision_margin,
-	partial_collisions_end=partial_collision_margin)
-)
-integration_steps = max_num_collisions * points_per_collision
-# Suggestion: 100m step is sufficient
-dz = 100
-integration_steps = int(np.ceil(fiber_length / dz))
-z_max = np.linspace(0, fiber_length, integration_steps)
-
-np.save("z_max.npy", z_max)
-pbar_description = "Optimizing vs signal power"
-pbar = tqdm.tqdm(power_per_channel_dBm_list, leave=False)
-pbar.set_description(pbar_description)
-
+##  Waves parameters ===========================
 num_pumps = num_only_ct_pumps
 
 # --- uniform pump frequencies
 pump_band_b = lambda2nu(1480e-9)
 pump_band_a = lambda2nu(1400e-9)
 initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
+
 # --- BROMAGE pump frequencies
 initial_pump_frequencies = np.array(
 	lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
 
+# --- uniform power
+power_per_pump = dBm2watt(10)
+pump_powers = np.ones((len(initial_pump_frequencies), num_modes)) * power_per_pump
+
+# --- JLT-NLIN-1
+initial_pump_frequencies = np.array(
+	lambda2nu([1449e-9, 1465e-9, 1488e-9, 1514e-9]))
+
+# --- JLT-NLIN-1 power
+# warn: these are the powers at the fiber end
+# pump_powers = dBm2watt(np.array([19.6, 17.3, 19.6, 14.5]))[:, None].repeat(num_modes, axis=1)
+
 power_per_channel = dBm2watt(-30)
-power_per_pump = dBm2watt(-10)
+
+# PRECISION REQUIREMENTS ESTIMATION =================================
+# Suggestion: 100m step is sufficient
+dz = 100
+integration_steps = int(np.ceil(fiber_length / dz))
+z_max = np.linspace(0, fiber_length, integration_steps)
+print(z_max)
+np.save("z_max.npy", z_max)
+
 signal_wavelengths = wdm.wavelength_grid()
 pump_wavelengths = nu2lambda(initial_pump_frequencies)
-num_pumps = len(pump_wavelengths)
 signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
-pump_powers = np.ones((len(pump_wavelengths), num_modes)) * power_per_channel * 0.001
-
 
 amplifier = MMFRamanAmplifier(fiber)
 print("________ parameters")
@@ -154,17 +151,15 @@ pump_solution, signal_solution = amplifier.solve(
 	z_max,
 	fiber,
 	counterpumping = True,
-	# pump_direction=-1,
-	# use_power_at_fiber_start=True,
 	reference_bandwidth=ref_bandwidth
 )
 print(np.shape(pump_solution))
-print(np.shape(signal_solution))
 
 ### fixed mode
 plt.clf()
 cmap = viridis
-z_plot = np.linspace(0, fiber_length, len(pump_solution[:, 1, 1])) * 1e-3
+z_plot = np.linspace(0, fiber_length, len(pump_solution[:, 0, 0]))[:, None] * 1e-3
+print(pump_solution)
 for i in range(num_pumps):
   if i ==1:
     plt.plot(z_plot,
@@ -178,8 +173,7 @@ for i in range(num_channels):
   else:
     plt.plot(z_plot, 
                watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
+
 plt.legend()
 plt.grid()
 plt.show()
-plt.clf()
-plt.savefig("profiles.pdf")
