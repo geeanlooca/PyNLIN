@@ -636,6 +636,7 @@ class MMFRamanAmplifier(RamanAmplifier):
         num_pumps = pump_power.shape[0]
 
         total_wavelengths = num_signals + num_pumps
+        print(num_pumps)
         num_modes = fiber.modes
         total_signals = total_wavelengths
         pump_power_ = pump_power.reshape((num_modes * num_pumps))
@@ -683,7 +684,6 @@ class MMFRamanAmplifier(RamanAmplifier):
                              total_wavelengths * fiber.modes), order='F')
 
         # M = np.ones((fiber.modes, fiber.modes))
-
         gain_matrix = freq_scaling * gains
         print("===== WARN: gain and oi product probably wrong")
 
@@ -692,6 +692,8 @@ class MMFRamanAmplifier(RamanAmplifier):
         )
 
         gains_mmf = gain_matrix * oi
+        print(np.shape(gains_mmf))
+        
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))
@@ -700,17 +702,13 @@ class MMFRamanAmplifier(RamanAmplifier):
                 direction[: num_pumps * fiber.modes] = -1
 
             if not shooting:
-                # print(direction)
                 sol = scipy.integrate.odeint(
                     MMFRamanAmplifier.raman_ode,
                     input_power,
                     z,
                     args=(losses_linear, gains_mmf, direction),
                 )
-                print(watt2dBm(sol[-1, :]))
-                print(sol.shape)
                 sol = sol.reshape((len(z), total_signals, fiber.modes))
-                print(np.shape(sol))
                 pump_solution = sol[:, :num_pumps, :]
                 signal_solution = sol[:, num_pumps:, :]
             else:
