@@ -52,23 +52,20 @@ def get_final_signals(
 
     if use_average:
       if max_oi:
-          actual_oi = oi_max
+          oi_avg = oi_max
       else:
-          actual_oi = oi_min
-      actual_oi[0, 0] *= 2
+          oi_avg = oi_min
+      oi_avg[0, 3] *= 10
       oi_fit = None
     else:
-      actual_oi = None
-
-    # oi_fit = None
-    # actual_fit = None
+      oi_avg = None
     
     fiber = pynlin.fiber.MMFiber(
-        effective_area=80e-12,
+        effective_area=80e-12, 
         beta2=beta2,
         modes=num_modes,
         overlap_integrals=oi_fit,
-        overlap_integrals_avg=actual_oi
+        overlap_integrals_avg=oi_avg
     )
 
     
@@ -88,34 +85,36 @@ def get_final_signals(
     print("Warning: selecting only the first gain")
 
     # Waves parameters ===========================
-    num_pumps = 1
 
     # --- uniform pump frequencies
-    pump_band_b = lambda2nu(1480e-9)
-    pump_band_a = lambda2nu(1400e-9)
-    initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
+    # pump_band_b = lambda2nu(1480e-9)
+    # pump_band_a = lambda2nu(1400e-9)
+    # initial_pump_frequencies = np.linspace(pump_band_a, pump_band_b, num_pumps)
 
     # --- BROMAGE pump frequencies
-    initial_pump_frequencies = np.array(
-        lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
+    # initial_pump_frequencies = np.array(
+        # lambda2nu([1647e-9, 1467e-9, 1485e-9, 1515e-9]))
 
-
-    # pump_powers[2, 2] *= 0.0001
 
     # --- JLT-NLIN-1
-    # initial_pump_frequencies = np.array(
-    #     lambda2nu([1449e-9, 1465e-9, 1488e-9, 1514e-9]))
     initial_pump_frequencies = np.array(
-        lambda2nu([1449e-9]))
+        lambda2nu([1429e-9, 1465e-9, 1488e-9, 1514e-9]))
+    # initial_pump_frequencies = np.array(
+        # lambda2nu([1449e-9]))
     
     # --- uniform power
-    power_per_pump = dBm2watt(0)
-    pump_powers = np.ones((len(initial_pump_frequencies), num_modes)) * power_per_pump
+    # power_per_pump = dBm2watt(-10)
+    # pump_powers = np.ones((len(initial_pump_frequencies), num_modes)) * power_per_pump
     
     # --- JLT-NLIN-1 power
     # warn: these are the powers at the fiber end
-    # pump_powers = dBm2watt(np.array([19.6, 17.3, 19.6, 14.5]))[:, None].repeat(num_modes, axis=1)
-
+    pump_powers = dBm2watt(np.array([19.6-32, 17.3-32, 19.6-32, 14.5-32]))
+    num_pumps = 1
+    initial_pump_frequencies = initial_pump_frequencies[:num_pumps]
+    pump_powers = pump_powers[:num_pumps][:, None].repeat(num_modes, axis=1)
+    pump_powers[:, 1:] *= 0
+    print(pump_powers)
+    # pump_powers[2, 2] *= 0.0001
     power_per_channel = dBm2watt(-30)
 
     # PRECISION REQUIREMENTS ESTIMATION =================================
@@ -130,12 +129,12 @@ def get_final_signals(
     signal_powers = np.ones((len(signal_wavelengths), num_modes)) * power_per_channel
 
     amplifier = MMFRamanAmplifier(fiber)
-    print("________ parameters")
-    print(signal_wavelengths)
-    print(watt2dBm(signal_powers))
-    print(pump_wavelengths)
-    print(watt2dBm(pump_powers))
-    print("________ end parameters")
+    # print("________ parameters")
+    # print(signal_wavelengths)
+    # print(watt2dBm(signal_powers))
+    # print(pump_wavelengths)
+    # print(watt2dBm(pump_powers))
+    # print("________ end parameters")
     pump_solution, signal_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
@@ -173,16 +172,18 @@ def get_final_signals(
 
 max_min = []
 max_min.append(get_final_signals(max_oi=True , use_average=True))
-max_min.append(get_final_signals(max_oi=False, use_average=True))
+# max_min.append(get_final_signals(max_oi=False, use_average=True))
+# max_min.append(get_final_signals(max_oi=False, use_average=False))
 num_channels = len(max_min[0][:, 0])
 num_modes = len(max_min[0][0, :])
-print(max_min[0])
 cmap = viridis
 for imod in range(num_modes):
     plt.plot(range(num_channels), watt2dBm(
-        max_min[0][:, imod]), color=cmap(imod / num_channels), label="max" if imod==1 else None, lw=0.5)
-    plt.plot(range(num_channels), watt2dBm(
-        max_min[1][:, imod]), color=cmap(imod / num_channels), ls="--", label="min" if imod==1 else None, lw=0.5)
+        max_min[0][:, imod]), color=cmap(imod / num_channels), label="max" if imod==1 else None, lw=0.8)
+    # plt.plot(range(num_channels), watt2dBm(
+    #     max_min[1][:, imod]), color=cmap(imod / num_channels), ls="--", label="min" if imod==1 else None, lw=0.8)
+    # plt.plot(range(num_channels), watt2dBm(
+    #     max_min[2][:, imod]), color=cmap(imod / num_channels), ls=":", label="fit" if imod==1 else None, lw=0.8)
 plt.legend()
 plt.grid()
 plt.savefig("media/spectra_comparison.pdf")

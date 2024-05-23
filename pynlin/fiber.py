@@ -105,15 +105,18 @@ class MMFiber:
         if overlap_integrals is None:
           # default super-approximated case: all the modes overlap as the fundamental one.
           # No cross-overlap
-        
           if overlap_integrals_avg is None: 
-            self.overlap_integrals_avg = 1/effective_area * np.identity(modes)
+            self.overlap_integrals_avg = 1/effective_area * np.identity(modes)   
+            self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
+            
             for i in range(5):
               self.overlap_integrals[i, :, :] *= 0.0
           else:
             self.overlap_integrals_avg = overlap_integrals_avg
         
           self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
+          for i in range(5):
+            self.overlap_integrals[i, :, :] *= 0.0
         else:
           self.overlap_integrals = overlap_integrals
           self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
@@ -125,6 +128,9 @@ class MMFiber:
         self.overlap_integrals_avg = self.overlap_integrals_avg[:modes, :modes]
         self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
         
+        print("==========================")
+        print(self.overlap_integrals[-1, :, :])
+        
         self.mode_names = mode_names
 
         super().__init__()
@@ -134,10 +140,21 @@ class MMFiber:
     wl1, wl2 are the respective wavelengths
     """
 
-    def evaluate_oi(self, i, j, wavelengths):
+    def evaluate_oi(self, i, j, wavelength_i, wavelength_j):
         # original data were in um
-        return oi_law(wavelengths[0][None, :, :, :, :], wavelengths[1][None, :, :, :, :], self.overlap_integrals[:, i, j])
-
+        return oi_law(wavelength_i, wavelength_j, self.overlap_integrals[:, i, j])
+    
+    def get_oi_matrix(self, modes, wavelengths):
+      M = len(modes)
+      W = len(wavelengths)
+      mat = np.zeros((M*W, M*W))
+      for n in range(M):
+        for m in range(M):
+          for wn in range(W):
+            for wm in range(W):
+              mat[wn+(n*W), wm+(m*W)] = self.evaluate_oi(n, m, wavelengths[wn], wavelengths[wm])
+      return mat
+    
     def loss_profile(self, wavelengths):
         """Get the fiber losses (in dB/m) at the specified wavelengths (in
         meters)."""

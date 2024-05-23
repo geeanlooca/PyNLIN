@@ -41,6 +41,7 @@ np.save('oi_avg.npy', oi_avg)
 np.save('oi_max.npy', oi_max)
 np.save('oi_min.npy', oi_min)
 
+
 # quadratic fit of the OI in frequency
 oi_fit = np.ndarray((6, 4, 4))
 
@@ -48,9 +49,14 @@ x, y = np.meshgrid(wl, wl)
 for i in range(4):
     for j in range(4):
         oi_fit[:, i, j] = curve_fit(
-            oi_law_fit, (x, y), oi[:, :, 1, 1].ravel(), p0=[0, 1, 0, 1, 0, 1])[0].T
+            oi_law_fit, (x, y), oi[:, :, i, j].ravel(), p0=[0, 1, 0, 1, 0, 1])[0].T
 # print(np.shape(oi_fit))
 np.save('oi_fit.npy', oi_fit)
+
+print(oi_fit[-1, :, :])
+# plt.plot(oi_fit[:, 1, 1])
+print(oi_max[:, :])
+print(oi_min[:, :])
 
 # =========
 # PLOTTING

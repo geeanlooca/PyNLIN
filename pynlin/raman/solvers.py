@@ -1,7 +1,6 @@
 from typing import Tuple
 
 import matplotlib.pyplot as plt
-
 import numpy as np
 import scipy.integrate
 import scipy.optimize
@@ -678,10 +677,12 @@ class MMFRamanAmplifier(RamanAmplifier):
         freq_scaling = np.maximum(1, freqs * (1 / freqs.T))
 
         mode_list = np.array(range(fiber.modes))
-        oi = fiber.evaluate_oi(mode_list[:, None, None, None], mode_list[None, :, None, None],
-                               (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
+        # change the order of creation
+        oi = fiber.get_oi_matrix(mode_list, wavelengths)
+        print(np.shape(oi))
+
         oi = np.reshape(oi, (total_wavelengths * fiber.modes,
-                             total_wavelengths * fiber.modes), order='F')
+                             total_wavelengths * fiber.modes), order='C')
 
         # M = np.ones((fiber.modes, fiber.modes))
         gain_matrix = freq_scaling * gains
@@ -692,8 +693,10 @@ class MMFRamanAmplifier(RamanAmplifier):
         )
 
         gains_mmf = gain_matrix * oi
-        print(np.shape(gains_mmf))
-        
+        print(gain_matrix)
+   
+        # Show the heatmap
+        plt.show()
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))

@@ -4,7 +4,7 @@
   "baud_rate":10e9,
   "fiber_length": [100e3],
   "num_channels": 2,
-  "channel_spacing":4000e9,
+  "channel_spacing": 1000e9,
   "center_frequency":190e12,
   "store_true": 1,
   "pulse_shape":"Nyquist",
@@ -20,5 +20,5 @@
   "pump_direction":"direct",
   "gain_dB_list":[-6.0, 0.0, 2],
   "power_dBm_list":[-20.0, 0.0, 2],
-  "num_modes": 2
-} 
+  "num_modes": 4
+}
