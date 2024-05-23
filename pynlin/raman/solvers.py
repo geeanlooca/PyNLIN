@@ -1,6 +1,7 @@
 from typing import Tuple
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy as np
 import scipy.integrate
 import scipy.optimize
@@ -679,24 +680,15 @@ class MMFRamanAmplifier(RamanAmplifier):
         mode_list = np.array(range(fiber.modes))
         # change the order of creation
         oi = fiber.get_oi_matrix(mode_list, wavelengths)
-        print(np.shape(oi))
 
-        oi = np.reshape(oi, (total_wavelengths * fiber.modes,
-                             total_wavelengths * fiber.modes), order='C')
-
-        # M = np.ones((fiber.modes, fiber.modes))
         gain_matrix = freq_scaling * gains
-        print("===== WARN: gain and oi product probably wrong")
 
         gain_matrix = gain_matrix.repeat(fiber.modes, axis=0).repeat(
             fiber.modes, axis=1
         )
 
         gains_mmf = gain_matrix * oi
-        print(gain_matrix)
-   
-        # Show the heatmap
-        plt.show()
+    
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))

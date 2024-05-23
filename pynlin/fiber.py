@@ -106,7 +106,8 @@ class MMFiber:
           # default super-approximated case: all the modes overlap as the fundamental one.
           # No cross-overlap
           if overlap_integrals_avg is None: 
-            self.overlap_integrals_avg = 1/effective_area * np.identity(modes)   
+            # self.overlap_integrals_avg = 1/effective_area * np.identity(modes)   
+            self.overlap_integrals_avg = np.array([[1. , 2.], [3. , 4.]])       
             self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
             
             for i in range(5):
@@ -152,7 +153,7 @@ class MMFiber:
         for m in range(M):
           for wn in range(W):
             for wm in range(W):
-              mat[wn+(n*W), wm+(m*W)] = self.evaluate_oi(n, m, wavelengths[wn], wavelengths[wm])
+              mat[n+(wn*M), m+(wm*M)] = self.evaluate_oi(n, m, wavelengths[wn], wavelengths[wm])
       return mat
     
     def loss_profile(self, wavelengths):
