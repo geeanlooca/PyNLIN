@@ -3,7 +3,7 @@
   "effective_area":80e-12,
   "baud_rate":10e9,
   "fiber_length": [100e3],
-  "num_channels": 4,
+  "num_channels": 20,
   "channel_spacing": 100e9,
   "center_frequency":190e12,
   "store_true": 1,

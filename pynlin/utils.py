@@ -66,12 +66,11 @@ def dispersion_to_beta2(D, wavelength):
 
 def oi_law(l1, l2, params):
   a1, b1, a2, b2, x, c = params
-  return (a1 * np.square(l1) + b1 * l1 + a2 * np.square(l2) + b2 * l2 + x * l1 * l2 + c).ravel()
+  return (a1 * np.square(l1) + b1 * l1 + a2 * np.square(l2) + b2 * l2 + x * l1 * l2 + c)
 
 def oi_law_fit(L, a1, b1, a2, b2, x, c):
   l1, l2 = L
   return (a1 * np.square(l1) + b1 * l1 + a2 * np.square(l2) + b2 * l2 + x * l1 * l2 + c).ravel()
-
 class OpticalBands(Enum):
     """Class enumerating the optical transmission bandwidths.
 

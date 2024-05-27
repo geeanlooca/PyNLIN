@@ -104,7 +104,7 @@ def compare_interferent(interfering_channels = []):
     plt.legend(loc="upper left")
     plt.tight_layout()
     plt.savefig('media/Interferent_'+str(intf)+'.pdf')
-    plt.show()
+    # plt.show()
     # X0mm is supposed to be real
     error = (X0mm-X0mm_ana)/X0mm
     plt.plot(m, np.real(error))

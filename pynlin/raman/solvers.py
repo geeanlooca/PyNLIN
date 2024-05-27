@@ -356,10 +356,10 @@ class RamanAmplifier:
             -z[:, np.newaxis] * signal_losses
         )
 
-        plt.figure()
-        plt.plot(z, pynlin.utils.watt2dBm(signal_solution_initial_cond))
-        plt.plot(z, pynlin.utils.watt2dBm(pump_solution_initial_cond))
-        plt.show()
+        # plt.figure()
+        # plt.plot(z, pynlin.utils.watt2dBm(signal_solution_initial_cond))
+        # plt.plot(z, pynlin.utils.watt2dBm(pump_solution_initial_cond))
+        # # plt.show()
 
         initial_conditions = np.hstack(
             (pump_solution_initial_cond, signal_solution_initial_cond)
@@ -631,12 +631,10 @@ class MMFRamanAmplifier(RamanAmplifier):
             https://www.osapublishing.org/abstract.cfm?uri=OFC-2012-OW1D.2
             (June 5, 2019).
         """
-
         num_signals = signal_power.shape[0]
         num_pumps = pump_power.shape[0]
 
         total_wavelengths = num_signals + num_pumps
-        print(num_pumps)
         num_modes = fiber.modes
         total_signals = total_wavelengths
         pump_power_ = pump_power.reshape((num_modes * num_pumps))
@@ -680,7 +678,10 @@ class MMFRamanAmplifier(RamanAmplifier):
         mode_list = np.array(range(fiber.modes))
         # change the order of creation
         oi = fiber.get_oi_matrix(mode_list, wavelengths)
-
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(oi, annot=True, cmap='viridis', linewidths=.5, fmt='.2e')
+        # plt.show()
+        
         gain_matrix = freq_scaling * gains
 
         gain_matrix = gain_matrix.repeat(fiber.modes, axis=0).repeat(

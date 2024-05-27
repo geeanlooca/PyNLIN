@@ -106,8 +106,8 @@ class MMFiber:
           # default super-approximated case: all the modes overlap as the fundamental one.
           # No cross-overlap
           if overlap_integrals_avg is None: 
-            # self.overlap_integrals_avg = 1/effective_area * np.identity(modes)   
-            self.overlap_integrals_avg = np.array([[1. , 2.], [3. , 4.]])       
+            self.overlap_integrals_avg = 1/effective_area * np.identity(modes)   
+            # self.overlap_integrals_avg = np.array([[1. , 2.], [3. , 4.]])       
             self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
             
             for i in range(5):
@@ -118,19 +118,14 @@ class MMFiber:
           self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
           for i in range(5):
             self.overlap_integrals[i, :, :] *= 0.0
+          self.overlap_integrals_avg = self.overlap_integrals_avg[:modes, :modes]
         else:
           self.overlap_integrals = overlap_integrals
-          self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
-          self.overlap_integrals_avg = self.overlap_integrals[0, :, :]
-          
-        # adjust for mismatches of OI matrix and selected mode number 
-        # print(np.shape(self.overlap_integrals))
-        # print(np.shape(self.overlap_integrals_avg))  
-        self.overlap_integrals_avg = self.overlap_integrals_avg[:modes, :modes]
-        self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
+          self.overlap_integrals_avg = self.overlap_integrals[-1, :, :]
+          # adjust for mismatches of OI matrix and selected mode number 
         
-        print("==========================")
-        print(self.overlap_integrals[-1, :, :])
+        self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
+        print(self.overlap_integrals)
         
         self.mode_names = mode_names
 
