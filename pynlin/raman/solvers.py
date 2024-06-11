@@ -678,8 +678,8 @@ class MMFRamanAmplifier(RamanAmplifier):
         mode_list = np.array(range(fiber.modes))
         # change the order of creation
         oi = fiber.get_oi_matrix(mode_list, wavelengths)
-        plt.figure(figsize=(10, 8))
-        sns.heatmap(oi, annot=True, cmap='viridis', linewidths=.5, fmt='.2e')
+        # plt.figure(figsize=(10, 8))
+        # sns.heatmap(oi, annot=True, cmap='viridis', linewidths=.5, fmt='.2e')
         # plt.show()
         
         gain_matrix = freq_scaling * gains
@@ -690,6 +690,8 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         gains_mmf = gain_matrix * oi
     
+        # print("\nNUMPY OI: ", oi.shape)
+        # plt.savefig("media/NUMPY_OI.pdf")
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))

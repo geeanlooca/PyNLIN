@@ -4,7 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rc
 import plotly.graph_objects as go
-from pynlin.utils import oi_law_fit, oi_law
+from pynlin.utils import oi_law_fit
+from scipy.constants import lambda2nu
+
 from matplotlib.cm import viridis
 rc('text', usetex=False)
 
@@ -12,6 +14,7 @@ oi_file = 'oi.mat'
 mat = scipy.io.loadmat(oi_file)
 oi_full = mat['OI'] * 1e12
 wl = mat['wavelenght_array'][0] * 1e-9
+freqs = lambda2nu(wl)
 # average over the polarizations
 oi = np.ndarray((21, 21, 4, 4))
 oi_avg = np.ndarray((4, 4))
@@ -23,18 +26,23 @@ oi_min = np.zeros_like(oi_avg)
 """
 WARN: probably wrong
 """
+
+
 def expression(l1i, l1f, params):
-  l2i=l1i
-  l2f=l1f
-  Lambda = (l1f-l1i)
-  a1, a2, b1, b2, c, x = params
-  integral = Lambda * ((a1+a2)*(l1f**3-l1i**3)/3 + (b1+b2) * (l1f**2-l1i**2)/2) + x * (l1f**2-l1i**2)*(l2f**2-l2i**2)/4 + c * Lambda**2
-  return integral / Lambda**2
+    l2i = l1i
+    l2f = l1f
+    Lambda = (l1f - l1i)
+    a1, a2, b1, b2, c, x = params
+    integral = Lambda * ((a1 + a2) * (l1f**3 - l1i**3) / 3 + (b1 + b2) * (l1f**2 -
+                         l1i**2) / 2) + x * (l1f**2 - l1i**2) * (l2f**2 - l2i**2) / 4 + c * Lambda**2
+    return integral / Lambda**2
+
 
 def polix(f):
     ll = [2, 4, 4, 2]
     st = [0, 2, 6, 10]
     return (st[f], st[f] + ll[f])
+
 
 for i in range(4):
     for j in range(4):
@@ -52,7 +60,7 @@ np.save('oi_min.npy', oi_min)
 # quadratic fit of the OI in frequency
 oi_fit = np.ndarray((6, 4, 4))
 
-x, y = np.meshgrid(wl, wl)
+x, y = np.meshgrid(freqs, freqs)
 for i in range(4):
     for j in range(4):
         oi_fit[:, i, j] = curve_fit(
@@ -62,19 +70,22 @@ np.save('oi_fit.npy', oi_fit)
 
 
 for mode in range(1):
-  color = viridis(mode/4)
-  plt.plot(wl, oi_law_fit([wl, wl[1]], *oi_fit[:, mode, mode]), color=color, label="oi_law_fit")
-  # plt.plot(wl, oi_law(wl, wl[1], oi_fit[:, mode, mode]), color=color, label="oi_law")
-  plt.plot(wl, oi[:, 1, mode, mode], color=color, ls=":", label="oi")
-  plt.hlines([oi_max[mode, mode], oi_min[mode, mode]], wl[1], wl[-1], label="max")
-  # plt.hlines(expression(wl[0], wl[-1], oi_fit[:, mode, mode]), wl[1], wl[-1], ls="--", label="analytical mean")
+    color = viridis(mode / 4)
+    plt.plot(freqs, oi_law_fit([freqs, freqs[1]], *oi_fit[:, mode, mode]),
+             color=color, label="oi_law_fit")
+    # plt.plot(wl, oi_law(wl, wl[1], oi_fit[:, mode, mode]), color=color, label="oi_law")
+    plt.plot(freqs, oi[:, 1, mode, mode], color=color, ls=":", label="oi", lw=3)
+    plt.hlines([oi_max[mode, mode], oi_min[mode, mode]], freqs[1], freqs[-1], label="max")
+    # plt.hlines(expression(freqs[0], freqs[-1], oi_fit[:, mode, mode]),
+    #            freqs[1], freqs[-1], ls="--", label="analytical mean")
 plt.legend()
 plt.show()
 
 print("\n\nThis is oi_fit: \n", oi_fit)
 print("\n\nThis is the numerical average: \n", oi_avg)
-print("\n\nThis is the analytical average: \n", expression(wl[0], wl[-1], oi_fit[:, :, :]))
- 
+print("\n\nThis is the analytical average: \n",
+      expression(freqs[0], freqs[-1], oi_fit[:, :, :]))
+
 # =========
 # PLOTTING
 # =========
@@ -83,14 +94,14 @@ if plot:
     modes = ["01", "11", "21", "02"]
     n_modes = 4
     # for i in range(n_modes):
-    #   plt.plot(wl, oi[0, :, i, :], label=modes)
+    #   plt.plot(freqs, oi[0, :, i, :], label=modes)
     #   plt.legend()
     #   plt.title(str(modes[i])+" @ 1400nm")
     #   plt.show()
     #   plt.savefig('media/OI_'+str(i)+'_pump-like.pdf')
 
     # for i in range(n_modes):
-    #   plt.plot(wl, oi[-1, :, i, :], label=modes)
+    #   plt.plot(freqs, oi[-1, :, i, :], label=modes)
     #   plt.legend()
     #   plt.title(str(modes[i])+" @ 1600nm")
     #   plt.show()
@@ -102,8 +113,8 @@ if plot:
             print(str(modes[i]) + '/' + str(modes[j]) + " | %2.2e" %
                   (np.max(oi_slice) - np.min(oi_slice) / np.average(oi_slice)))
             fig = go.Figure(data=go.Contour(z=oi_slice * 1e3,
-                                            x=wl,
-                                            y=wl,
+                                            x=freqs,
+                                            y=freqs,
                                             line_smoothing=0,
                                             contours=dict(
                                                 showlabels=True,  # show labels on contours
@@ -136,12 +147,12 @@ if plot:
                             str(modes[i]) + '_' + str(modes[j]) + '.pdf')
             # fig.savefig("test.pdf")
 
-            # oi_slice = oi_law(wl, wl, oi_fit[i, j]...)
+            # oi_slice = oi_law(freqs, freqs, oi_fit[i, j]...)
             # print(str(modes[i])+'/'+str(modes[j]) +" | %2.2e" % (np.max(oi_slice)-np.min(oi_slice)))
             # fig = go.Figure(data=
             #   go.Contour(z=oi_slice*1e3,
-            #             x=wl,
-            #             y=wl,
+            #             x=freqs,
+            #             y=freqs,
             #             line_smoothing=0,
             #             contours=dict(
             #                     showlabels = True, # show labels on contours

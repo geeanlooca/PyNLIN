@@ -13,7 +13,7 @@ import pynlin.fiber
 import matplotlib.pyplot as plt
 from matplotlib.cm import inferno
 from matplotlib.cm import viridis
-from pynlin.utils import oi_law, oi_law_fit
+from pynlin.utils import oi_polynomial_expansion, oi_law_fit
 cmap = inferno
 
 plt.rcParams.update({
@@ -47,7 +47,7 @@ def get_final_signals(
     oi_fit = np.load('oi_fit.npy')
     oi_max = np.load('oi_max.npy')
     oi_min = np.load('oi_min.npy')
-    
+
     beta2 = pynlin.utils.dispersion_to_beta2(
         dispersion, wavelength
     )
@@ -67,7 +67,6 @@ def get_final_signals(
         beta2=beta2,
         modes=num_modes,
         overlap_integrals=oi_fit,
-        overlap_integrals_avg=oi_avg
     )
 
     wdm = pynlin.wdm.WDM(
@@ -152,19 +151,17 @@ def get_final_signals(
 
 
 max_min = []
-max_min.append(get_final_signals(max_oi=True , use_average=True))
-max_min.append(get_final_signals(max_oi=False, use_average=True))
-max_min.append(get_final_signals(max_oi=False, use_average=False))
+max_min.append(get_final_signals(use_average=False))
 num_channels = len(max_min[0][:, 0])
 num_modes = len(max_min[0][0, :])
 plt.clf()
 for imod in range(num_modes):
     plt.plot(range(num_channels), watt2dBm(
-        max_min[0][:, imod]), color=cmap(imod / num_modes), label="max", lw=0.8)
-    plt.plot(range(num_channels), watt2dBm(
-        max_min[1][:, imod]), color=cmap(imod / num_modes), ls="--", label="min", lw=0.8)
-    plt.plot(range(num_channels), watt2dBm(
-        max_min[2][:, imod]), color=cmap(imod / num_modes), ls=":", label="fit", lw=0.8)
+        max_min[0][:, imod]), color=cmap(imod / num_modes), label="fit", lw=0.8)
+    # plt.plot(range(num_channels), watt2dBm(
+    #     max_min[1][:, imod]), color=cmap(imod / num_modes), ls="--", label="min", lw=0.8)
+    # plt.plot(range(num_channels), watt2dBm(
+    #     max_min[2][:, imod]), color=cmap(imod / num_modes), ls=":", label="fit", lw=0.8)
 plt.legend()
 plt.grid()
 plt.ylabel("Output power [dBm]")
@@ -172,7 +169,7 @@ plt.xlabel("Channel number")
 plt.savefig("media/LP01.pdf")
     # plt.plot(range(num_channels), watt2dBm(
     #     max_min[2][:, imod]), color=cmap(imod / num_channels), ls=":", label="fit" if imod==1 else None, lw=0.8)
-for i in range(3):
+for i in range(0):
   plt.clf()
   plt.fill_between(range(num_channels), np.max(watt2dBm(
         max_min[i][:, :]), axis=1), np.min(watt2dBm(

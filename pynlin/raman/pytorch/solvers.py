@@ -11,8 +11,10 @@ from numpy import polyval
 from pynlin.fiber import Fiber, MMFiber
 from pynlin.raman.pytorch._torch_ode import torch_rk4
 from pynlin.raman.response import impulse_response
+from pynlin.utils import nu2lambda
 
-
+import matplotlib.pyplot as plt
+import seaborn as sns
 class RamanAmplifier(torch.nn.Module):
   def __init__(
     self,
@@ -374,9 +376,9 @@ class MMFRamanAmplifier(torch.nn.Module):
     self.modes = fiber.modes
     self.length = length
     self.steps = steps
-
-    self.overlap_integrals_avg = fiber.overlap_integrals_avg[:self.modes, :self.modes]
-    overlap_integrals = torch.Tensor(fiber.overlap_integrals_avg).float()
+    self.fiber = fiber
+    self.overlap_integrals = fiber.overlap_integrals[:, :self.modes, :self.modes]
+    overlap_integrals_tensor = torch.Tensor(fiber.overlap_integrals).float()
 
     z = torch.linspace(0, self.length, self.steps)
 
@@ -438,7 +440,7 @@ class MMFRamanAmplifier(torch.nn.Module):
     )
     self.register_buffer("loss_coefficients", torch.from_numpy(loss_coeffs).float())
     self.register_buffer("signal_loss", signal_loss)
-    self.register_buffer("overlap_integrals", overlap_integrals)
+    # self.register_buffer("overlap_integrals", overlap_integrals_tensor)
     self.register_buffer("raman_response", raman_response)
 
     # Doesn't matter, the pumps are turned off
@@ -475,7 +477,11 @@ class MMFRamanAmplifier(torch.nn.Module):
   def _lambda2frequency(self, wavelength):
     """Convert wavelength in frequency."""
     return self.c0 / wavelength
-
+  
+  def _frequency2lambda(self, frequency):
+    """Convert wavelength in frequency."""
+    return self.c0 / frequency
+  
   def _batch_diff(self, x):
     """Takes a Tensor of shape (B, N) and returns a Tensor of shape (B, N,
     N) where in position (i, :, :) is the matrix of differences of the
@@ -576,7 +582,8 @@ class MMFRamanAmplifier(torch.nn.Module):
       (pump_freqs, self.signal_frequency.expand(batch_size, self.num_channels)),
       dim=1,
     )
-
+    total_wavelenghts = self._frequency2lambda(total_freqs)
+    
     total_power = torch.cat(
       (
         torch.nn.functional.relu(x[:, self.num_pumps:]),
@@ -608,6 +615,7 @@ class MMFRamanAmplifier(torch.nn.Module):
     )
 
     gain *= freq_scaling
+    
     """
      build gain matrix, tiling gains by the number of modes and multiplying
      for the corresponding overlap integral
@@ -624,31 +632,60 @@ class MMFRamanAmplifier(torch.nn.Module):
             | m11 m12 | m11 m12 |
        F2   | m21 m22 | m21 m22 |
             +---------+---------+
+            
      mantain the same topology?
      gain = gain.repeat_interleave(self.modes, dim=1).repeat_interleave(
      self.modes, dim=2
      )
          beware, dim = 0 is the batch dimension
     """
+    
     gain = gain.repeat_interleave(self.modes, dim=1).repeat_interleave(
      self.modes, dim=2
     ).float()
-    oi = torch.from_numpy(self.overlap_integrals_avg[None, :, :].repeat(num_freqs, axis=1).repeat(num_freqs, axis=2)).float()
-    # oi = self.overlap_integrals_avg.expand((batch_size, self.modes, self.modes)).repeat(
-    #   1, num_freqs, num_freqs
-    # )
+    # print("self.modes", self.modes)
     
-    # mode_list = np.array(range(self.modes))
-    # oi = self.overlap_integral(mode_list[:, None, None, None], mode_list[None, :, None, None],
-    # 						   (wavelengths[None, None, :, None], wavelengths[None, None, None, :]))
-    # oi = np.reshape(oi, (total_wavelengths * fiber.modes,
-    # 				total_wavelengths * fiber.modes), order='F')
+    # oi = torch.from_numpy(self.fiber.get_oi_matrix_torch(range(self.modes), 3e8 / total_freqs))
+    oi = self.fiber.torch_oi.evaluate_oi_tensor(total_wavelenghts)
+    
+    # print("\nTORCH OI: ", oi.shape)
+    # oi_numpy = oi.detach().numpy()
+    # plt.clf()
+    # plt.figure(figsize=(10, 8))
+    # sns.heatmap(oi_numpy, annot=True, cmap='viridis', linewidths=.5, fmt='.2e')
+    # plt.savefig("media/TORCH_OI.pdf")
+    # plt.show()
+    """
+            +---------+   +---------+  +---------+
+            | c11 c12 |   | c11 c12 |  | c11 c12 |
+            | c21 c22 |   | c21 c22 |  | c21 c22 |
+            +---------+0  +---------+1 +---------+2
+
+            A1                        B1                      X
+            +---------+---------+    +---------+---------+   +---------+---------+
+            | c11 c12 | c11 c12 |    | c11 c12 | c11 c12 |   | c11 c12 | c11 c12 |
+            | c21 c22 | c21 c22 |    | c21 c22 | c21 c22 |   | c21 c22 | c21 c22 |
+            +---------+---------+    +---------+---------+   +---------+---------+
+            | c11 c12 | c11 c12 |    | c11 c12 | c11 c12 |   | c11 c12 | c11 c12 |
+            | c21 c22 | c21 c22 |    | c21 c22 | c21 c22 |   | c21 c22 | c21 c22 |
+            +---------+---------+0   +---------+---------+1  +---------+---------+2
+
+            F1                    F2                    FX
+            +-------+-------+     +-------+-------+     +---------+---------+
+            | f1 f1 | f2 f2 |     | f1 f1 | f1 f1 |     | c11 c12 | c11 c12 |
+            | f1 f1 | f2 f2 |     | f1 f1 | f1 f1 |     | c21 c22 | c21 c22 |
+            +-------+-------+  *  +-------+-------+  =  +---------+---------+
+            | f1 f1 | f2 f2 |     | f2 f2 | f2 f2 |     | c11 c12 | c11 c12 |
+            | f1 f1 | f2 f2 |     | f2 f2 | f2 f2 |     | c21 c22 | c21 c22 |
+            +-------+-------+0    +-------+-------+1    +---------+---------+2
+    """
+   
+    # oi = torch.from_numpy(self.overlap_integrals_avg[None, :, :].repeat(num_freqs, axis=1).repeat(num_freqs, axis=2)).float()
     G = gain * oi
     
-    solution = torch_rk4(
+    solution = torch_rk4(           
       MMFRamanAmplifier.ode, total_power, self.z, losses, G, self.direction,
     ).view(-1, num_freqs, self.modes)
-
     signal_spectrum = solution[:, self.num_pumps:, :].clone()
 
     # if self.counterpumping:
@@ -656,4 +693,5 @@ class MMFRamanAmplifier(torch.nn.Module):
     #   return signal_spectrum, pump_initial_power
     # else:
     # print("signal_spectrum", signal_spectrum)
+    
     return signal_spectrum

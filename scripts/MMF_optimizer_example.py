@@ -62,14 +62,14 @@ oi_avg = np.load('oi_avg.npy')
 power_per_channel_dBm_list = power_dBm_list
 # Pumping scheme choice
 pumping_schemes = ['ct']
-num_only_co_pumps = 4
-num_only_ct_pumps = 4
+# num_only_co_pumps = 4
+# num_only_ct_pumps = 4
 optimize = True
 profiles = True
 
 fiber_length = fiber_lengths[0]
-gain_dB = -10
-power_per_pump = dBm2watt(-50)
+gain_dB = 0
+power_per_pump = dBm2watt(0)
 
 log.warning("end loading of parameters")
 
@@ -81,8 +81,7 @@ fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
     modes=num_modes,
-    overlap_integrals=None,
-    overlap_integrals_avg=oi_avg,
+    overlap_integrals=oi_fit,
 )
 wdm = pynlin.wdm.WDM(
     spacing=channel_spacing,
@@ -142,10 +141,11 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     initial_pump_frequencies = np.array(lambda2nu([1447e-9, 1467e-9, 1485e-9, 1515e-9]))
     power_per_channel = dBm2watt(power_per_channel_dBm)
     signal_wavelengths = wdm.wavelength_grid()
-    initial_pump_wavelengths = nu2lambda(initial_pump_frequencies)
+    initial_pump_wavelengths = nu2lambda(initial_pump_frequencies[:num_pumps])
 
     initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
     initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0)
+    print(num_pumps)
     torch_amplifier_ct = MMFRamanAmplifier(
         fiber_length,
         integration_steps,
@@ -165,20 +165,20 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     signal_powers = signal_powers[:, None].repeat(num_modes, axis=1)
     target_spectrum = watt2dBm(signal_powers)[None, :, :] + gain_dB
-    learning_rate = 1e-6
+    learning_rate = 1e-3
 
-    pump_wavelengths, initial_pump_powers = optimizer.optimize(
+    pump_wavelengths, pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=1,
+        epochs=300,
         learning_rate=learning_rate,
-        lock_wavelengths=100,
+        lock_wavelengths=50,
         )
     
     amplifier = NumpyMMFRamanAmplifier(fiber)
 
-    "\n\n============ results ==============")
+    print("\n=========== results ===================")
     print("Pump powers")
-    print(watt2dBm(initial_pump_powers.reshape((num_pumps, num_modes))))
+    print(watt2dBm(pump_powers.reshape((num_pumps, num_modes))))
     print("Pump frequency")
     print(lambda2nu(pump_wavelengths))
     print("Pump wavelenghts")
@@ -188,11 +188,11 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     print("=========== end ===================\n\n")
     
     print("WARN: converting the inlined pump_powers into a matrix")
-    initial_pump_powers = initial_pump_powers.reshape((num_pumps, num_modes))
+    pump_powers = pump_powers.reshape((num_pumps, num_modes))
     pump_solution, signal_solution = amplifier.solve(
         signal_powers,
         signal_wavelengths,
-        initial_pump_powers,
+        pump_powers,
         pump_wavelengths,
         z_max,
         fiber,
@@ -219,7 +219,11 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
                    watt2dBm(signal_solution[:, i, :]), color=cmap(i/num_channels))
     plt.legend()
     plt.grid()
-    plt.show()
+    
+    flatness = np.max(watt2dBm(signal_solution[-1, :, :])) - watt2dBm(np.min(signal_solution[-1, :, :]))
+    print(f"final flatness: {flatness:.2f}")
+    # plt.show()
+    plt.savefig("media/optimized_profile.pdf")
     return
 
 ct_solver(-30.0)

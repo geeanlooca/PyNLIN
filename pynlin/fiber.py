@@ -1,7 +1,8 @@
+from dataclasses import dataclass
 from numpy import polyval
-from pynlin.utils import oi_law
+from pynlin.utils import oi_polynomial_expansion, oi_law
 import numpy as np
-
+import torch
 
 class Fiber:
     """Object collecting parameters of an optical fiber."""
@@ -46,6 +47,36 @@ class Fiber:
         return self.__str__()
 
 
+
+"""
+OI fit storage and evaluation in a way which is compatible with torch
+"""
+@dataclass
+class OICoefficients:
+  values: list[torch.Tensor]
+
+  def __init__(self, modes: int, input_values: np.ndarray):
+    self.modes = modes
+    self.values = [torch.from_numpy(v[:modes, :modes]) for v in input_values]
+    self.num_modes = self.values[0].shape[0]
+    # self.num_modes, dim=2
+    # ).float()
+
+  def evaluate_oi_tensor(self, wavelengths: torch.Tensor) -> torch.Tensor:
+      """Evaluate the overlap integral between the pump and signal modes.+
+
+      Parameters
+      ----------
+      coefficients : OICoefficients
+          The overlap integral coefficients. The `values` attribute should be a list of length 6
+            of torch.Tensor elements, each of size (num_modes, num_modes).
+
+      wavelengths : torch.Tensor (batch_dim, num_frequencies (pumps + signals))
+        Tensor containing all the wavelengths involved in the system.
+      """
+      return oi_polynomial_expansion(wavelengths, self.values)
+    
+  
 class MMFiber:
     def __init__(
         self,
@@ -55,7 +86,6 @@ class MMFiber:
         beta2=20 * 1e-24 / 1e3,
         modes=1,
         overlap_integrals=None,
-        overlap_integrals_avg=None,
         mode_names=None,
     ):
         """
@@ -76,9 +106,7 @@ class MMFiber:
         =======
          
         self.overlap_integrals : (6, modes, modes) used only in the Numpy solver: can also contain also the average if needed!
-        
-        self.overlap_integrals_avg : (modes, modes), symmetric, used in the Torch solver. Torch solver do not support wavelength-dependent oi. 
-        
+                
         """
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
@@ -100,35 +128,11 @@ class MMFiber:
         # Structure of the overlap integrals
         # overlap_integrals[i, j] = [a1, b1, a2, b2, x, c]
         # i, j mode indexes,
-        # all the quadratic fit parameters are used in oi_law
-        
-        if overlap_integrals is None:
-          # default super-approximated case: all the modes overlap as the fundamental one.
-          # No cross-overlap
-          if overlap_integrals_avg is None: 
-            self.overlap_integrals_avg = 1/effective_area * np.identity(modes)   
-            # self.overlap_integrals_avg = np.array([[1. , 2.], [3. , 4.]])       
-            self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
-            
-            for i in range(5):
-              self.overlap_integrals[i, :, :] *= 0.0
-          else:
-            self.overlap_integrals_avg = overlap_integrals_avg
-        
-          self.overlap_integrals = self.overlap_integrals_avg[None, :, :].repeat(6, axis=0)
-          for i in range(5):
-            self.overlap_integrals[i, :, :] *= 0.0
-          self.overlap_integrals_avg = self.overlap_integrals_avg[:modes, :modes]
-        else:
-          self.overlap_integrals = overlap_integrals
-          self.overlap_integrals_avg = self.overlap_integrals[-1, :, :]
-          # adjust for mismatches of OI matrix and selected mode number 
-        
-        self.overlap_integrals = self.overlap_integrals[:, :modes, :modes]
-        print(self.overlap_integrals)
-        
+        # all the quadratic fit parameters are used in oi_polynomial_expansion
+       
+        self.overlap_integrals = overlap_integrals
+        self.torch_oi = OICoefficients(self.modes, overlap_integrals)
         self.mode_names = mode_names
-
         super().__init__()
 
     """
@@ -144,6 +148,7 @@ class MMFiber:
       M = len(modes)
       W = len(wavelengths)
       mat = np.zeros((M*W, M*W))
+      mat[:, :]
       for n in range(M):
         for m in range(M):
           for wn in range(W):
