@@ -1,4 +1,4 @@
-from space_integrals_general import do_space_integrals
+from space_integrals_general import get_space_integrals
 from time_integrals import do_time_integrals
 import numpy as np
 import matplotlib.pyplot as plt
@@ -23,7 +23,7 @@ for il, length in enumerate(length_list):
   fname = str(length)
   if os.path.isfile("X_"+fname+".npy"):
     X0mm = np.load()
-  X0mm, X0mm_ana = do_space_integrals()
+  X0mm, X0mm_ana = get_space_integrals()
   allofthem = sum(X0mm**2)
   numbs = len(X0mm)
   X_mid[il] = allofthem

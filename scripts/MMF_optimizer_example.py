@@ -57,6 +57,13 @@ power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_s
 num_modes = data['num_modes']
 oi_fit = np.load('oi_fit.npy')
 oi_avg = np.load('oi_avg.npy')
+use_avg_oi = False
+
+
+num_original_modes = oi_avg[0].shape[0]
+matrix_avg = oi_avg
+matrix_zeros = np.tile(np.zeros((num_original_modes, num_original_modes))[None, :, :], (5, 1, 1))
+oi_avg_complete = np.stack((*matrix_zeros, matrix_avg), axis=0)
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
@@ -68,7 +75,7 @@ optimize = True
 profiles = True
 
 fiber_length = fiber_lengths[0]
-gain_dB = 0
+gain_dB = -5
 power_per_pump = dBm2watt(0)
 
 log.warning("end loading of parameters")
@@ -77,12 +84,26 @@ beta2 = pynlin.utils.dispersion_to_beta2(
     dispersion, wavelength
 )
 ref_bandwidth = baud_rate
+
+if use_avg_oi:
+  oi_set = oi_avg_complete
+else:
+  oi_set = oi_fit
 fiber = pynlin.fiber.MMFiber(
+    effective_area=80e-12,
+    beta2=beta2,
+    modes=num_modes,
+    overlap_integrals=oi_set,
+)
+# assert((oi_set == oi_fit).all())
+
+actual_fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
     beta2=beta2,
     modes=num_modes,
     overlap_integrals=oi_fit,
 )
+
 wdm = pynlin.wdm.WDM(
     spacing=channel_spacing,
     num_channels=num_channels,
@@ -145,7 +166,6 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     initial_pump_powers = np.ones_like(initial_pump_wavelengths) * power_per_pump
     initial_pump_powers = initial_pump_powers.repeat(num_modes, axis=0)
-    print(num_pumps)
     torch_amplifier_ct = MMFRamanAmplifier(
         fiber_length,
         integration_steps,
@@ -165,20 +185,22 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
     signal_powers = np.ones_like(signal_wavelengths) * power_per_channel
     signal_powers = signal_powers[:, None].repeat(num_modes, axis=1)
     target_spectrum = watt2dBm(signal_powers)[None, :, :] + gain_dB
-    learning_rate = 1e-3
+    learning_rate = 2e-4
 
     pump_wavelengths, pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=300,
+        epochs=1000,
         learning_rate=learning_rate,
-        lock_wavelengths=50,
+        lock_wavelengths=200,
         )
-    
+    print(pump_powers)
     amplifier = NumpyMMFRamanAmplifier(fiber)
 
     print("\n=========== results ===================")
     print("Pump powers")
     print(watt2dBm(pump_powers.reshape((num_pumps, num_modes))))
+    print("Initial pump powers")
+    print(watt2dBm(initial_pump_powers.reshape((num_pumps, num_modes))))
     print("Pump frequency")
     print(lambda2nu(pump_wavelengths))
     print("Pump wavelenghts")
@@ -195,15 +217,15 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
         pump_powers,
         pump_wavelengths,
         z_max,
-        fiber,
+        actual_fiber,
         counterpumping=True,
         reference_bandwidth=ref_bandwidth
     )
+    
     # fixed mode
     plt.clf()
     cmap = viridis
     z_plot = np.linspace(0, fiber_length, len(pump_solution[:, 0, 0])) * 1e-3
-    print(np.shape(pump_solution))
     for i in range(num_pumps):
       if i ==1:
         plt.plot(z_plot,

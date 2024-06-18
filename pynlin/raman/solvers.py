@@ -600,7 +600,7 @@ class MMFRamanAmplifier(RamanAmplifier):
           The input pump power in a 2d ndarray of shape (wavelengths, modes)
           expressed in Watt.
         pump_wavelength: np.ndarray
-          The input pump wavelengths in a 2d ndarray of shape (wavelengths,)
+          The input pump wavelengths in a 1d ndarray of shape (wavelengths,)
           expressed in meters.
         z: np.ndarray
           The z-axis along which to integrate the equations, expressed in
@@ -678,9 +678,6 @@ class MMFRamanAmplifier(RamanAmplifier):
         mode_list = np.array(range(fiber.modes))
         # change the order of creation
         oi = fiber.get_oi_matrix(mode_list, wavelengths)
-        # plt.figure(figsize=(10, 8))
-        # sns.heatmap(oi, annot=True, cmap='viridis', linewidths=.5, fmt='.2e')
-        # plt.show()
         
         gain_matrix = freq_scaling * gains
 
@@ -690,8 +687,7 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         gains_mmf = gain_matrix * oi
     
-        # print("\nNUMPY OI: ", oi.shape)
-        # plt.savefig("media/NUMPY_OI.pdf")
+        np.save("np_gains.npy", gain_matrix)
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))
