@@ -619,6 +619,7 @@ class MMFRamanAmplifier(torch.nn.Module):
 
         gain *= freq_scaling
 
+        np.save("tc_gains.npy", total_freqs[0, :].detach().numpy())
         """
      build gain matrix, tiling gains by the number of modes and multiplying
      for the corresponding overlap integral
@@ -680,7 +681,6 @@ class MMFRamanAmplifier(torch.nn.Module):
 
         # oi = torch.from_numpy(self.overlap_integrals_avg[None, :, :].repeat(num_freqs, axis=1).repeat(num_freqs, axis=2)).float()
         G = gain * oi
-        np.save("tc_gains.npy", gain[0, :, :].detach().numpy())
         solution = torch_rk4(
             MMFRamanAmplifier.ode, total_power, self.z, losses, G, self.direction,
         ).view(-1, num_freqs, self.modes)

@@ -57,7 +57,7 @@ power_dBm_list = np.linspace(power_dBm_setup[0], power_dBm_setup[1], power_dBm_s
 num_modes = data['num_modes']
 oi_fit = np.load('oi_fit.npy')
 oi_avg = np.load('oi_avg.npy')
-use_avg_oi = False
+use_avg_oi = True
 
 
 num_original_modes = oi_avg[0].shape[0]
@@ -189,7 +189,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     pump_wavelengths, pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=1000,
+        epochs=1,
         learning_rate=learning_rate,
         lock_wavelengths=200,
         )

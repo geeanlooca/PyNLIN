@@ -687,7 +687,7 @@ class MMFRamanAmplifier(RamanAmplifier):
 
         gains_mmf = gain_matrix * oi
     
-        np.save("np_gains.npy", gain_matrix)
+        np.save("np_gains.npy", frequencies)
         if not ase:
             if direction is None:
                 direction = np.ones((total_wavelengths * fiber.modes,))
