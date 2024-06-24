@@ -121,11 +121,10 @@ for i in range(len(modes)):
 print("Unlucky channel has noise: ", np.min(nlin))
 print("Lucky channel has noise: ", np.max(nlin))
 
-nlin_single = np.zeros((1, len(freqs)))
-for j in range(len(freqs)):
-    nlin_single[0, j] = np.sum(L / (np.abs(beta1[0, :] - beta1[0, j])[(beta1[0, :] - beta1[0, j]) != 0] * T))
-print("Unlucky channel has noise: ", np.min(nlin))
-print("Lucky channel has noise: ", np.max(nlin))
+nlin_no_cross = np.zeros((len(modes), len(freqs)))
+for i in range(len(modes)):
+  for j in range(len(freqs)):
+      nlin_no_cross[i, j] = np.sum(L / (np.abs(beta1[i, :] - beta1[i, j])[(beta1[i, :] - beta1[i, j]) != 0] * T))
 
 # plt.clf(
 # sns.heatmap(collisions, cmap="magma", square=False, xticklabels=freqs, yticklabels=modes)
@@ -155,13 +154,14 @@ plt.savefig(f"media/dispersion/collisions_single.png")
 # plt.show()
 
 plt.clf()
-plt.semilogy(freqs * 1e-12, nlin_single[0, :], label=f'Mode {modes[i]}', marker='x')
+for i in range(len(modes)): 
+  plt.semilogy(freqs * 1e-12, nlin_no_cross[i, :], label=f'Mode {modes[i]}', marker='x')
 plt.xlabel('Frequency (THz)')
 plt.ylabel('NLIN coeff')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
-plt.savefig(f"media/dispersion/nlin_single.png")
+plt.savefig(f"media/dispersion/nlin_no_cross.png")
 # plt.show()
 
 plt.clf()
