@@ -50,6 +50,3 @@ def get_collision_location(m, fiber, channel_spacing, T) -> float:
     complete collision."""
     return -m * T / (fiber.beta2 * 2 * math.pi * channel_spacing)
   
-def compute_I_mmf():
-  
-  pass

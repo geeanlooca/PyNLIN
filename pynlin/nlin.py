@@ -14,7 +14,7 @@ from pynlin.constellations import Constellation
 from pynlin.fiber import Fiber
 from pynlin.pulses import Pulse, RaisedCosinePulse, GaussianPulse, NyquistPulse
 from pynlin.wdm import WDM
-from pynlin.collisions import get_interfering_frequencies, get_m_values, compute_I_mmf, get_interfering_channels
+from pynlin.collisions import get_interfering_frequencies, get_m_values, get_interfering_channels
 
 def apply_chromatic_dispersion(
     pulse: Pulse, fiber: Fiber, z: float, delay: float = None
@@ -46,7 +46,7 @@ def apply_chromatic_dispersion(
     return g_propagated
 
 
-def X0mm_time_integral_WDM_selection(
+def iterate_time_integrals(
     baud_rate: float,
     wdm: WDM,
     interfering_index: int, 
@@ -141,6 +141,7 @@ def X0mm_time_integral_WDM_selection(
             )
 
 
+### Superseded by iterate_time_integrals
 def X0mm_mmf_time_integral_WDM_grid(
     baud_rate: float,
     wdm: WDM,
@@ -230,107 +231,6 @@ def X0mm_mmf_time_integral_WDM_grid(
 
             # dset = file.create_dataset(interferer_group_name + "z", data=z)
             # dset = file.create_dataset(interferer_group_name + "m", data=m)
-            # integrals_group_name = interferer_group_name + "/integrals/"
-            # for x, integral in enumerate(I_list):
-            file.create_dataset(
-                interferer_group_name + f"integrals",
-                data=integral,
-                compression="gzip",
-                compression_opts=9,
-            )
-
-
-def X0mm_time_integral_WDM_grid(
-    baud_rate: float,
-    wdm: WDM,
-    fiber: Fiber,
-    fiber_length: float,
-    filename: str,
-    **compute_collisions_kwargs,
-) -> None:
-    """Compute the inner time integral of the expression for the XPM
-    coefficients Xhkm for each combination of frequencies in the supplied WDM
-    grid."""
-    T = 1 / baud_rate
-    beta2 = fiber.beta2
-
-    # open the file to save data to disk
-    file = h5py.File(filename, "w")
-
-    # get the WDM comb frequencies and set up the progress bar
-    frequency_grid = wdm.frequency_grid()
-    coi_frequency_grid_pbar = tqdm.tqdm(
-        [frequency_grid[0],
-         frequency_grid[9],
-         frequency_grid[19],
-         frequency_grid[29],
-         frequency_grid[39],
-         frequency_grid[49]]
-         )
-    coi_frequency_grid_pbar.set_description("WDM Channels")
-
-    # iterate over all channels of the WDM grid
-    for coi_number, coi_frequency in enumerate(coi_frequency_grid_pbar):
-        interfering_frequencies = get_interfering_frequencies(
-            coi_frequency, frequency_grid
-        )
-
-        z_list = []
-        integrals_list = []
-        m_list = []
-
-        # set up the progress bar to iterate over all interfering channels
-        # of the current channel of interest
-        interfering_frequencies_pbar = tqdm.tqdm(interfering_frequencies)
-        interfering_frequencies_pbar.set_description(
-            f"Interfering frequencies of channel {coi_number}"
-        )
-        for intererer_number, interfering_frequency in enumerate(
-            interfering_frequencies_pbar
-        ):
-
-            # compute the frequency separation between the coi and the
-            # interfering channel
-            channel_spacing = interfering_frequency - coi_frequency
-
-            # compute the time integrals for each complete collision
-            z, I, M = compute_all_collisions_X0mm_time_integrals(
-                coi_frequency,
-                interfering_frequency,
-                baud_rate,
-                fiber,
-                fiber_length,
-                **compute_collisions_kwargs,
-            )
-
-            z_list.append(z)
-            integrals_list.append(I)
-            m_list.append(M)
-
-        # Save the results to file
-
-        # each Channel of interest gets its own group with its attributes
-        group_name = f"time_integrals/channel_{coi_number}/"
-        group = file.create_group(group_name)
-        group.attrs["frequency"] = coi_frequency
-        group.attrs["frequency_THz"] = coi_frequency * 1e-12
-        group.attrs["wavelength"] = nu2lambda(coi_frequency) * 1e9
-
-        # in each COI group, create a group for each interfering channel
-        # and store the z-array (positions inside the fiber)
-        # and the time integrals for each collision.
-        for interf_number, (z, integral, m, interf_freq) in enumerate(
-            zip(z_list, integrals_list, m_list, interfering_frequencies)
-        ):
-
-            interferer_group_name = group_name + f"interfering_channel_{interf_number}/"
-            interferer_group = file.create_group(interferer_group_name)
-            interferer_group.attrs["frequency"] = interf_freq
-            interferer_group.attrs["frequency_THz"] = interf_freq * 1e-12
-            interferer_group.attrs["wavelength"] = nu2lambda(interf_freq) * 1e9
-
-            dset = file.create_dataset(interferer_group_name + "z", data=z)
-            dset = file.create_dataset(interferer_group_name + "m", data=m)
             # integrals_group_name = interferer_group_name + "/integrals/"
             # for x, integral in enumerate(I_list):
             file.create_dataset(
@@ -668,6 +568,10 @@ def X0mm_time_integral_precomputed(
     return time_integrals
 
 
+def compute_X0mm_mmf():
+  pass
+
+### Currently unused methods for nondegenerate FWM noise
 def Xhkm_time_integral(
     pulse: Pulse,
     fiber: Fiber,
@@ -717,6 +621,7 @@ def Xhkm_precomputed(
     X = scipy.integrate.trapezoid(time_integrals * amplification_function, z, axis=axis)
 
     return X
+
 
 
 def Xhkm(

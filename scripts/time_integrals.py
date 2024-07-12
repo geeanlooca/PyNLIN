@@ -39,7 +39,7 @@ def do_time_integrals(fiber_length, pulse_shape="Nyquist"):
   points_per_collision = 10
 
   coi_index = [0]
-  pynlin.nlin.X0mm_time_integral_WDM_selection(
+  pynlin.nlin.iterate_time_integrals(
       baud_rate,
       wdm,
       coi_index,
