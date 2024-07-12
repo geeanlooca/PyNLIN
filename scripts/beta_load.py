@@ -79,6 +79,7 @@ freqs = wdm.frequency_grid()
 print(nu2lambda(np.max(freqs))*1e9)
 print(nu2lambda(np.min(freqs))*1e9)
 modes = [0, 1, 2, 3]
+mode_names = ["LP01", "LP11", "LP21", "LP02"]
 
 # from the Matlab file the fit is:
 # 3 * fitresult.p1.*(omega_n).^2 + 2 * fitresult.p2.*omega_n +fitresult.p3)./std(omega)
@@ -136,7 +137,7 @@ for i in range(len(modes)):
 
 plt.clf()
 for i in range(4):
-    plt.plot(freqs * 1e-12, collisions[i, :], label=f'Mode {modes[i]}')
+    plt.plot(freqs * 1e-12, collisions[i, :], label=mode_names[i])
 plt.xlabel('Frequency (THz)')
 plt.ylabel(r'$m_{\mathrm{max}}$')
 plt.legend()
@@ -145,7 +146,7 @@ plt.savefig(f"media/dispersion/collisions.png")
 # plt.show()
 
 plt.clf()
-plt.plot(freqs * 1e-12, collisions_single[0, :], label=f'Mode {modes[i]}')
+plt.plot(freqs * 1e-12, collisions_single[0, :], label=mode_names[i])
 plt.xlabel('Frequency (THz)')
 plt.ylabel(r'$m_{\mathrm{max}}$')
 plt.legend()
@@ -155,7 +156,7 @@ plt.savefig(f"media/dispersion/collisions_single.png")
 
 plt.clf()
 for i in range(len(modes)): 
-  plt.semilogy(freqs * 1e-12, nlin_no_cross[i, :], label=f'Mode {modes[i]}', marker='x')
+  plt.semilogy(freqs * 1e-12, nlin_no_cross[i, :], label=mode_names[i], marker='x')
 plt.xlabel('Frequency (THz)')
 plt.ylabel('NLIN coeff')
 plt.legend()
@@ -166,7 +167,7 @@ plt.savefig(f"media/dispersion/nlin_no_cross.png")
 
 plt.clf()
 for i in range(4):
-    plt.semilogy(freqs * 1e-12, nlin[i, :], label=f'Mode {modes[i]}', marker='x')
+    plt.semilogy(freqs * 1e-12, nlin[i, :], label=mode_names[i], marker='x')
 plt.xlabel('Frequency (THz)')
 plt.ylabel('NLIN coeff')
 plt.legend()
@@ -178,13 +179,25 @@ plt.savefig(f"media/dispersion/nlin.png")
 plt.clf()
 plt.figure(figsize=(4.6, 4))
 for i in range(4):
-    plt.plot(freqs * 1e-12, beta1[i, :] * 1e9, label=f'Mode {modes[i]}')
+    plt.plot(freqs * 1e-12, beta1[i, :] * 1e9, label=mode_names[i])
 plt.xlabel('Frequency (THz)')
 plt.ylabel(r'$\beta_1$ (ps/km)')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(f"media/dispersion/beta1.png")
+
+df = freqs[1]-freqs[0]
+plt.clf()
+plt.figure(figsize=(4.6, 4))
+for i in range(4):
+    plt.plot(freqs[:-1] * 1e-12, np.diff(beta1[i, :])/df * 1e9 * 1e17 * 2, label=mode_names[i])
+plt.xlabel('Frequency (THz)')
+plt.ylabel(r'$\beta_2$ (ps$^2$/km)')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.savefig(f"media/dispersion/beta2.png")
 
 beta1_differences = np.abs(beta1[:, :, np.newaxis, np.newaxis] - beta1[np.newaxis, np.newaxis, :, :])
 beta1_differences = beta1_differences[beta1_differences!= 0]
@@ -217,10 +230,11 @@ plt.clf()
 plt.figure(figsize=(4.6, 4))
 for i in range(4):
     plt.plot(freqs * 1e-12, (beta1[i, :] - beta1[1, :])
-             * 1e12, label=f'Mode {modes[i]}')
+             * 1e12, label=mode_names[i])
 plt.xlabel('Frequency (THz)')
 plt.ylabel(r'$\Delta\beta_1$ (ps/m)')
 plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.savefig(f"media/dispersion/DMGD_LP01.png")
+
