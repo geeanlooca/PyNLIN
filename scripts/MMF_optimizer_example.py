@@ -190,7 +190,7 @@ def ct_solver(power_per_channel_dBm, use_precomputed=False):
 
     pump_wavelengths, pump_powers = optimizer.optimize(
         target_spectrum=target_spectrum,
-        epochs=1,
+        epochs=1000,
         learning_rate=learning_rate,
         lock_wavelengths=200,
         )
