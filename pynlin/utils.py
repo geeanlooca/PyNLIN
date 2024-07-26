@@ -7,6 +7,7 @@ from scipy.constants import speed_of_light as c0
 from scipy.constants import nu2lambda, lambda2nu
 import torch
 
+
 def wavelength_to_frequency(lambdas):
     """Convert wavelength to frequency."""
     return scipy.constants.lambda2nu(lambdas)
@@ -65,25 +66,32 @@ def dispersion_to_beta2(D, wavelength):
 
 
 def oi_law(l1, l2, params):
-  a1, b1, a2, b2, x, c = params
-  return (a1 * l1**2 + b1 * l1 + a2 * l2**2 + b2 * l2 + x * l1 * l2 + c)
+    a1, b1, a2, b2, x, c = params
+    return (a1 * l1**2 + b1 * l1 + a2 * l2**2 + b2 * l2 + x * l1 * l2 + c)
+
 
 def oi_polynomial_expansion(wl, values):
-  A1, B1, A2, B2, X, C = values
-  M = A1.shape[0]
-  N = wl.shape[1]
-  OIa1 = torch.kron((wl**2).reshape(N, 1), A1).repeat(1, N)
-  OIa2 = torch.kron(wl**2, A2).repeat(N, 1)
-  OIb1 = torch.kron(wl.reshape(N, 1), B1).repeat(1, N)
-  OIb2 = torch.kron(wl, B2).repeat(N, 1)
-  OIx = torch.kron(torch.kron(wl.reshape(N, 1), X), wl)
-  OIc = C.repeat((N, N))
-  return (OIa1 + OIa2 + OIb1 + OIb2 + OIx + OIc).float()
+    A1, B1, A2, B2, X, C = values
+    M = A1.shape[0]
+    N = wl.shape[1]
+    OIa1 = torch.kron((wl**2).reshape(N, 1), A1).repeat(1, N)
+    OIa2 = torch.kron(wl**2, A2).repeat(N, 1)
+    OIb1 = torch.kron(wl.reshape(N, 1), B1).repeat(1, N)
+    OIb2 = torch.kron(wl, B2).repeat(N, 1)
+    OIx = torch.kron(torch.kron(wl.reshape(N, 1), X), wl)
+    OIc = C.repeat((N, N))
+    return (OIa1 + OIa2 + OIb1 + OIb2 + OIx + OIc).float()
+
+
+def beta1_polynomial_expansion(mat, i, omega_n, std):
+  beta1 = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
+          mat[i, 1] * omega_n + mat[i, 2]) / std
+  return beta1
 
 
 def oi_law_fit(L, a1, b1, a2, b2, x, c):
-  l1, l2 = L
-  return (a1 * np.square(l1) + b1 * l1 + a2 * np.square(l2) + b2 * l2 + x * l1 * l2 + c).ravel()
+    l1, l2 = L
+    return (a1 * np.square(l1) + b1 * l1 + a2 * np.square(l2) + b2 * l2 + x * l1 * l2 + c).ravel()
 
 
 class OpticalBands(Enum):

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from numpy import polyval
-from pynlin.utils import oi_polynomial_expansion, oi_law
+from pynlin.utils import oi_polynomial_expansion, oi_law, beta1_polynomial_expansion
 import numpy as np
 import torch
 
@@ -56,9 +56,7 @@ class OICoefficients:
   values: list[torch.Tensor]
 
   def __init__(self, modes: int, input_values: np.ndarray):
-    self.modes = modes
     self.values = [torch.from_numpy(v[:modes, :modes]) for v in input_values]
-    self.num_modes = self.values[0].shape[0]
     # self.num_modes, dim=2
     # ).float()
 
@@ -76,6 +74,16 @@ class OICoefficients:
       """
       return oi_polynomial_expansion(wavelengths, self.values)
     
+@dataclass
+class GroupDelay:
+  values: list[np.array]
+
+  def __init__(self, modes: int, input_values: np.ndarray):
+    self.modes = modes
+    self.values = input_values
+  
+  def evaluate_beta1(self, wavelengths: torch.Tensor) -> torch.Tensor:
+    return beta1_polynomial_expansion(wavelengths, self.values)
   
 class MMFiber:
     def __init__(
@@ -132,6 +140,7 @@ class MMFiber:
        
         self.overlap_integrals = overlap_integrals
         self.torch_oi = OICoefficients(self.modes, overlap_integrals)
+        
         self.mode_names = mode_names
         super().__init__()
 
@@ -139,7 +148,6 @@ class MMFiber:
     i, j are mode indexes
     wl1, wl2 are the respective wavelengths
     """
-
     def evaluate_oi(self, i, j, wavelength_i, wavelength_j):
         # original data were in um
         return oi_law(wavelength_i, wavelength_j, self.overlap_integrals[:, i, j])

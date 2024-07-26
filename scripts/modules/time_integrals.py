@@ -56,7 +56,6 @@ def do_time_integrals(fiber_length, pulse_shape="Nyquist"):
   )
   return 0
 
-# do_time_integrals(100)
 
 def do_mmf_time_integrals(fiber_length, pulse_shape="Nyquist"):
   f = open("./scripts/sim_config.json")

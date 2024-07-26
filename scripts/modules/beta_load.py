@@ -7,7 +7,8 @@ import plotly.graph_objects as go
 import seaborn as sns
 import pynlin.wdm
 from pynlin.utils import nu2lambda
- 
+from scripts.modules.load_fiber_values import load_oi
+
 import json
 rc('text', usetex=True)
 logging.basicConfig(filename='MMF_optimizer.log', encoding='utf-8', level=logging.INFO)
@@ -44,54 +45,7 @@ oi_fit = np.load('oi_fit.npy')
 oi_avg = np.load('oi_avg.npy')
 use_avg_oi = False
 
-
-s_limit = 1460e-9
-l_limit = 1625e-9
-s_freq = 3e8/s_limit
-l_freq = 3e8/l_limit
-
-print(s_freq*1e-12)
-print(l_freq*1e-12)
-delta = (s_freq - l_freq) *1e-12
-print(delta)
-avg = print((s_freq+l_freq) *1e-12 /2)
-beta_file = './results/fitBeta.mat'
-mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
-
-print(mat)
-
-# Load the WDM grid and fiber characteristic and compute the number of collisions
-
-
-beta2 = -pynlin.utils.dispersion_to_beta2(
-    dispersion, wavelength
-)
-wdm = pynlin.wdm.WDM(
-    spacing=channel_spacing,
-    num_channels=num_channels,
-    center_frequency=center_frequency
-)
-
-freqs = wdm.frequency_grid()
-# high = 214.2e12
-# low  = 187.5e12
-
-print(nu2lambda(np.max(freqs))*1e9)
-print(nu2lambda(np.min(freqs))*1e9)
-modes = [0, 1, 2, 3]
-mode_names = ["LP01", "LP11", "LP21", "LP02"]
-
-# from the Matlab file the fit is:
-# 3 * fitresult.p1.*(omega_n).^2 + 2 * fitresult.p2.*omega_n +fitresult.p3)./std(omega)
-# omega_n is the centered rescaled vector
-omega = 2 * np.pi * freqs
-omega_norm = scipy.io.loadmat(beta_file)['omega_std']
-omega_n = (omega - scipy.io.loadmat(beta_file)['omega_mean']) / omega_norm
-beta1 = np.zeros((4, len(freqs)))
-
-for i in range(4):
-    beta1[i, :] = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
-                   mat[i, 1] * omega_n + mat[i, 2]) / omega_norm
+beta1 = load_oi()
 
 plt.clf()
 sns.heatmap(beta1, cmap="coolwarm", square=False, xticklabels=freqs, yticklabels=modes)

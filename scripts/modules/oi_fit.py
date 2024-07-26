@@ -8,6 +8,7 @@ from pynlin.utils import oi_law_fit, oi_law
 from matplotlib.cm import viridis
 rc('text', usetex=False)
 
+# ================== copied
 oi_file = 'oi.mat'
 mat = scipy.io.loadmat(oi_file)
 oi_full = mat['OI'] * 1e12
@@ -59,7 +60,7 @@ for i in range(4):
             oi_law_fit, (x, y), oi[:, :, i, j].ravel(), p0=[1e10, 1e10, 1e10, 1e10, 0, 1])[0].T
 # print(np.shape(oi_fit))
 np.save('oi_fit.npy', oi_fit)
-
+# ================== copied
 
 for mode in range(1):
   color = viridis(mode/4)
