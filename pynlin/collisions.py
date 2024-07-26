@@ -3,9 +3,8 @@ from typing import Generator, List, Tuple
 from pynlin.fiber import Fiber
 import math
 
-def get_iterfering_channels(): 
+def get_interfering_channels(): 
   pass
-
 
 def get_interfering_frequencies(
     channel_of_interest: float,

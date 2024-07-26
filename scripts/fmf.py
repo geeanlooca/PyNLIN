@@ -4,8 +4,8 @@
 # beware to run only once per session!
 # is there a better way? :)
 
-from space_integrals_general import *
-from time_integrals import do_time_integrals
+from scripts.modules.space_integrals_general import *
+from scripts.modules.time_integrals import do_time_integrals
 import matplotlib.pyplot as plt
 
 # Load the simulation parameters
