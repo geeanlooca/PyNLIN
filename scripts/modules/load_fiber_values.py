@@ -5,69 +5,35 @@ from scipy.optimize import curve_fit
 from pynlin.utils import *
 
 
-def init_omega_norm():
+def convert_coefficients(fit):
+    p1 = fit[0]
+    p2 = fit[1]
+    p3 = fit[2]
+    beta_file = './results/fitBeta.mat'
     std = scipy.io.loadmat(beta_file)['omega_std']
     avg = scipy.io.loadmat(beta_file)['omega_mean']
+    p1_new = 3 * p1 / (std**3)
+    p2_new = 2 * p2 / (std**2) - 6 * p1 * avg / (std**3)
+    p3_new = 3 * (avg**2) / (std**3) * p1 - 2 * p2 * avg / (std**2) + p3
+    return [p1_new, p2_new, p3_new]
 
-    def omega_norm(freq) -> np.array:
-        omega = 2 * np.pi * freq
-        omega_n = (omega - avg) / std
-        return omega_n
-
-    return omega_norm
 
 def load_group_delay() -> np.array:
-    # s_limit = 1460e-9
-    # l_limit = 1625e-9
-    # s_freq = 3e8/s_limit
-    # l_freq = 3e8/l_limit
-
-    # print(s_freq*1e-12)
-    # print(l_freq*1e-12)
-    # delta = (s_freq - l_freq) *1e-12
-    # print(delta)
-    # avg = print((s_freq+l_freq) *1e-12 /2)
     beta_file = './results/fitBeta.mat'
     mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
-
-    # modes = [0, 1, 2, 3]
-
-    # from the Matlab file the fit is:
-    # 3 * fitresult.p1.*(omega_n).^2 + 2 * fitresult.p2.*omega_n +fitresult.p3)./std(omega)
-    # omega_n is the centered rescaled vector
-    # omega = 2 * np.pi * freqs
-    # omega_norm = scipy.io.loadmat(beta_file)['omega_std']
-    # omega_n = (omega - scipy.io.loadmat(beta_file)['omega_mean']) / omega_norm
-    # beta1 = np.zeros((4, len(freqs)))
-
-    # for i in range(4):
-    #     beta1[i, :] = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
-    #                   mat[i, 1] * omega_n + mat[i, 2]) / omega_norm
+    print(mat.shape)
+    for i in range(4):
+        print(convert_coefficients(mat[:, i]))
     return mat
 
 
-s_limit = 1460e-9
-l_limit = 1625e-9
-s_freq = 3e8 / s_limit
-l_freq = 3e8 / l_limit
+def load_gvd() -> np.array:
+    beta_file = './results/fitBeta.mat'
+    mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
 
-print(s_freq * 1e-12)
-print(l_freq * 1e-12)
-delta = (s_freq - l_freq) * 1e-12
-print(delta)
-avg = print((s_freq + l_freq) * 1e-12 / 2)
-beta_file = './results/fitBeta.mat'
-mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
-
-omega = 2 * np.pi * freqs
-omega_norm = scipy.io.loadmat(beta_file)['omega_std']
-omega_n = (omega - scipy.io.loadmat(beta_file)['omega_mean']) / omega_norm
-beta1 = np.zeros((4, len(freqs)))
-
-for i in range(4):
-    beta1[i, :] = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
-                   mat[i, 1] * omega_n + mat[i, 2]) / omega_norm
-
+    for i in range(4):
+        mat[:, i] = convert_coefficients
+    return mat
 
 def load_oi() -> np.array:
     oi_file = 'oi.mat'
@@ -107,4 +73,4 @@ def load_oi() -> np.array:
             oi_fit[:, i, j] = curve_fit(
                 oi_law_fit, (x, y), oi[:, :, i, j].ravel(), p0=[1e10, 1e10, 1e10, 1e10, 0, 1])[0].T
     np.save('oi_fit.npy', oi_fit)
-    return
+    return oi_fit
