@@ -1,16 +1,14 @@
 import functools
 import math
-from typing import Generator, List, Tuple
+from typing import Tuple
 
 import h5py
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.integrate
 import tqdm
 from scipy.constants import nu2lambda
 from tqdm.contrib.concurrent import process_map
 
-from pynlin.constellations import Constellation
 from pynlin.fiber import Fiber
 from pynlin.pulses import Pulse, RaisedCosinePulse, GaussianPulse, NyquistPulse
 from pynlin.wdm import WDM
@@ -541,7 +539,7 @@ def X0mm_time_integral(
 
     return time_integrals
 
-# posso precomputare la propagazione e poi usare una lookup table
+
 def X0mm_time_integral_precomputed(
     pulse_matrix: np.ndarray,
     fiber: Fiber,
@@ -623,7 +621,6 @@ def Xhkm_precomputed(
     return X
 
 
-
 def Xhkm(
     pulse: Pulse,
     fiber: Fiber,
@@ -640,3 +637,15 @@ def Xhkm(
     # integrate in space
     X = scipy.integrate.trapezoid(time_integrals * amplification_function, z)
     return X
+
+
+
+## we can design a single function that takes in input Delta beta1, beta2,
+# check if the pulse is special, and call a specialized function or a standard 
+# one (with propagation). 
+
+# wdm + fiber -> 
+# (coi, interf) channel couples -> 
+# {X0mm},  collision to be computed ITER ->
+# two integrals to compute ->
+# integrand evaluation: manual propagation or analytics

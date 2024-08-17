@@ -12,9 +12,7 @@ from scripts.modules.time_integrals import do_time_integrals
 from scripts.modules.load_fiber_values import *
 import matplotlib.pyplot as plt
 import scipy
-import pynlin.fiber
-import pynlin.wdm
-import pynlin.utils
+from pynlin import *
 
 with open("./scripts/sim_config.json") as f:
   f = open("./scripts/sim_config.json")
@@ -64,7 +62,15 @@ fiber = pynlin.fiber.SMFiber(
       beta2=beta2, 
       length=length
 )
-  
+
+# make the time integral take as an input (pulse, fiber, wdm)
+pulse = pynlin.pulses.NyquistPulse(
+  baud_rate = baud_rate,
+  num_symbols = 1e3, # ???
+  samples_per_symbol = 2**5,
+  rolloff = 0.1,
+)
+ 
 freqs = wdm.frequency_grid()
 
 s_limit = 1460e-9
@@ -75,7 +81,6 @@ l_freq = 3e8/l_limit
 print(s_freq*1e-12)
 print(l_freq*1e-12)
 delta = (s_freq - l_freq) *1e-12
-print(delta)
 avg = print((s_freq+l_freq) *1e-12 /2)
 beta_file = './results/fitBeta.mat'
 mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
@@ -89,10 +94,9 @@ beta1 = np.zeros((4, len(freqs)))
 for i in range(4):
     beta1[i, :] = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
                    mat[i, 1] * omega_n + mat[i, 2]) / omega_norm
-print(beta1)
 
 # write the results file in ../results/general_results.h5 with the correct time integrals
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
-do_time_integrals(fiber, wdm, pulse_shape="Gaussian")
+do_time_integrals(fiber, wdm, baud_rate, pulse_shape="Gaussian")
 compare_interferent(interfering_channels=[0, 1, 2, 3])

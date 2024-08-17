@@ -5,23 +5,8 @@ import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
 import pynlin.constellations
-import json
 
-def do_time_integrals(fiber, wdm, pulse_shape="Nyquist"):
-  f = open("./scripts/sim_config.json")
-  data = json.load(f)
-  dispersion = data["dispersion"]
-  baud_rate = data["baud_rate"]
-  num_channels = data["num_channels"]
-  channel_spacing = data["channel_spacing"]
-  partial_collision_margin = data["partial_collision_margin"]
-  wavelength = data["wavelength"]
-  center_frequency = data["center_frequency"]
-
-  channel_spacing = channel_spacing
-  num_channels = num_channels
-  baud_rate = baud_rate
-
+def do_time_integrals(fiber, wdm, baud_rate, pulse_shape="Nyquist"):
   partial_collision_margin = 5
   points_per_collision = 10
 
