@@ -83,9 +83,8 @@ def oi_polynomial_expansion(wl, values):
     return (OIa1 + OIa2 + OIb1 + OIb2 + OIx + OIc).float()
 
 
-def beta1_polynomial_expansion(mat, i, omega_n, std):
-  beta1 = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
-          mat[i, 1] * omega_n + mat[i, 2]) / std
+def beta1_polynomial_expansion(mat, mode, f):
+  beta1 = mat[mode, 0] * f ** 2 + mat[mode, 1] * f + mat[mode, 2]
   return beta1
 
 

@@ -6,8 +6,8 @@ from matplotlib import rc
 import plotly.graph_objects as go
 import seaborn as sns
 import pynlin.wdm
-from pynlin.utils import nu2lambda
-from scripts.modules.load_fiber_values import load_oi
+from pynlin.utils import nu2lambda, beta1_polynomial_expansion
+from scripts.modules.load_fiber_values import load_group_delay
 
 import json
 rc('text', usetex=True)
@@ -45,7 +45,21 @@ oi_fit = np.load('oi_fit.npy')
 oi_avg = np.load('oi_avg.npy')
 use_avg_oi = False
 
-beta1 = load_oi()
+beta1_params = load_group_delay()
+print(beta1_params.shape)
+
+wdm = pynlin.wdm.WDM(
+    spacing=channel_spacing,
+    num_channels=num_channels,
+    center_frequency=center_frequency
+)
+freqs = wdm.frequency_grid()
+modes = [0, 1, 2, 3]
+mode_names = ['LP01', 'LP11', 'LP21', 'LP02']
+
+beta1 = np.zeros((len(modes), len(freqs)))
+for i in modes:
+  beta1[i, :] = beta1_polynomial_expansion(beta1_params, i, freqs)
 
 plt.clf()
 sns.heatmap(beta1, cmap="coolwarm", square=False, xticklabels=freqs, yticklabels=modes)

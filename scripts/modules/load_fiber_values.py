@@ -18,11 +18,9 @@ def convert_coefficients(p1, p2, p3):
 def load_group_delay() -> np.array:
     beta_file = './results/fitBeta.mat'
     mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
-    print(mat)
     for i in range(4):
       print(convert_coefficients(mat[i, 0], mat[i, 1], mat[i, 2]))
       mat[i, :] = convert_coefficients(mat[i, 0], mat[i, 1], mat[i, 2])
-    print(mat)
     return mat
 
 
