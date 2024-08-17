@@ -21,7 +21,6 @@ def get_interfering_frequencies(
 
 def get_m_values(
     fiber: Fiber,
-    fiber_length: float,
     channel_spacing: float,
     T: float,
     partial_collisions_start=10,
@@ -34,7 +33,7 @@ def get_m_values(
     fiber are computed. This parameter can be controlled by the
     `partial_collisions_start` and `partial_collisions_end` kwargs.
     """
-    m_max = -fiber_length * fiber.beta2 * 2 * math.pi * channel_spacing / T
+    m_max = -fiber.length * fiber.beta2 * 2 * math.pi * channel_spacing / T
 
     if m_max < 0:
         m_max = math.ceil(m_max)
