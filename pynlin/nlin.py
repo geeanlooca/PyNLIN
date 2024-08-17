@@ -45,7 +45,6 @@ def apply_chromatic_dispersion(
 
 
 def iterate_time_integrals(
-    baud_rate: float,
     wdm: WDM,
     coi_index: int, 
     fiber: Fiber,
@@ -85,7 +84,6 @@ def iterate_time_integrals(
             z, I, M = compute_all_collisions_time_integrals(
                 coi_frequency,
                 interfering_frequency,
-                baud_rate,
                 fiber,
                 pulse,
                 **compute_collisions_kwargs,
@@ -127,7 +125,6 @@ def iterate_time_integrals(
 def compute_all_collisions_time_integrals(
     frequency_of_interest: float,
     interfering_frequency: float,
-    baud_rate: float,
     fiber: Fiber,
     pulse: Pulse,
     points_per_collision: int = 10,
@@ -148,7 +145,7 @@ def compute_all_collisions_time_integrals(
     m: np.ndarray
         Array of collision indeces
     """
-    T = 1 / baud_rate
+    T = 1 / pulse.baud_rate
     channel_spacing = interfering_frequency - frequency_of_interest
     M = get_m_values(
         fiber,
