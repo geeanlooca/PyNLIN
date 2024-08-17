@@ -6,26 +6,26 @@ import tqdm
 from torch import nn
 from torch.nn import MSELoss
 from torch.optim.adam import Adam
-
-from pynlin.raman.pytorch.solvers import RamanAmplifier
+from pynlin.utils import dBm2watt
+from pynlin.raman.pytorch.solvers import MMFRamanAmplifier
 
 
 def dBm(x: torch.Tensor) -> torch.Tensor:
-    """Convert a tensor from watt to dBm."""
+    """Convert a tensor from Watt to dBm."""
     return 10 * torch.log10(x) + 30
 
 
-class CopropagatingOptimizer(nn.Module):
+class GainOptimizer(nn.Module):
     """PyTorch module for finding the power and wavelength of each pump of a
     Raman amplifier to obtain a target output signal spectrum."""
 
     def __init__(
         self,
-        raman_torch_solver: RamanAmplifier,
+        raman_torch_solver: MMFRamanAmplifier,
         initial_pump_wavelengths: torch.Tensor,
         initial_pump_powers: torch.Tensor,
     ):
-        super(CopropagatingOptimizer, self).__init__()
+        super(GainOptimizer, self).__init__()
         self.raman_solver = raman_torch_solver
         scaled_wavelengths, self.wavelength_scaling = self.scale(
             initial_pump_wavelengths.float()
@@ -55,7 +55,7 @@ class CopropagatingOptimizer(nn.Module):
         self,
         target_spectrum: np.ndarray = None,
         epochs: int = 100,
-        learning_rate: float = 1e-1,
+        learning_rate: float = 2e-2,
         lock_wavelengths: int = 100,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Run the optimization algorithm."""
@@ -66,7 +66,9 @@ class CopropagatingOptimizer(nn.Module):
                 * torch.ones_like(self.raman_solver.signal_wavelengths).view(1, -1)
             ).float()
         else:
-            _target_spectrum = torch.from_numpy(target_spectrum).view(1, -1).float()
+            print("Overriding the loading of the target spectrum")
+            _target_spectrum = torch.from_numpy(target_spectrum).float()
+            # _target_spectrum = torch.from_numpy(target_spectrum).view(1, -1).float()
 
         torch_optimizer = Adam(self.parameters(), lr=learning_rate)
         loss_function = MSELoss()
@@ -74,46 +76,60 @@ class CopropagatingOptimizer(nn.Module):
         best_loss = torch.inf
         best_wavelengths = torch.clone(self.pump_wavelengths)
         best_powers = torch.clone(self.pump_powers)
-
+        best_flatness = torch.inf
+        
         # do not optimize wavelengths for the first `lock_wavelengths` epochs
         self.pump_wavelengths.requires_grad = False
-
+        reg_lambda = 0.0
+        # pbar = tqdm.trange(epochs)
         pbar = tqdm.trange(epochs)
         for epoch in pbar:
-
-            if epoch > lock_wavelengths:
-                self.pump_wavelengths.requires_grad = True
-
-            pump_wavelengths = self.unscale(
-                self.pump_wavelengths, *self.wavelength_scaling
-            )
-
-            signal_spectrum = self.forward(pump_wavelengths * 1e-9, self.pump_powers)
-            loss = loss_function(signal_spectrum, _target_spectrum)
-            loss.backward()
-            torch_optimizer.step()
-            torch_optimizer.zero_grad()
-
-            with torch.no_grad():
-                flatness = (
-                    torch.max(signal_spectrum) - torch.min(signal_spectrum)
-                ).item()
-
-            pbar.set_description(
-                f"Loss: {loss.item():.4f}"
-                + f"\tBest Loss: {best_loss:.4f}"
-                + f"\tFlatness: {flatness:.2f} dB"
-            )
-
-            if loss.item() < best_loss:
+            if best_loss > 0.001 or flatness > 0.001:
+                if epoch > lock_wavelengths:
+                    self.pump_wavelengths.requires_grad = True
                 pump_wavelengths = self.unscale(
                     self.pump_wavelengths, *self.wavelength_scaling
                 )
-                best_wavelengths = torch.clone(pump_wavelengths)
-                best_powers = torch.clone(self.pump_powers)
-                best_loss = loss.item()
+                # TODO add the power dependency on the modes? No, we do not tune the modes 
+                # TODO adapt this whole method to MMF
+                # print("pump_powers: ", self.pump_powers)
+                signal_spectrum = self.forward(
+                    pump_wavelengths, self.pump_powers) + reg_lambda * torch.sum(dBm2watt(self.pump_powers[4:]))
+                
+                loss = loss_function(signal_spectrum, _target_spectrum)
+                loss.backward()
+                torch_optimizer.step()
+                torch_optimizer.zero_grad()
 
+                with torch.no_grad():
+                    flatness = (
+                        torch.max(signal_spectrum) - torch.min(signal_spectrum)
+                    ).item()
+                    # print("Signal spectrum: ", signal_spectrum)
+                pbar.set_description(
+                    f"Loss: {loss.item():.4f}"
+                    + f"\tBest Loss: {best_loss:.4f}"
+                    + f"\tFlatness: {flatness:.2f} dB"
+                )
+                # print(f"\nWavel. : {pump_wavelengths}"+f"\nPow. : {self.pump_powers}")
+                # pbar.set_description(
+                #     f"Loss: {loss.item():.4f}"
+                #     + f"\tBest Loss: {best_loss:.4f}"
+                #     + f"\tFlatness: {flatness:.2f} dB"
+                # )
+
+                if loss.item() < best_loss:
+                    pump_wavelengths = self.unscale(
+                        self.pump_wavelengths, *self.wavelength_scaling
+                    )
+                    best_wavelengths = torch.clone(pump_wavelengths)
+                    best_powers = torch.clone(self.pump_powers)
+                    best_loss = loss.item()
+                    best_flatness = flatness
+                    
+        print(f"\nPow. : {best_flatness}")
+        # print(f"\nFlatness: {flatness:.2f} dB")
         return (
-            best_wavelengths.detach().numpy().squeeze() * 1e-9,
+            best_wavelengths.detach().numpy().squeeze(),
             torch.abs(best_powers).detach().numpy().squeeze(),
         )

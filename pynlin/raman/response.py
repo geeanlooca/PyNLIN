@@ -159,7 +159,7 @@ def gain_spectrum(frequencies, spacing=20e9, normalize=False, spline_order=4):
     # Set the sampling frequency based on the maximum frequency requested
     fs = np.max(np.abs(frequencies)) * 10
 
-    negative_idx = np.argwhere()
+    #negative_idx = np.argwhere()
 
     # fs = max(fs, 80e12)
 
@@ -239,7 +239,6 @@ if __name__ == "__main__":
 
     n2 = 2.6e-20
     gamma = n2 * lambda2nu(wavelength) * 2 * np.pi / c0
-    print(gamma)
 
     copolarized, t = agrawal_copolarized_response(duration, fs)
     crosspolarized, t = agrawal_crosspolarized_response(duration, fs)
