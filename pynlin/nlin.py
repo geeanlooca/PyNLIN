@@ -167,6 +167,15 @@ def compute_all_collisions_time_integrals(
     interfering_frequency_THz = interfering_frequency * 1e-12
     coi_frequency_THz = frequency_of_interest * 1e-12
 
+    ## TODO implement here the choice between specialized and nonspecialized, 
+    # SMF and MMF
+    if isinstance(pulse, NyquistPulse):
+      pass 
+    elif isinstance(pulse, GaussianPulse):
+      pass
+    else:  
+      pass
+    
     if speedup:
       g, t = pulse.data()
       dt = t[1] - t[0]
