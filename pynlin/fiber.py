@@ -14,12 +14,13 @@ class Fiber:
         raman_coefficient=7e-14,
         effective_area=80e-12,
         gamma=1.3 * 1e-3,
+        length = 100e3
     ):
         self.fiber_type = fiber_type 
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
         self.gamma = gamma
-
+        self.length = length
         if losses:
             try:
                 self.losses = list(losses)
@@ -54,16 +55,20 @@ class SMFiber(Fiber):
         effective_area=80e-12,
         beta2=20 * 1e-24 / 1e3,
         gamma=1.3 * 1e-3,
+        length = 100e3
     ):
-        super().__init__("SM", losses, raman_coefficient, effective_area, gamma)
+        super().__init__("SM", 
+                         losses=losses, 
+                         raman_coefficient=raman_coefficient, 
+                         effective_area=effective_area, 
+                         gamma=gamma, 
+                         length=length)
         self.effective_area = effective_area
         self.raman_coefficient = raman_coefficient
         self.beta2 = beta2
         self.gamma = gamma
 
         self.raman_efficiency = self.raman_coefficient / self.effective_area
-
-        super().__init__()
 
     def loss_profile(self, wavelengths):
         """Get the fiber losses (in dB/m) at the specified wavelengths (in
@@ -127,6 +132,7 @@ class MMFiber:
         effective_area=80e-12,
         beta2=20 * 1e-24 / 1e3,
         gamma=1.3 * 1e-3,
+        length = 100e3,
         modes=1,
         overlap_integrals=None,
         mode_names=None,
@@ -143,7 +149,12 @@ class MMFiber:
         =======
         self.overlap_integrals : (6, modes, modes) used only in the Numpy solver: can also contain also the average if needed!
         """
-        super().__init__("SM", losses, raman_coefficient, effective_area, gamma)
+        super().__init__("MM", 
+                         losses=losses, 
+                         raman_coefficient=raman_coefficient, 
+                         effective_area=effective_area, 
+                         gamma=gamma, 
+                         length=length)
         self.beta2 = beta2 # to be modified
         self.raman_efficiency = self.raman_coefficient / self.effective_area
         self.modes = modes

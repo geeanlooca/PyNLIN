@@ -12,6 +12,9 @@ from scripts.modules.time_integrals import do_time_integrals
 from scripts.modules.load_fiber_values import *
 import matplotlib.pyplot as plt
 import scipy
+import pynlin.fiber
+import pynlin.wdm
+import pynlin.utils
 
 with open("./scripts/sim_config.json") as f:
   f = open("./scripts/sim_config.json")
@@ -49,11 +52,19 @@ length = data["fiber_length"][0]
 beta2 = -pynlin.utils.dispersion_to_beta2(
     dispersion, wavelength
 )
+
 wdm = pynlin.wdm.WDM(
     spacing=channel_spacing,
     num_channels=num_channels,
     center_frequency=center_frequency
 )
+
+fiber = pynlin.fiber.SMFiber(
+      effective_area=80e-12,
+      beta2=beta2, 
+      length=length
+)
+  
 freqs = wdm.frequency_grid()
 
 s_limit = 1460e-9
@@ -83,5 +94,5 @@ print(beta1)
 # write the results file in ../results/general_results.h5 with the correct time integrals
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
-do_time_integrals(length, pulse_shape="Gaussian")
+do_time_integrals(fiber, wdm, pulse_shape="Gaussian")
 compare_interferent(interfering_channels=[0, 1, 2, 3])
