@@ -83,6 +83,5 @@ print(beta1)
 # write the results file in ../results/general_results.h5 with the correct time integrals
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
-do_mmf_time_integrals(length, pulse_shape="Gaussian")
+do_time_integrals(length, pulse_shape="Gaussian")
 compare_interferent(interfering_channels=[0, 1, 2, 3])
-
