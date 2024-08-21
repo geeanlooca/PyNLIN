@@ -124,7 +124,7 @@ class GroupDelay:
     return beta1_polynomial_expansion(wavelengths, self.values)
   
   
-class MMFiber:
+class MMFiber(Fiber):
     def __init__(
         self,
         losses=None,
