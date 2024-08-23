@@ -2,6 +2,8 @@ import numpy as np
 from typing import Generator, List, Tuple
 from pynlin.fiber import Fiber
 import math
+from pynlin.fiber import Fiber, SMFiber, MMFiber
+from pynlin.wdm import WDM
 
 def get_interfering_channels(): 
   pass
@@ -21,7 +23,9 @@ def get_interfering_frequencies(
 
 def get_m_values(
     fiber: Fiber,
-    channel_spacing: float,
+    wdm: WDM,
+    a_chan: Tuple[int, int],
+    b_chan: Tuple[int, int],
     T: float,
     partial_collisions_start=10,
     partial_collisions_end=10,
@@ -33,8 +37,13 @@ def get_m_values(
     fiber are computed. This parameter can be controlled by the
     `partial_collisions_start` and `partial_collisions_end` kwargs.
     """
-    m_max = -fiber.length * fiber.beta2 * 2 * math.pi * channel_spacing / T
-
+    frequency_grid = wdm.frequency_grid()
+    if isinstance(fiber, SMFiber):
+      dgd = fiber.beta2 * 2 * np.pi * (frequency_grid(b_chan[1]) - frequency_grid(a_chan[1]))
+    elif isinstance(fiber, MMFiber):
+      dgd = (fiber.group_delay.evaluate_beta1(a_chan[0], a_chan[1])-fiber.group_delay.evaluate_beta1(b_chan[0], b_chan[1]))
+    
+    m_max = (fiber.length * dgd) / T 
     if m_max < 0:
         m_max = math.ceil(m_max)
         return np.arange(m_max - partial_collisions_start, partial_collisions_end + 1)
