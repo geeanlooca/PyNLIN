@@ -83,9 +83,9 @@ def oi_polynomial_expansion(wl, values):
     return (OIa1 + OIa2 + OIb1 + OIb2 + OIx + OIc).float()
 
 
-def beta1_polynomial_expansion(mat, mode, f):
-  beta1 = mat[mode, 0] * f ** 2 + mat[mode, 1] * f + mat[mode, 2]
-  return beta1
+# def beta_n_polynomial_expansion(vals, f):
+#   beta1 = vals[0] * f ** 2 + vals[1] * f + vals[2]
+#   return beta1
 
 
 def oi_law_fit(L, a1, b1, a2, b2, x, c):
