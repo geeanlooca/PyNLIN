@@ -121,15 +121,24 @@ Dispersion data storage and evaluation for the walkoff and collision evaluation
 
 @dataclass
 class GroupDelay:
+    """ Third order fit data for the beta1 
+    (and beta2) functions of frequency and modes
+    
+    Data format:
+        values: (num_modes, 3)
+    """
     values: list[np.array]
 
-    def __init__(self, modes: int, input_values: np.ndarray):
+    def __init__(self, modes: int, beta1_values: np.ndarray):
         self.modes = modes
-        self.values = input_values
+        self.values = beta1_values
 
-    def evaluate_beta1(self, wavelengths: torch.Tensor) -> torch.Tensor:
-        return beta1_polynomial_expansion(wavelengths, self.values)
+    def evaluate_beta1(self, mode: int, frequency: float) -> torch.Tensor:
+        return polyval(self.values[mode, :], frequency)
 
+    def evaluate_beta2(self, mode: int, frequency: float) -> torch.Tensor:
+        derivative_parameters = [self.values[mode, 0]/np.pi, self.values[mode, 1]/(2*np.pi)]
+        return polyval(derivative_parameters, frequency)
 
 class MMFiber(Fiber):
     def __init__(
@@ -138,6 +147,7 @@ class MMFiber(Fiber):
         raman_coefficient=7e-14,
         effective_area=80e-12,
         beta1_values=None,
+        beta2_values=None,
         gamma=1.3 * 1e-3,
         length=100e3,
         n_modes=1,
@@ -172,31 +182,9 @@ class MMFiber(Fiber):
 
         self.overlap_integrals = overlap_integrals
         self.torch_oi = OICoefficients(self.modes, overlap_integrals)
-        self.group_delay = GroupDelay(self.modes, )
+        self.group_delay = GroupDelay(self.modes, beta1_values, beta2_values)
         self.mode_names = mode_names
-
-    """
-    i, j are mode indexes
-    wl1, wl2 are the respective wavelengths
-    """
-
-    def evaluate_oi(self, i, j, wavelength_i, wavelength_j):
-        # original data were in um
-        return oi_law(wavelength_i, wavelength_j, self.overlap_integrals[:, i, j])
-
-    def get_oi_matrix(self, modes, wavelengths):
-        M = len(modes)
-        W = len(wavelengths)
-        mat = np.zeros((M * W, M * W))
-        mat[:, :]
-        for n in range(M):
-            for m in range(M):
-                for wn in range(W):
-                    for wm in range(W):
-                        mat[n + (wn * M), m + (wm * M)] = self.evaluate_oi(n,
-                                                                           m, wavelengths[wn], wavelengths[wm])
-        return mat
-
+        
     def loss_profile(self, wavelengths):
         """Get the fiber losses (in dB/m) at the specified wavelengths (in
         meters)."""
