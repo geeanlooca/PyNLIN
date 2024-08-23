@@ -83,84 +83,75 @@ def iterate_time_integrals(
     assert (isinstance(fiber, SMFiber) and a_chan[1] == 0)
 
     # open the file to save data to disk
-    file = h5py.File(filename, "w")
-
-    # get the WDM comb frequencies and set up the progress bar
+    with h5py.File('results/results.hdf5', 'a') as file:
+      if f"time_integrals/channel_{a_chan}/" in file:
+        print("A chan group already present on file. Nothing to do.")
+        return -1
+    
+    print("No groupd for this A channel, calculating...")
+    file = h5py.File(filename, "a")
+    
     frequency_grid = wdm.frequency_grid()
-    # a_frequency_grid_pbar = tqdm.tqdm([frequency_grid[k] for k in a_chan])
-    # coi_frequency_grid_pbar.set_description("WDM Channels")
-
-    interfering_channels = get_interfering_channels(
+    b_channels = get_interfering_channels(
         a_chan, wdm, fiber,
     )
 
     # iterate over all channels of the WDM grid
-    for intf_number, intf_frequency in enumerate(coi_frequency_grid_pbar):
-        for intf_number, intf_frequency in enumerate(coi_frequency_grid_pbar):
+    for b_num, b_chan in enumerate(b_channels):
+        # set up the progress bar to iterate over all interfering channels
+        # of the current channel of interest
+        interfering_frequencies_pbar = tqdm.tqdm(b_channels)
+        interfering_frequencies_pbar.set_description(
+            f"Interfering frequencies of channel {b_chan}"
+        )
 
-            z_list = []
-            integrals_list = []
-            m_list = []
+        z, I, M = compute_all_collisions_time_integrals(
+            a_chan,
+            b_chan,
+            fiber,
+            wdm,
+            pulse,
+            **compute_collisions_kwargs,
+        )
+        # saving the result
+        # each Channel of interest gets its own group with its attributes
+        a_freq = frequency_grid[a_chan[1]]
+        b_freq = frequency_grid[b_chan[1]]
+        group_name = f"time_integrals/channel_{a_chan}/"
+        group = file.create_group(group_name)
+        group.attrs["mode"] = a_chan[0]
+        group.attrs["frequency"] = a_freq
 
-            # set up the progress bar to iterate over all interfering channels
-            # of the current channel of interest
-            interfering_frequencies_pbar = tqdm.tqdm(interfering_frequencies)
-            interfering_frequencies_pbar.set_description(
-                f"Interfering frequencies of channel {intf_number}"
-            )
-            for interfering_frequency in interfering_frequencies_pbar:
-                # compute the time integrals for each complete collision
-                z, I, M = compute_all_collisions_time_integrals(
-                    intf_frequency,
-                    interfering_frequency,
-                    fiber,
-                    pulse,
-                    **compute_collisions_kwargs,
-                )
-                z_list.append(z)
-                integrals_list.append(I)
-                m_list.append(M)
+        # in each COI group, create a group for each interfering channel
+        # and store the z-array (positions inside the fiber)
+        # and the time integrals for each collision.
+        interferer_group_name = group_name + \
+            f"interfering_channel_{b_chan}/"
+        interferer_group = file.create_group(interferer_group_name)
+        interferer_group.attrs["frequency"] = b_freq
+        interferer_group.attrs["mode"] = b_chan[0] 
 
-            # saving the result
-            # each Channel of interest gets its own group with its attributes
-            group_name = f"time_integrals/channel_{intf_number}/"
-            group = file.create_group(group_name)
-            group.attrs["frequency"] = intf_frequency
-            group.attrs["frequency_THz"] = intf_frequency * 1e-12
-            group.attrs["wavelength"] = nu2lambda(intf_frequency) * 1e9
-
-            # in each COI group, create a group for each interfering channel
-            # and store the z-array (positions inside the fiber)
-            # and the time integrals for each collision.
-            for interf_number, (z, integral, m, interf_freq) in enumerate(zip(z_list, integrals_list, m_list, interfering_frequencies)):
-                interferer_group_name = group_name + \
-                    f"interfering_channel_{interf_number}/"
-                interferer_group = file.create_group(interferer_group_name)
-                interferer_group.attrs["frequency"] = interf_freq
-                interferer_group.attrs["frequency_THz"] = interf_freq * 1e-12
-                interferer_group.attrs["wavelength"] = nu2lambda(interf_freq) * 1e9
-
-                file.create_dataset(interferer_group_name + "z", data=z)
-                file.create_dataset(interferer_group_name + "m", data=m)
-                # integrals_group_name = interferer_group_name + "/integrals/"
-                # for x, integral in enumerate(I_list):
-                file.create_dataset(
-                    interferer_group_name + f"integrals",
-                    data=integral,
-                    compression="gzip",
-                    compression_opts=9,
-                )
+        file.create_dataset(interferer_group_name + "z", data=z)
+        file.create_dataset(interferer_group_name + "m", data=M)
+        # integrals_group_name = interferer_group_name + "/integrals/"
+        # for x, integral in enumerate(I_list):
+        file.create_dataset(
+            interferer_group_name + f"integrals",
+            data=I,
+            compression="gzip",
+            compression_opts=9,
+        )
 
 
 def compute_all_collisions_time_integrals(
-    frequency_of_interest: float,
-    interfering_frequency: float,
+    a_chan: Tuple[int, int],
+    b_chan: Tuple[int, int],
     fiber: Fiber,
+    wdm: WDM,
     pulse: Pulse,
     points_per_collision: int = 10,
     use_multiprocessing: bool = False,
-    partial_collisions_start: int = 10,
-    partial_collisions_end: int = 10,
+    partial_collisions_margin: int = 10,
     speedup=True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute the integrals for all the collisions for the specified pair of
@@ -176,15 +167,15 @@ def compute_all_collisions_time_integrals(
         Array of collision indeces
     """
     T = 1 / pulse.baud_rate
-    channel_spacing = interfering_frequency - frequency_of_interest
 
     M = get_m_values(
         fiber,
-        channel_spacing,
+        a_chan, 
+        b_chan,
         T,
-        partial_collisions_end=partial_collisions_end,
-        partial_collisions_start=partial_collisions_start,
+        partial_collisions_margin=partial_collisions_margin,
     )
+    exit()
     # first, create the Pulse object with the appropriate parameters
     # compute the maximum delay between pulses and use it to set
     # the number of symbols in the rcos signal

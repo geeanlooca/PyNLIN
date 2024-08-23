@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from numpy import polyval
-from pynlin.utils import oi_polynomial_expansion, oi_law, beta1_polynomial_expansion
+from pynlin.utils import oi_polynomial_expansion
 import numpy as np
 import torch
 
