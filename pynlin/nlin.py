@@ -8,7 +8,7 @@ import scipy.integrate
 import tqdm
 from scipy.constants import nu2lambda
 from tqdm.contrib.concurrent import process_map
-import itertools.product
+from itertools import product
 
 from pynlin.fiber import Fiber, SMFiber, MMFiber
 from pynlin.pulses import Pulse, RaisedCosinePulse, GaussianPulse, NyquistPulse
@@ -47,25 +47,25 @@ def apply_chromatic_dispersion(
 
 
 def get_interfering_channels(a_chan: Tuple, wdm: WDM, fiber: Fiber):
-    b_chans = list(itertools.product(range(wdm.num_channels), range(fiber.n_modes)))
+    b_chans = list(product(range(wdm.num_channels), range(fiber.n_modes)))
     b_chans.remove(a_chan)
     return b_chans
 
 
 def get_dgd(a_chan, b_chan, fiber, wdm):
+    freq_grid = wdm.frequency_grid()
     if isinstance(fiber, SMFiber):
         assert (a_chan[1] == 0 and b_chan[1] == 0)
-        freq_grid = wdm.frequency_grid()
-        return fiber.beta2 * (freq_grid(a_chan[0]) - freq_grid(b_chan[0]))
+        return fiber.beta2 * (freq_grid(b_chan[0]) - freq_grid(a_chan[0]))
     elif isinstance(fiber, MMFiber):
-      return 
+        return fiber.group_delay.evaluate_beta1(b_chan[0], freq_grid[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], freq_grid[a_chan[1]])
 
 
 def get_gvd(b_chan, fiber, wdm):
     if isinstance(fiber, SMFiber):
-      return fiber.beta2
+        return fiber.beta2
     elif isinstance(fiber, MMFiber):
-      return  
+        return fiber.group_delay.evaluate_beta2(b_chan[0], wdm.frequenc_grid()[b_chan[1]])
     pass
 
 
