@@ -64,7 +64,7 @@ fiber = pynlin.fiber.SMFiber(
 )
 
 # make the time integral take as an input (pulse, fiber, wdm)
-pulse = pynlin.pulses.NyquistPulse(
+pulse = pynlin.pulses.GaussianPulse(
   baud_rate = baud_rate,
   num_symbols = 1e3, # ???
   samples_per_symbol = 2**5,

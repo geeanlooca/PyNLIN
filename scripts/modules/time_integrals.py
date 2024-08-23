@@ -20,6 +20,6 @@ def do_time_integrals(fiber, wdm, pulse, pulse_shape="Nyquist"):
       points_per_collision=points_per_collision, # kwargs
       use_multiprocessing=True,
       partial_collisions_margin=partial_collisions_margin,
-      speedup=True
+      speedup_pulse_propagation=True
   )
   return 0

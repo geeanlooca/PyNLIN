@@ -20,6 +20,9 @@ def get_interfering_frequencies(
             combinations.append(x)
     return combinations
 
+def get_frequency_spacing(a_chan, b_chan, wdm):
+  frequency_grid = wdm.frequency_grid()
+  return frequency_grid[b_chan[1]] - frequency_grid[a_chan[1]]
 
 def get_m_values(
     fiber: Fiber,
@@ -27,8 +30,7 @@ def get_m_values(
     a_chan: Tuple[int, int],
     b_chan: Tuple[int, int],
     T: float,
-    partial_collisions_start=10,
-    partial_collisions_end=10,
+    partial_collisions_start:int,
 ) -> np.ndarray:
     """Get values of the m indeces to compute the X0mm XPM coefficients for.
 
@@ -37,11 +39,11 @@ def get_m_values(
     fiber are computed. This parameter can be controlled by the
     `partial_collisions_start` and `partial_collisions_end` kwargs.
     """
-    frequency_grid = wdm.frequency_grid()
+    partial_collisions_end = partial_collisions_start
     if isinstance(fiber, SMFiber):
-      dgd = fiber.beta2 * 2 * np.pi * (frequency_grid(b_chan[1]) - frequency_grid(a_chan[1]))
+      dgd = fiber.beta2 * 2 * np.pi * (get_frequency_spacing(a_chan, b_chan, wdm))
     elif isinstance(fiber, MMFiber):
-      dgd = (fiber.group_delay.evaluate_beta1(a_chan[0], a_chan[1])-fiber.group_delay.evaluate_beta1(b_chan[0], b_chan[1]))
+      dgd = (fiber.group_delay.evaluate_beta1(a_chan[0], wdm.frequency_grid()[a_chan[1]])-fiber.group_delay.evaluate_beta1(b_chan[0], b_chan[1]))
     
     m_max = (fiber.length * dgd) / T 
     if m_max < 0:
