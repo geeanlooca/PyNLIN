@@ -15,17 +15,18 @@ import json
 from multiprocessing import Pool
 from scipy.special import erf, erfc
 from pynlin.raman.solvers import RamanAmplifier as NumpyRamanAmplifier
-
+from typing import Tuple, List
 
 '''
   Read the time integrals from the result file
 '''
-def get_space(intf):
+def get_space(filename, b_chan: Tuple[int, int]):
   time_integrals_results_path = 'results/'
-  f_general = h5py.File(time_integrals_results_path + 'general_results_alt.h5', 'r')
-  m = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/m'])
-  z = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/z'])
-  I = np.array(f_general['/time_integrals/channel_0/interfering_channel_' + str(intf) + '/integrals'])
+  f_general = h5py.File(time_integrals_results_path + filename, 'r')
+  m = np.array(f_general[f'/time_integrals/a_chan_(0, 0)/b_chan_{b_chan}/m'])
+  z = np.array(f_general[f'/time_integrals/a_chan_(0, 0)/b_chan_{b_chan}/z'])
+  I = np.array(f_general[f'/time_integrals/a_chan_(0, 0)/b_chan_{b_chan}/integrals'])
+  print(f"From file we got objects with shapes: m:{m.shape}, z:{z.shape}, I:{I.shape}")
   return (m, z, I)
 
 def get_zm(m, Omega, beta2, baud_rate):
@@ -81,15 +82,19 @@ def get_space_integral_approximation(intf):
   return X0mm_ana
 
 
-'''
-  compare the analytical approximation with the numerical.
-  plot the results
-'''
-def compare_interferent(interfering_channels = []):
-  for intf in interfering_channels:
-    (m, z, I) = get_space(intf)
-    X0mm = get_space_integrals(intf)
-    X0mm_ana = get_space_integral_approximation(intf)
+def compare_interferent(interfering_channels: List[Tuple[int, int]]):
+  '''
+    compare the analytical approximation with the numerical.
+    plot the results
+  '''
+  filename = 'results.h5'
+  for b_chan in interfering_channels:
+    print(b_chan)
+    (m, z_axis_list, integral_list) = get_space(filename, b_chan)
+    plot_time_integrals(m, z_axis_list, integral_list)
+    exit()
+    X0mm = get_space_integrals(b_chan)
+    X0mm_ana = get_space_integral_approximation(b_chan)
     print("NOISE numerical         = {:4.3e}".format(np.real(np.sum(X0mm**2))))
     print("NOISE analytical        = {:4.3e}".format(np.real(np.sum(X0mm_ana**2))))
     print("RELATIVE ERROR on noise = {:4.3e}".format(np.real((np.sum(X0mm_ana**2))/np.sum(X0mm**2))-1.0))
@@ -103,7 +108,7 @@ def compare_interferent(interfering_channels = []):
     plt.ylabel(r"$X_{\mathrm{0mm}}$")
     plt.legend(loc="upper left")
     plt.tight_layout()
-    plt.savefig('media/Interferent_'+str(intf)+'.pdf')
+    plt.savefig('media/Interferent_'+str(b_chan)+'.pdf')
     # plt.show()
     # X0mm is supposed to be real
     error = (X0mm-X0mm_ana)/X0mm
@@ -117,9 +122,21 @@ def compare_interferent(interfering_channels = []):
     plt.ylabel(r"$\varepsilon_R$")
     plt.ylim([-0.1, 0.005])
     plt.tight_layout()
-    plt.savefig('media/error_'+str(intf)+'.pdf')
+    plt.savefig('media/error_'+str(b_chan)+'.pdf')
   return
 
+def plot_time_integrals(m, z, I):
+    """
+    Plot m functions defined as I(z) for given z.
 
-
-  
+    Parameters:
+    m (numpy.ndarray): Array of shape (n_collisions,) representing the different functions.
+    z (numpy.ndarray): Array of shape (n_collisions, n_samples_per_collision) representing the z values.
+    I (numpy.ndarray): Array of shape (n_collisions, n_samples_per_collision) representing the I(z) values.
+    """
+    for i in range(m.shape[0]):
+        plt.plot(z[i], I[i], label=f'Function {i+1}')
+    
+    plt.xlabel(r'z')
+    plt.ylabel(r'I(z)')
+    plt.savefig("media/collisions/time_integrals.pdf")

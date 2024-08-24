@@ -6,7 +6,7 @@ import pynlin.nlin
 import pynlin.utils
 import pynlin.constellations
 
-def do_time_integrals(fiber, wdm, pulse, pulse_shape="Nyquist"):
+def do_time_integrals(fiber, wdm, pulse, overwrite):
   partial_collisions_margin = 2
   points_per_collision = 10
 
@@ -17,7 +17,7 @@ def do_time_integrals(fiber, wdm, pulse, pulse_shape="Nyquist"):
       a_channels[0],
       pulse,
       "results/results.h5",
-      overwrite = True,
+      overwrite = overwrite,
       points_per_collision=points_per_collision, # kwargs
       use_multiprocessing=True,
       partial_collisions_margin=partial_collisions_margin,

@@ -18,8 +18,7 @@ from pynlin.collisions import get_interfering_frequencies, get_m_values, get_int
 
 
 def apply_chromatic_dispersion(
-    pulse: Pulse, fiber: Fiber, z: float, delay: float = None
-) -> Tuple[np.ndarray, np.ndarray]:
+    pulse: Pulse, fiber: Fiber, z: float, delay: float = None) -> Tuple[np.ndarray, np.ndarray]:
     """Return the propagated pulse shape.
 
     Optionally apply a delay in time.
@@ -74,7 +73,7 @@ def iterate_time_integrals(
           for gg in file["time_integrals"]:
             print(gg)
             
-          if f"channel_{a_chan}" in file["time_integrals"]:
+          if f"a_chan_{a_chan}" in file["time_integrals"]:
               print("A-chan group already present on file. Nothing to do.")
               found = True
     except FileNotFoundError:
@@ -92,7 +91,7 @@ def iterate_time_integrals(
     
     frequency_grid = wdm.frequency_grid()
     a_freq = frequency_grid[a_chan[1]]
-    group_name = f"time_integrals/channel_{a_chan}/"
+    group_name = f"time_integrals/a_chan_{a_chan}/"
     group = file.create_group(group_name)
     group.attrs["mode"] = a_chan[0]
     group.attrs["frequency"] = a_freq
@@ -124,7 +123,7 @@ def iterate_time_integrals(
         # and the time integrals for each collision.
         b_freq = frequency_grid[b_chan[1]]
         interferer_group_name = group_name + \
-            f"interfering_channel_{b_chan}/"
+            f"b_chan_{b_chan}/"
         interferer_group = file.create_group(interferer_group_name)
         interferer_group.attrs["frequency"] = b_freq
         interferer_group.attrs["mode"] = b_chan[0]
@@ -221,15 +220,14 @@ def compute_all_collisions_time_integrals(
       while i_sample > threshold and z_max < fiber.length:
         z_max += dz
         i_sample = i_func(m, z_max)
-      n_z_points = 20
+      n_z_points = 100
       z_min = max(z_min, 0)
       z_max = min(z_max, fiber.length)
       if z_min > z_max:
         z_axis_list.append(None)
       else:
-        print((z_min, z_max))
+        # print((z_min, z_max))
         z_axis_list.append(np.linspace(z_min, z_max, n_z_points))
-    exit()
     
     # channel_spacing_GHz = channel_spacing * 1e-9
     # interfering_frequency_THz = interfering_frequency * 1e-12
