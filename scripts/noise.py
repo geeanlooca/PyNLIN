@@ -62,6 +62,7 @@ fiber = pynlin.fiber.SMFiber(
       beta2=beta2, 
       length=length
 )
+print(f"beta_2 = {beta2:.9e}")
 
 # make the time integral take as an input (pulse, fiber, wdm)
 pulse = pynlin.pulses.GaussianPulse(
@@ -99,4 +100,7 @@ for i in range(4):
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
 do_time_integrals(fiber, wdm, pulse, pulse_shape="Gaussian")
+
+exit()
+# TODO fix the space part
 compare_interferent(interfering_channels=[0, 1, 2, 3])

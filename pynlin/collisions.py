@@ -4,6 +4,7 @@ from pynlin.fiber import Fiber
 import math
 from pynlin.fiber import Fiber, SMFiber, MMFiber
 from pynlin.wdm import WDM
+from pynlin.pulses import Pulse
 
 def get_interfering_channels(): 
   pass
@@ -40,12 +41,10 @@ def get_m_values(
     `partial_collisions_start` and `partial_collisions_end` kwargs.
     """
     partial_collisions_end = partial_collisions_start
-    if isinstance(fiber, SMFiber):
-      dgd = fiber.beta2 * 2 * np.pi * (get_frequency_spacing(a_chan, b_chan, wdm))
-    elif isinstance(fiber, MMFiber):
-      dgd = (fiber.group_delay.evaluate_beta1(a_chan[0], wdm.frequency_grid()[a_chan[1]])-fiber.group_delay.evaluate_beta1(b_chan[0], b_chan[1]))
-    
-    m_max = (fiber.length * dgd) / T 
+    dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+    m_max = -(fiber.length * dgd) / T
+    print(m_max)
+    print(-m_max * T /dgd)
     if m_max < 0:
         m_max = math.ceil(m_max)
         return np.arange(m_max - partial_collisions_start, partial_collisions_end + 1)
@@ -54,8 +53,41 @@ def get_m_values(
         return np.arange(-partial_collisions_start, m_max + partial_collisions_end + 1)
 
 
-def get_collision_location(m, fiber, channel_spacing, T) -> float:
+def get_collision_location(m, 
+                           fiber: Fiber, 
+                           wdm: WDM, 
+                           a_chan:Tuple[int, int], 
+                           b_chan: Tuple[int, int],
+                           pulse: Pulse) -> float:
     """For the specified index m, compute the position of the corresponding
     complete collision."""
-    return -m * T / (fiber.beta2 * 2 * math.pi * channel_spacing)
+    dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+    # print(f" DGD: {dgd}, a_chan: {a_chan}, b_chan: {b_chan}")
+    return -m / (pulse.baud_rate *  dgd)
   
+  
+def get_dgd(a_chan, b_chan, fiber, wdm) -> float:
+    freq_grid = wdm.frequency_grid()
+    if isinstance(fiber, SMFiber):
+        assert (a_chan[0] == 0 and b_chan[0] == 0)
+        return fiber.beta2 * 2 * np.pi * (freq_grid[b_chan[1]] - freq_grid[a_chan[1]])
+    elif isinstance(fiber, MMFiber):
+        return fiber.group_delay.evaluate_beta1(b_chan[0], freq_grid[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], freq_grid[a_chan[1]])
+
+
+def get_gvd(b_chan, fiber, wdm) -> float:
+    if isinstance(fiber, SMFiber):
+        return fiber.beta2
+    elif isinstance(fiber, MMFiber):
+        return fiber.group_delay.evaluate_beta2(b_chan[0], wdm.frequenc_grid()[b_chan[1]])
+    pass
+  
+  
+def get_z_walkoff(
+  fiber: Fiber, 
+  wdm: WDM, 
+  a_chan: Tuple[int, int], 
+  b_chan: Tuple[int, int], 
+  pulse: Pulse):
+  dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+  return 1/ (pulse.baud_rate * dgd)
