@@ -99,7 +99,8 @@ for i in range(4):
 # write the results file in ../results/general_results.h5 with the correct time integrals
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
+a_chan = (0,0)
 print("@@@@@@@@ Time integrals  @@@@@@@@")
-do_time_integrals(fiber, wdm, pulse, overwrite=False)
+do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=True)
 print("@@@@@@@@ Space integrals @@@@@@@@")
-compare_interferent(interfering_channels=[(0, 49)])
+compare_interferent(a_chan, [(0, 2)], fiber, wdm, pulse)

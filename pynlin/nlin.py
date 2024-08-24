@@ -496,24 +496,22 @@ def m_th_time_integral_Nyquist(
 #     return time_integrals
 
 
-# def Xhkm_precomputed(
-#     z: np.ndarray, time_integrals, amplification_function: np.ndarray = None, axis=-1
-# ) -> np.ndarray:
-#     """Compute the Xhkm XPM coefficients specifying the inner time integral as
-#     input.
+def X0mm_space_integral(
+    z: np.ndarray, time_integrals, amplification_function: np.ndarray = None, axis=-1) -> np.ndarray:
+    """Compute the X0mm XPM coefficients specifying the inner time integral as
+    input.
 
-#     Useful to compare different amplification schemes without re-
-#     computing the time integral.
-#     """
-
-#     if type(amplification_function) is not np.ndarray:
-#         # if the amplification function is not supplied, assume perfect distributed
-#         # amplification
-#         amplification_function = np.ones_like(z)
-
-#     X = scipy.integrate.trapezoid(time_integrals * amplification_function, z, axis=axis)
-
-#     return X
+    Useful to compare different amplification schemes without re-
+    computing the time integral.
+    """
+    if type(amplification_function) is not np.ndarray:
+        # if the amplification function is not supplied, assume perfect distributed
+        # amplification
+        amplification_function = np.ones_like(z)
+    else:
+      print('\033[2;31;43m WARN \033[0;0m need to implement scaling of f(z) w.r.t. the given z axis.')
+    X = scipy.integrate.trapezoid(time_integrals * amplification_function, z, axis=axis)
+    return X
 
 
 # def Xhkm(

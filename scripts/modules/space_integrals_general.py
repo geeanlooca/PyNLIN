@@ -9,6 +9,7 @@ import pynlin.wdm
 import pynlin.pulses
 import pynlin.nlin
 import pynlin.utils
+import pynlin.collisions
 from pynlin.utils import dBm2watt
 import pynlin.constellations
 import json
@@ -29,17 +30,12 @@ def get_space(filename, b_chan: Tuple[int, int]):
   print(f"From file we got objects with shapes: m:{m.shape}, z:{z.shape}, I:{I.shape}")
   return (m, z, I)
 
-def get_zm(m, Omega, beta2, baud_rate):
-  return m/(baud_rate*beta2*Omega)
-
-
 '''
   Read the time integral file and compute the space integrals 
 '''
-def get_space_integrals(intf):
-  (m, z, I) = get_space(intf)
+def get_space_integrals(m, z, I):
   X0mm = np.zeros_like(m)
-  X0mm = pynlin.nlin.Xhkm_precomputed(z, I, amplification_function=None)
+  X0mm = pynlin.nlin.X0mm_space_integral(z, I, amplification_function=None)
   return X0mm
 
 
@@ -82,19 +78,19 @@ def get_space_integral_approximation(intf):
   return X0mm_ana
 
 
-def compare_interferent(interfering_channels: List[Tuple[int, int]]):
+def compare_interferent(a_chan: Tuple[int, int], b_channels: List[Tuple[int, int]], fiber, wdm, pulse):
   '''
     compare the analytical approximation with the numerical.
     plot the results
   '''
   filename = 'results.h5'
-  for b_chan in interfering_channels:
+  for b_chan in b_channels:
     print(b_chan)
     (m, z_axis_list, integral_list) = get_space(filename, b_chan)
-    plot_time_integrals(m, z_axis_list, integral_list)
-    exit()
-    X0mm = get_space_integrals(b_chan)
-    X0mm_ana = get_space_integral_approximation(b_chan)
+    # plot_time_integrals(m, z_axis_list, integral_list)
+    X0mm = get_space_integrals(m, z_axis_list, integral_list)
+    dgd = pynlin.collisions.get_dgd(a_chan, b_chan, fiber, wdm)
+    X0mm_ana = 1/dgd *  np.ones_like(m)
     print("NOISE numerical         = {:4.3e}".format(np.real(np.sum(X0mm**2))))
     print("NOISE analytical        = {:4.3e}".format(np.real(np.sum(X0mm_ana**2))))
     print("RELATIVE ERROR on noise = {:4.3e}".format(np.real((np.sum(X0mm_ana**2))/np.sum(X0mm**2))-1.0))
