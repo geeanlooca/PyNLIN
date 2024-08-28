@@ -293,12 +293,12 @@ def m_th_time_integral_Gaussian(
         # print(f"m/pulse.baud_rate : {m:.5e}, dgd z: {pulse.baud_rate * dgd * z:.5e}, exponent : {exponent:.5e}")
         return factor1 * factor2 * np.exp(exponent)
     if isinstance(fiber, MMFiber):
-        l_da = 1 / \
+        l_da = pulse.T0**2 / \
             (fiber.group_delay.evaluate_beta2(
-                a_chan[0], wdm.frequency_grid()[a_chan[1]])(pulse.baud_rate)**2)
-        l_db = 1 / \
+                a_chan[0], wdm.frequency_grid()[a_chan[1]]))
+        l_db = pulse.T0**2 / \
             (fiber.group_delay.evaluate_beta2(
-                b_chan[0], wdm.frequency_grid()[b_chan[1]])(pulse.baud_rate)**2)
+                b_chan[0], wdm.frequency_grid()[b_chan[1]]))
         dgd = fiber.group_delay.evaluate_beta1(b_chan[0], wdm.frequency_grid(
         )[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], wdm.frequency_grid()[a_chan[1]])
         avg_l_d = (l_da * l_db) / (l_da + l_db) / 2

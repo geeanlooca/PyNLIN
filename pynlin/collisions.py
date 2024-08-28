@@ -79,7 +79,7 @@ def get_gvd(b_chan, fiber, wdm) -> float:
     if isinstance(fiber, SMFiber):
         return fiber.beta2
     elif isinstance(fiber, MMFiber):
-        return fiber.group_delay.evaluate_beta2(b_chan[0], wdm.frequenc_grid()[b_chan[1]])
+        return fiber.group_delay.evaluate_beta2(b_chan[0], wdm.frequency_grid()[b_chan[1]])
     pass
   
   
