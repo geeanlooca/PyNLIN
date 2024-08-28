@@ -60,7 +60,8 @@ def iterate_time_integrals(
     """Compute the inner time integral of the expression for the XPM
     coefficients Xhkm for each combination of frequencies in the supplied WDM
     grid."""
-    assert (isinstance(fiber, SMFiber) and a_chan[0] == 0)
+    if isinstance(fiber, SMFiber):
+      assert (a_chan[0] == 0)
 
     append_write = "a"
     found = False
@@ -200,7 +201,9 @@ def compute_all_collisions_time_integrals(
     n_z_points = 200
     margin = 10
     if isinstance(pulse, NyquistPulse):
-      margin = 10000
+      print("\033[91m warn: \033[0m The pulse is Nyquist (long-tailed): overriding the number of points!")
+      n_z_points = 1000
+      margin = 100
     for m in m_list:
         # print(f"m={m}")
         z_m = get_collision_location(m, fiber, wdm, a_chan, b_chan, pulse)

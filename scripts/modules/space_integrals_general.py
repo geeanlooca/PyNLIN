@@ -120,7 +120,7 @@ def compare_interferent(a_chan: Tuple[int, int], b_channels: List[Tuple[int, int
         plt.plot(m, np.real(X0mm_ana), color="blue", ls="dashed", label="mecozzi 1+3")
         plt.plot(m, np.real(X0mm), color="red",
                  ls="solid", label="numerical")
-        plt.ylim(mid * 0.99, mid * 1.01)
+        # plt.ylim(mid * 0.99, mid * 1.01)9
         plt.xlabel(r"$m$")
         plt.ylabel(r"$X_{\mathrm{0mm}}$")
         plt.legend(loc="upper left")

@@ -146,8 +146,7 @@ class MMFiber(Fiber):
         losses=None,
         raman_coefficient=7e-14,
         effective_area=80e-12,
-        beta1_values=None,
-        beta2_values=None,
+        group_delay=None,
         gamma=1.3 * 1e-3,
         length=100e3,
         n_modes=1,
@@ -180,9 +179,9 @@ class MMFiber(Fiber):
         # i, j mode indexes,
         # all the quadratic fit parameters are used in oi_polynomial_expansion
 
-        self.overlap_integrals = overlap_integrals
-        self.torch_oi = OICoefficients(self.modes, overlap_integrals)
-        self.group_delay = GroupDelay(self.modes, beta1_values, beta2_values)
+        # self.overlap_integrals = overlap_integrals
+        self.torch_oi = OICoefficients(self.n_modes, overlap_integrals)
+        self.group_delay = GroupDelay(self.n_modes, group_delay)
         self.mode_names = mode_names
         
     def loss_profile(self, wavelengths):

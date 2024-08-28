@@ -6,7 +6,7 @@ from matplotlib import rc
 import plotly.graph_objects as go
 import seaborn as sns
 import pynlin.wdm
-from pynlin.utils import nu2lambda, beta1_polynomial_expansion
+from pynlin.utils import nu2lambda
 from scripts.modules.load_fiber_values import load_group_delay
 
 import json

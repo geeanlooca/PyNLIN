@@ -13,6 +13,7 @@ from scripts.modules.load_fiber_values import *
 import matplotlib.pyplot as plt
 import scipy
 from pynlin import *
+from scripts.modules.load_fiber_values import load_group_delay
 
 with open("./scripts/sim_config.json") as f:
     f = open("./scripts/sim_config.json")
@@ -57,19 +58,20 @@ wdm = pynlin.wdm.WDM(
     center_frequency=center_frequency
 )
 
-fiber = pynlin.fiber.SMFiber(
+fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
-    beta2=beta2,
+    overlap_integrals = oi_fit,
+    group_delay = load_group_delay(),
     length=length
 )
 print(f"beta_2 = {beta2:.9e}")
 
 # make the time integral take as an input (pulse, fiber, wdm)
-pulse = pynlin.pulses.NyquistPulse(
+pulse = pynlin.pulses.GaussianPulse(
     baud_rate=baud_rate,
     num_symbols=1e2,
     samples_per_symbol=2**5,
-    rolloff=0.1,
+    rolloff=0.0,
 )
 
 freqs = wdm.frequency_grid()
