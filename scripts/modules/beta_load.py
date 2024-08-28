@@ -8,14 +8,16 @@ import seaborn as sns
 import pynlin.wdm
 from pynlin.utils import nu2lambda
 from scripts.modules.load_fiber_values import load_group_delay
+from numpy import polyval
+from pynlin.fiber import MMFiber
 
 import json
 rc('text', usetex=True)
 logging.basicConfig(filename='MMF_optimizer.log', encoding='utf-8', level=logging.INFO)
 log = logging.getLogger(__name__)
-log.debug("starting to load sim_config.json")
+log.debug("starting to load s+c+l_config.json")
 
-f = open("./scripts/sim_config.json")
+f = open("./scripts/s+c+l_config.json")
 data = json.load(f)
 # print(data)
 dispersion = data["dispersion"]
@@ -46,7 +48,7 @@ oi_avg = np.load('oi_avg.npy')
 use_avg_oi = False
 
 beta1_params = load_group_delay()
-print(beta1_params.shape)
+# print(beta1_params.shape)
 
 wdm = pynlin.wdm.WDM(
     spacing=channel_spacing,
@@ -57,9 +59,16 @@ freqs = wdm.frequency_grid()
 modes = [0, 1, 2, 3]
 mode_names = ['LP01', 'LP11', 'LP21', 'LP02']
 
+fiber = MMFiber(
+    effective_area=80e-12,
+    overlap_integrals = oi_fit,
+    group_delay = beta1_params,
+    length=100e3
+)
+
 beta1 = np.zeros((len(modes), len(freqs)))
 for i in modes:
-  beta1[i, :] = beta1_polynomial_expansion(beta1_params, i, freqs)
+  beta1[i, :] = fiber.group_delay.evaluate_beta1(i, freqs)
 
 plt.clf()
 sns.heatmap(beta1, cmap="coolwarm", square=False, xticklabels=freqs, yticklabels=modes)
