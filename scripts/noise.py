@@ -15,8 +15,8 @@ import scipy
 from pynlin import *
 
 with open("./scripts/sim_config.json") as f:
-  f = open("./scripts/sim_config.json")
-  
+    f = open("./scripts/sim_config.json")
+
 data = json.load(f)
 # print(data)
 dispersion = data["dispersion"]
@@ -58,31 +58,31 @@ wdm = pynlin.wdm.WDM(
 )
 
 fiber = pynlin.fiber.SMFiber(
-      effective_area=80e-12,
-      beta2=beta2, 
-      length=length
+    effective_area=80e-12,
+    beta2=beta2,
+    length=length
 )
 print(f"beta_2 = {beta2:.9e}")
 
 # make the time integral take as an input (pulse, fiber, wdm)
-pulse = pynlin.pulses.GaussianPulse(
-  baud_rate = baud_rate,
-  num_symbols = 1e3, # ???
-  samples_per_symbol = 2**5,
-  rolloff = 0.1,
+pulse = pynlin.pulses.NyquistPulse(
+    baud_rate=baud_rate,
+    num_symbols=1e2,
+    samples_per_symbol=2**5,
+    rolloff=0.1,
 )
- 
+
 freqs = wdm.frequency_grid()
 
 s_limit = 1460e-9
 l_limit = 1625e-9
-s_freq = 3e8/s_limit
-l_freq = 3e8/l_limit
+s_freq = 3e8 / s_limit
+l_freq = 3e8 / l_limit
 
-print(s_freq*1e-12)
-print(l_freq*1e-12)
-delta = (s_freq - l_freq) *1e-12
-avg = print((s_freq+l_freq) *1e-12 /2)
+print(s_freq * 1e-12)
+print(l_freq * 1e-12)
+delta = (s_freq - l_freq) * 1e-12
+avg = print((s_freq + l_freq) * 1e-12 / 2)
 beta_file = './results/fitBeta.mat'
 mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
 
@@ -99,8 +99,8 @@ for i in range(4):
 # write the results file in ../results/general_results.h5 with the correct time integrals
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
-a_chan = (0,0)
+a_chan = (0, 0)
 print("@@@@@@@@ Time integrals  @@@@@@@@")
 do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=True)
 print("@@@@@@@@ Space integrals @@@@@@@@")
-compare_interferent(a_chan, [(0, 2)], fiber, wdm, pulse)
+compare_interferent(a_chan, [(0, 1)], fiber, wdm, pulse)
