@@ -82,7 +82,7 @@ def compare_interferent(a_chan: Tuple[int, int], b_channels: List[Tuple[int, int
         print(f"X0mm Mecozzi: {np.abs(1/dgd):.4e}")
         X0mm_Mecozzi = np.abs(1 / dgd) * np.ones_like(m)
         X0mm_ana = X0mm_Mecozzi * (1 + 6 * eps**2) # originally there should be a 6
-        X0mm_finite_size = X0mm_Mecozzi * get_space_integral_approximation(m, dgd, pulse, a_chan, b_chan, fiber, wdm)
+        X0mm_finite_size = get_space_integral_approximation(m, dgd, pulse, a_chan, b_chan, fiber, wdm)
         print("NOISE numerical         = {:4.3e}".format(np.real(np.sum(X0mm**2))))
         print("NOISE analytical        = {:4.3e}".format(np.real(np.sum(X0mm_ana**2))))
         print("RELATIVE ERROR on noise = {:4.3e}".format(
@@ -93,11 +93,12 @@ def compare_interferent(a_chan: Tuple[int, int], b_channels: List[Tuple[int, int
         # for mx in m:
         #     plt.axvline(x=mx, lw=0.3, color="gray", ls="dotted")
         mid = X0mm[int(round(len(X0mm) / 2))]
-        plt.plot(m, np.real(X0mm_Mecozzi), color="gray", ls="dashed", label="mecozzi")
+        plt.plot(m, np.real(X0mm_Mecozzi), color="gray", ls="dashed", label="Mec.")
         # plt.plot(m, np.real(X0mm_ana), color="blue", ls="dotted", label="mecozzi 1+3")
-        plt.plot(m, np.real(X0mm_finite_size), color="blue", ls="dotted", label="+ Gaussian finite size")
+        plt.plot(m, np.real(X0mm_finite_size * X0mm_Mecozzi), color="blue", ls="dotted", label="fin.")
+        plt.plot(m, np.real(X0mm_finite_size * X0mm_ana), color="green", ls="dotted", label="fin. 3+1")
         plt.plot(m, np.real(X0mm), color="red",
-                 ls="solid", label="numerical")
+                 ls="solid", label="num.")
         # plt.ylim(mid * 0.99, mid * 1.01)9
         plt.xlabel(r"$m$")
         plt.ylabel(r"$X_{\mathrm{0mm}}$")

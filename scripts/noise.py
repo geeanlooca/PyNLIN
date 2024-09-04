@@ -60,7 +60,7 @@ fiber = pynlin.fiber.MMFiber(
       overlap_integrals = oi_fit,
       group_delay = load_group_delay(),
       length=length,
-      n_modes = 2
+      n_modes = 4
   )
 
 # print(f"beta_2 = {beta2:.9e}")
@@ -102,6 +102,6 @@ avg = ((s_freq + l_freq) * 1e-12 / 2)
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
 a_chan = (0, 0)
 print("@@@@@@@@ Time integrals  @@@@@@@@")
-do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=False)
+do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=True)
 print("@@@@@@@@ Space integrals @@@@@@@@")
 compare_interferent(a_chan, [(0, 1)], fiber, wdm, pulse)

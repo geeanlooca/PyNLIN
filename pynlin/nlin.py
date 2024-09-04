@@ -148,7 +148,7 @@ def compute_all_collisions_time_integrals(
     wdm: WDM,
     pulse: Pulse,
     points_per_collision: int = 10,
-    use_multiprocessing: bool = False,
+    use_multiprocessing: bool = True,
     partial_collisions_margin: int = 10,
     speedup_pulse_propagation=True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -229,7 +229,8 @@ def compute_all_collisions_time_integrals(
         z_min = max(z_min, 0)
         z_max = min(z_max, fiber.length)
         if z_min > z_max:
-            z_axis_list.append(None)
+            print(z_min, z_max)
+            z_axis_list.append(np.linspace(0, fiber.length, n_z_points))
         else:
             z_axis_list.append(np.linspace(z_min, z_max, n_z_points))
 
@@ -244,6 +245,7 @@ def compute_all_collisions_time_integrals(
             m_th_time_integral, pulse, fiber, wdm, a_chan, b_chan,
         )
         # def partial_function(m, z): return m_th_time_integral(pulse, fiber, wdm, a_chan, b_chan, m, z)
+        print("shape of z_xis list", len(z_axis_list[1]))
         integrals_list = process_map(
             partial_function, m_list, z_axis_list, leave=False, chunksize=1
         )
@@ -309,7 +311,6 @@ def m_th_time_integral_Gaussian(
         # )[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], wdm.frequency_grid()[a_chan[1]])
         # print("DGD!!!: ", l_da, l_db)
         avg_l_d = (l_da * l_db) / (l_da + l_db) / 2
-        # print("§§§§§: ", avg_l_d)
         factor1 = pulse.baud_rate / (np.sqrt(2 * np.pi))
         factor2 = 1 / np.sqrt(1 + (z / avg_l_d)**2)
         exponent = -((m + pulse.baud_rate * dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))
