@@ -2,17 +2,13 @@
 script for finding the overall noise on a single channel 
 given a fiber link configuration consisting 
 """
-
-# A workaround for setting the correct workind dir.
-# beware to run only once per session!
-# is there a better way? :)
-
 from scripts.modules.space_integrals_general import *
 from scripts.modules.time_integrals import do_time_integrals
 from scripts.modules.load_fiber_values import *
 import matplotlib.pyplot as plt
 import scipy
 from pynlin import *
+import pynlin.fiber
 from scripts.modules.load_fiber_values import load_group_delay
 
 with open("./scripts/sim_config.json") as f:
@@ -58,13 +54,16 @@ wdm = pynlin.wdm.WDM(
     center_frequency=center_frequency
 )
 
+
 fiber = pynlin.fiber.MMFiber(
-    effective_area=80e-12,
-    overlap_integrals = oi_fit,
-    group_delay = load_group_delay(),
-    length=length
-)
-print(f"beta_2 = {beta2:.9e}")
+      effective_area=80e-12,
+      overlap_integrals = oi_fit,
+      group_delay = load_group_delay(),
+      length=length,
+      n_modes = 2
+  )
+
+# print(f"beta_2 = {beta2:.9e}")
 
 # make the time integral take as an input (pulse, fiber, wdm)
 pulse = pynlin.pulses.GaussianPulse(
@@ -81,28 +80,28 @@ l_limit = 1625e-9
 s_freq = 3e8 / s_limit
 l_freq = 3e8 / l_limit
 
-print(s_freq * 1e-12)
-print(l_freq * 1e-12)
+# print(s_freq * 1e-12)
+# print(l_freq * 1e-12)
 delta = (s_freq - l_freq) * 1e-12
-avg = print((s_freq + l_freq) * 1e-12 / 2)
-beta_file = './results/fitBeta.mat'
-mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
+avg = ((s_freq + l_freq) * 1e-12 / 2)
+# beta_file = './results/fitBeta.mat'
+# mat = scipy.io.loadmat(beta_file)['fitParams'] * 1.0
 
-beta_file = './results/fitBeta.mat'
-omega = 2 * np.pi * freqs
-omega_norm = scipy.io.loadmat(beta_file)['omega_std']
-omega_n = (omega - scipy.io.loadmat(beta_file)['omega_mean']) / omega_norm
-beta1 = np.zeros((4, len(freqs)))
+# beta_file = './results/fitBeta.mat'
+# omega = 2 * np.pi * freqs
+# omega_norm = scipy.io.loadmat(beta_file)['omega_std']
+# omega_n = (omega - scipy.io.loadmat(beta_file)['omega_mean']) / omega_norm
+# beta1 = np.zeros((4, len(freqs)))
 
-for i in range(4):
-    beta1[i, :] = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
-                   mat[i, 1] * omega_n + mat[i, 2]) / omega_norm
+# for i in range(4):
+#     beta1[i, :] = (3 * mat[i, 0] * (omega_n ** 2) + 2 *
+#                    mat[i, 1] * omega_n + mat[i, 2]) / omega_norm
 
 # write the results file in ../results/general_results.h5 with the correct time integrals
 # the file contains, for each interferent channel, the values (z, m, I) of the z
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
 a_chan = (0, 0)
 print("@@@@@@@@ Time integrals  @@@@@@@@")
-do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=True)
+do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=False)
 print("@@@@@@@@ Space integrals @@@@@@@@")
 compare_interferent(a_chan, [(0, 1)], fiber, wdm, pulse)

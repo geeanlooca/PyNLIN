@@ -375,7 +375,7 @@ class MMFRamanAmplifier(torch.nn.Module):
         self.power_per_channel = power_per_channel
         self.num_pumps = num_pumps
         self.num_channels = signal_wavelength.shape[0]
-        self.modes = fiber.modes
+        self.modes = fiber.n_modes
         self.length = length
         self.steps = steps
         self.fiber = fiber

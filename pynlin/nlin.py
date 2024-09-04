@@ -43,7 +43,9 @@ def apply_chromatic_dispersion(
 
 
 def get_interfering_channels(a_chan: Tuple, wdm: WDM, fiber: Fiber):
+    print(fiber.n_modes)
     b_chans = list(product(range(fiber.n_modes), range(wdm.num_channels)))
+    print(b_chans)
     b_chans.remove(a_chan)
     return b_chans
 
@@ -97,6 +99,7 @@ def iterate_time_integrals(
     b_channels = get_interfering_channels(
         a_chan, wdm, fiber,
     )
+    print(b_channels)
 
     # iterate over all channels of the WDM grid
     for b_num, b_chan in enumerate(b_channels):
@@ -285,6 +288,7 @@ def m_th_time_integral_Gaussian(
     # Apply the fully analytical formula
     if isinstance(fiber, SMFiber):
         l_d = 1 / (np.abs(fiber.beta2) * (pulse.baud_rate)**2)
+        # print("§§§§§: ", l_d)
         dgd = fiber.beta2 * 2 * np.pi * (freq_spacing)
         factor1 = pulse.baud_rate / (np.sqrt(2 * np.pi))
         factor2 = 1 / np.sqrt(1 + (z / l_d)**2)
@@ -293,20 +297,23 @@ def m_th_time_integral_Gaussian(
         # print(f"m/pulse.baud_rate : {m:.5e}, dgd z: {pulse.baud_rate * dgd * z:.5e}, exponent : {exponent:.5e}")
         return factor1 * factor2 * np.exp(exponent)
     if isinstance(fiber, MMFiber):
-        l_da = pulse.T0**2 / \
+        l_da = np.abs(pulse.T0**2 / \
             (fiber.group_delay.evaluate_beta2(
-                a_chan[0], wdm.frequency_grid()[a_chan[1]]))
-        l_db = pulse.T0**2 / \
+                a_chan[0], wdm.frequency_grid()[a_chan[1]])))
+        l_db = np.abs(pulse.T0**2 / \
             (fiber.group_delay.evaluate_beta2(
-                b_chan[0], wdm.frequency_grid()[b_chan[1]]))
-        dgd = fiber.group_delay.evaluate_beta1(b_chan[0], wdm.frequency_grid(
-        )[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], wdm.frequency_grid()[a_chan[1]])
+                b_chan[0], wdm.frequency_grid()[b_chan[1]])))
+        # TODO: this gets repeated many time for nothing
+        dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+        # fiber.group_delay.evaluate_beta1(b_chan[0], wdm.frequency_grid(
+        # )[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], wdm.frequency_grid()[a_chan[1]])
+        # print("DGD!!!: ", l_da, l_db)
         avg_l_d = (l_da * l_db) / (l_da + l_db) / 2
+        # print("§§§§§: ", avg_l_d)
         factor1 = pulse.baud_rate / (np.sqrt(2 * np.pi))
         factor2 = 1 / np.sqrt(1 + (z / avg_l_d)**2)
-        exponent = -((m / pulse.baud_rate + dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))
+        exponent = -((m + pulse.baud_rate * dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))
         return factor1 * factor2 * np.exp(exponent)
-
 
 def m_th_time_integral_Nyquist(
     pulse: Pulse,
@@ -327,6 +334,7 @@ def m_th_time_integral_Nyquist(
         exponent = -((m + pulse.baud_rate * dgd * z) ** 2) / (2 * (1 + (z / l_d)**2))
         return factor1 * factor2 * np.exp(exponent)
     if isinstance(fiber, MMFiber):
+        raise(NotImplementedError)
         l_da = 1 / \
             (fiber.group_delay.evaluate_beta2(
                 a_chan[0], wdm.frequency_grid()[a_chan[1]])(pulse.baud_rate)**2)

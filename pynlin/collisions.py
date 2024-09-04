@@ -43,8 +43,8 @@ def get_m_values(
     partial_collisions_end = partial_collisions_start
     dgd = get_dgd(a_chan, b_chan, fiber, wdm)
     m_max = -(fiber.length * dgd) / T
-    print(m_max)
-    print(-m_max * T /dgd)
+    # print(m_max)
+    # print(-m_max * T /dgd)
     if m_max < 0:
         m_max = math.ceil(m_max)
         return np.arange(m_max - partial_collisions_start, partial_collisions_end + 1)
@@ -72,7 +72,8 @@ def get_dgd(a_chan, b_chan, fiber, wdm) -> float:
         assert (a_chan[0] == 0 and b_chan[0] == 0)
         return fiber.beta2 * 2 * np.pi * (freq_grid[b_chan[1]] - freq_grid[a_chan[1]])
     elif isinstance(fiber, MMFiber):
-        return fiber.group_delay.evaluate_beta1(b_chan[0], freq_grid[b_chan[1]]) - fiber.group_delay.evaluate_beta1(a_chan[0], freq_grid[a_chan[1]])
+        return fiber.group_delay.evaluate_beta1(b_chan[0], freq_grid[b_chan[1]]) \
+      - fiber.group_delay.evaluate_beta1(a_chan[0], freq_grid[a_chan[1]])
 
 
 def get_gvd(b_chan, fiber, wdm) -> float:
@@ -90,4 +91,4 @@ def get_z_walkoff(
   b_chan: Tuple[int, int], 
   pulse: Pulse):
   dgd = get_dgd(a_chan, b_chan, fiber, wdm)
-  return 1/ (pulse.baud_rate * dgd)
+  return np.abs(1/ (pulse.baud_rate * dgd))

@@ -114,14 +114,14 @@ class OICoefficients:
         return oi_polynomial_expansion(wavelengths, self.values)
 
 
-"""
-Dispersion data storage and evaluation for the walkoff and collision evaluation
-"""
 
 
 @dataclass
 class GroupDelay:
-    """ Third order fit data for the beta1 
+    """
+    Dispersion data storage and evaluation for the walkoff and collision evaluation
+    
+    Third order fit data for the beta1 
     (and beta2) functions of frequency and modes
     
     Data format:
@@ -149,7 +149,7 @@ class MMFiber(Fiber):
         group_delay=None,
         gamma=1.3 * 1e-3,
         length=100e3,
-        n_modes=1,
+        n_modes=4,
         overlap_integrals=None,
         mode_names=None,
     ):
@@ -179,7 +179,7 @@ class MMFiber(Fiber):
         # i, j mode indexes,
         # all the quadratic fit parameters are used in oi_polynomial_expansion
 
-        # self.overlap_integrals = overlap_integrals
+        self.overlap_integrals = overlap_integrals
         self.torch_oi = OICoefficients(self.n_modes, overlap_integrals)
         self.group_delay = GroupDelay(self.n_modes, group_delay)
         self.mode_names = mode_names

@@ -19,6 +19,7 @@ from pynlin.utils import dBm2watt, watt2dBm
 import pynlin.constellations
 import json
 from matplotlib.cm import viridis
+from scripts.modules.load_fiber_values import load_group_delay
 
 plt.rcParams.update({
 	"text.usetex": False,
@@ -67,10 +68,7 @@ oi_avg_complete = np.stack((*matrix_zeros, matrix_avg), axis=0)
 
 # Manual configuration
 power_per_channel_dBm_list = power_dBm_list
-# Pumping scheme choice
 pumping_schemes = ['ct']
-# num_only_co_pumps = 4
-# num_only_ct_pumps = 4
 optimize = True
 profiles = True
 
@@ -92,16 +90,14 @@ else:
   oi_set = oi_fit
 fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
-    beta2=beta2,
-    modes=num_modes,
+    n_modes=num_modes,
     overlap_integrals=oi_set,
+    group_delay=load_group_delay()
 )
-# assert((oi_set == oi_fit).all())
 
 actual_fiber = pynlin.fiber.MMFiber(
     effective_area=80e-12,
-    beta2=beta2,
-    modes=num_modes,
+    n_modes=num_modes,
     overlap_integrals=oi_fit,
 )
 
@@ -129,16 +125,19 @@ results_path_ct = '../results_' + \
 # PRECISION REQUIREMENTS ESTIMATION =================================
 max_channel_spacing = wdm.frequency_grid(
 )[num_channels - 1] - wdm.frequency_grid()[0]
-max_num_collisions = len(pynlin.nlin.get_m_values(
+
+a_chan = (0, 0)
+b_chan = (0, 1)
+m_values = pynlin.nlin.get_m_values(
     fiber,
-    fiber_length,
-    max_channel_spacing,
+    wdm,
+    a_chan, 
+    b_chan,
     1 / baud_rate,
-    partial_collisions_start=partial_collision_margin,
-    partial_collisions_end=partial_collision_margin)
-)
+    partial_collisions_start = partial_collision_margin)
+max_num_collisions = len(m_values)
 integration_steps = max_num_collisions * points_per_collision
-# Suggestion: 100m step is sufficient
+
 dz = 100
 integration_steps = int(np.ceil(fiber_length / dz))
 z_max = np.linspace(0, fiber_length, integration_steps)
