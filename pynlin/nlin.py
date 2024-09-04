@@ -195,7 +195,6 @@ def compute_all_collisions_time_integrals(
         m,
         z
     )
-    print(m_list)
 
     # Estimate the significant range of each collision:
     #   fill the z_axis_grid with good estimates of
