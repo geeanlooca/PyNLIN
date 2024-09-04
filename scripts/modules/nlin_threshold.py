@@ -16,9 +16,8 @@ import json
 rc('text', usetex=True)
 logging.basicConfig(filename='MMF_optimizer.log', encoding='utf-8', level=logging.INFO)
 log = logging.getLogger(__name__)
-log.debug("starting to load s+c+l_config.json")
-
-f = open("./scripts/s+c+l_config.json")
+log.debug("starting to load sim_config.json")
+f = open("./scripts/sim_config.json")
 
 data = json.load(f)
 # print(data)
@@ -74,7 +73,8 @@ dummy_fiber = MMFiber(
     effective_area=80e-12,
     overlap_integrals = oi_fit,
     group_delay = beta1_params,
-    length=100e3
+    length=100e3,
+    n_modes = 4
 )
 
 beta1 = np.zeros((len(modes), len(freqs)))
@@ -109,7 +109,7 @@ for ib, b_chan in enumerate([(0, i) for i in range(len(freqs))]):
   # space integrals
   X0mm = get_space_integrals(m, z, I)
   partial_nlin[ib] = np.sum(X0mm**2)
-  dgds[ib] = dgd * 1e12
+  dgds[ib] = np.abs(dgd) * 1e12
 
 # for each channel, we compute the total number of collisions that
 # needs to be computed for evaluating the total noise on that channel.
@@ -143,7 +143,7 @@ mask = (beta1_differences < 200 * 1e-12)
 hist, edges = np.histogram(beta1_differences[mask]*1e12, bins=200)
 
 fig =plt.figure(figsize=(6, 3))  # Overall figure size
-plt.semilogy(edges[:-1], L/T / edges[:-1], color='red')
+plt.semilogy(edges[:-1], L / T / edges[:-1] * 1e12, color='red')
 plt.semilogy(dgds, partial_nlin, color='green')
 plt.ylabel('partial NLIN')
 plt.xlabel('DGD (ps/m)')

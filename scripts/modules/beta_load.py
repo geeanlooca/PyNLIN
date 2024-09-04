@@ -49,7 +49,7 @@ use_avg_oi = False
 
 
 
-beta1_params = load_group_delay()
+beta1_params = load_dummy_group_delay()
 # beta1_params = load_dummy_group_delay()
 # print(beta1_params.shape)
 dpi = 300
@@ -60,7 +60,6 @@ wdm = pynlin.wdm.WDM(
     center_frequency=center_frequency
 )
 freqs = wdm.frequency_grid()
-print(freqs)
 modes = [0, 1, 2, 3]
 mode_names = ['LP01', 'LP11', 'LP21', 'LP02']
 

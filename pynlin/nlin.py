@@ -229,7 +229,7 @@ def compute_all_collisions_time_integrals(
         z_min = max(z_min, 0)
         z_max = min(z_max, fiber.length)
         if z_min > z_max:
-            print(z_min, z_max)
+            print(f"\033[91m warn: \033[0m delimitation of integral diverged at m = {m:10d}, z_m = {z_m: 5.4e}!")
             z_axis_list.append(np.linspace(0, fiber.length, n_z_points))
         else:
             z_axis_list.append(np.linspace(z_min, z_max, n_z_points))
