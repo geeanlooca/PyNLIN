@@ -95,56 +95,30 @@ pulse = pynlin.pulses.GaussianPulse(
 )
 
 a_chan = (0, 0)
-freqs = wdm.frequency_grid()
-partial_nlin = np.zeros(len(freqs))
-dgds = np.zeros_like(partial_nlin)
-for ib, b_chan in enumerate([(0, i) for i in range(len(freqs))]):
-  # compute time integrals
-  dgd = get_dgd(a_chan, b_chan, dummy_fiber, wdm)
+n_samples = 10
+partial_nlin = np.zeros(n_samples)
+dgds = np.linspace(1.0e-15, 6e-12, n_samples)
+for id, dgd in enumerate(dgds):
   print(f"DGD: {dgd:10.3e}")
-  z, I, m = compute_all_collisions_time_integrals(a_chan, b_chan, dummy_fiber, wdm, pulse)
+  z, I, m = compute_all_collisions_time_integrals(a_chan, (0, 0), dummy_fiber, wdm, pulse, dgd)
   print(m.shape)
   print(z.shape)
-  print(I[1].shape)
+  print(I[1])
   # space integrals
   X0mm = get_space_integrals(m, z, I)
-  partial_nlin[ib] = np.sum(X0mm**2)
-  dgds[ib] = np.abs(dgd) * 1e12
+  partial_nlin[id] = np.sum(X0mm**2)
 
 # for each channel, we compute the total number of collisions that
 # needs to be computed for evaluating the total noise on that channel.
 T = 100e-12
 L = 100e3
 
-collisions = np.zeros((len(modes), len(freqs)))
-for i in range(len(modes)):
-    for j in range(len(freqs)):
-        collisions[i, j] = np.floor(np.abs(np.sum(beta1 - beta1[i, j])) * L / T)
-
-
-collisions_single = np.zeros((1, len(freqs)))
-for j in range(len(freqs)):
-    collisions_single[0, j] = np.floor(np.abs(np.sum(beta1[0 :] - beta1[0, j])) * L / T)
-        
-nlin = np.zeros((len(modes), len(freqs)))
-for i in range(len(modes)):
-    for j in range(len(freqs)):
-        nlin[i, j] = np.sum(L / (np.abs(beta1 - beta1[i, j])[(beta1 - beta1[i, j]) != 0] * T))
-
-nlin_no_cross = np.zeros((len(modes), len(freqs)))
-for i in range(len(modes)):
-  for j in range(len(freqs)):
-      nlin_no_cross[i, j] = np.sum(L / (np.abs(beta1[i, :] - beta1[i, j])[(beta1[i, :] - beta1[i, j]) != 0] * T))
-
-beta1_differences = np.abs(beta1[:, :, np.newaxis, np.newaxis] - beta1[np.newaxis, np.newaxis, :, :])
-beta1_differences = beta1_differences[beta1_differences!= 0]
-
-mask = (beta1_differences < 200 * 1e-12)
-hist, edges = np.histogram(beta1_differences[mask]*1e12, bins=200)
-
+dgds2 = np.linspace(1e-18, 6e-12, 100)
 fig =plt.figure(figsize=(6, 3))  # Overall figure size
-plt.semilogy(edges[:-1], L / T / edges[:-1] * 1e12, color='red')
-plt.semilogy(dgds, partial_nlin, color='green')
+plt.semilogy(dgds2 * 1e12, L / T / (dgds2 * 1e12), color='red')
+print("Partial NLIN: ", partial_nlin)
+print("Partial NLIN: ", dgds2)
+plt.semilogy(dgds*1e12, partial_nlin, color='green')
 plt.ylabel('partial NLIN')
 plt.xlabel('DGD (ps/m)')
 plt.tight_layout()

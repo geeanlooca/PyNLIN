@@ -25,7 +25,7 @@ def load_group_delay() -> np.array:
 def load_dummy_group_delay() -> np.ndarray:
   mat = np.zeros((4, 3))
   for i in range(4):
-    mat[i, :] = [-1.0e-3, -1.1770516856235059e-26, (5.0255297044767565+0.0001*i)*1e-09]
+    mat[i, :] = [0.0, -1.1770516856235059e-26, (5.0255297044767565+0.0001*i)*1e-09]
   return mat
 
 
