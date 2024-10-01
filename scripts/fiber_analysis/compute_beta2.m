@@ -106,7 +106,7 @@ saveas(gcf,'DMGD.png');
 figure;
 plot(omega/2/pi*1e-12,beta1_3'*meanM*10^9,'LineWidth',1.5)
 xlabel('f (THz)');
-ylabel('\beta_1 (ps/km)')
+ylabel('\beta_1 (us/km)')
 grid on;
 legend('LP_{0,1}',...
     'LP_{1,1}',...
