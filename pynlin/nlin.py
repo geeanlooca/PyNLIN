@@ -205,7 +205,7 @@ def compute_all_collisions_time_integrals(
     margin = 10
     if isinstance(pulse, NyquistPulse):
       print("\033[91m warn: \033[0m The pulse is Nyquist (long-tailed): overriding the number of points!")
-      n_z_points = 1000
+      n_z_points = 5000
       margin = 100
     for m in m_list:
         # print(f"m={m}")
@@ -229,8 +229,8 @@ def compute_all_collisions_time_integrals(
         z_min = max(z_min, 0)
         z_max = min(z_max, fiber.length)
         if z_min > z_max or not (dgd is None):
-            print(f"\033[91m warn: \033[0m delimitation of integral diverged at m = {m:10d}, z_m = {z_m: 5.4e}!")
-            z_axis_list.append(np.linspace(0, fiber.length, n_z_points))
+            # print(f"\033[91m warn: \033[0m delimitation of integral diverged at m = {m:10d}, z_m = {z_m: 5.4e}!")
+            z_axis_list.append(np.linspace(0, fiber.length, 1000))
         else:
             z_axis_list.append(np.linspace(z_min, z_max, n_z_points))
 
@@ -285,8 +285,8 @@ def m_th_time_integral_Gaussian(
     a_chan: Tuple[int, int],
     b_chan: Tuple[int, int],
     freq_spacing: float,
+    dgd, 
     m: int,
-    dgd,
     z: List[float], 
 ) -> float:
     # Apply the fully analytical formula
@@ -319,7 +319,7 @@ def m_th_time_integral_Gaussian(
           exponent = -((m + pulse.baud_rate * dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))
           return factor1 * factor2 * np.exp(exponent)
     else:
-      avg_l_d = 100_000
+      avg_l_d = 100_000_000
       factor1 = pulse.baud_rate / (np.sqrt(2 * np.pi))
       factor2 = 1 / np.sqrt(1 + (z / avg_l_d)**2)
       exponent = -((m + pulse.baud_rate * dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))

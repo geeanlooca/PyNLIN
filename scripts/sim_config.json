@@ -8,7 +8,7 @@
   "center_frequency":195.9e12,
   "store_true": 1,
   "pulse_shape":"Gaussian",
-  "partial_collision_margin":5,
+  "partial_collision_margin":2,
   "num_co": 2, 
   "num_ct":4,
   "num_only_co_pumps":2,
