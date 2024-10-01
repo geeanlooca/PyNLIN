@@ -184,7 +184,7 @@ plt.axvline(200.9, color="red", ls="dotted", lw=1.5)
 #     plt.text(freq_boundaries[i], 4.8924, label, ha='center', va='bottom')
     
 plt.xlabel('Frequency (THz)')
-plt.ylabel(r'$\beta_1$ (\mu s/km)')
+plt.ylabel(r'$\beta_1$ ($\mu$ s/km)')
 plt.legend()
 # plt.grid(grid)
 plt.tight_layout()
