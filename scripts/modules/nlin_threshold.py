@@ -20,7 +20,6 @@ log.debug("starting to load sim_config.json")
 f = open("./scripts/sim_config.json")
 
 data = json.load(f)
-# print(data)
 dispersion = data["dispersion"]
 effective_area = data["effective_area"]
 baud_rate = data["baud_rate"]
@@ -87,7 +86,6 @@ for i in modes:
     beta2[i, :] = dummy_fiber.group_delay.evaluate_beta2(i, freqs)
 beta1 = np.array(beta1)
 beta2 = np.array(beta2)
-# print(beta2[1, :])
 
 pulse = pynlin.pulses.GaussianPulse(
     baud_rate=baud_rate,
@@ -97,29 +95,32 @@ pulse = pynlin.pulses.GaussianPulse(
 )
 
 a_chan = (0, 0)
-n_samples = 50
+n_samples = 20
 partial_nlin = np.zeros(n_samples)
-dgds = np.linspace(1.0e-15, 1e-12, n_samples)
-for id, dgd in enumerate(dgds):
-    print(f"DGD: {dgd:10.3e}")
-    z, I, m = compute_all_collisions_time_integrals(
-        a_chan, (0, 0), dummy_fiber, wdm, pulse, dgd)
-    print(m.shape)
-    print(I[1].shape)
-    print(I[1])
-    # space integrals
-    X0mm = get_space_integrals(m, z, I)
-    partial_nlin[id] = np.sum(X0mm**2)
-
+dgd1 = 1e-18
+dgd2 = 1e-15
+dgds = np.linspace(dgd1, dgd2, n_samples)
+dgds2 = np.linspace(dgd1, dgd2, 200)
+if False:
+  for id, dgd in enumerate(dgds):
+      print(f"DGD: {dgd:10.3e}")
+      z, I, m = compute_all_collisions_time_integrals(
+          a_chan, (0, 0), dummy_fiber, wdm, pulse, dgd)
+      # space integrals
+      X0mm = get_space_integrals(m, z, I)
+      partial_nlin[id] = np.sum(X0mm**2)
+      print(partial_nlin[id])
+  np.save("results/partial_nlin.npy", partial_nlin)
+  
+partial_nlin = np.load("results/partial_nlin.npy")
 # for each channel, we compute the total number of collisions that
 # needs to be computed for evaluating the total noise on that channel.
 T = 100e-12
-L = 100e3
-
-dgds2 = np.linspace(1e-18, 1e-12, 200)
+L = dummy_fiber.length
+print(partial_nlin)
 fig = plt.figure(figsize=(6, 3))  # Overall figure size
 plt.semilogy(dgds2 * 1e12, L / T / (dgds2 * 1e12), color='red')
-plt.semilogy(dgds * 1e12, (partial_nlin) * 1e-12, color='green')
+plt.semilogy(dgds * 1e12, (partial_nlin) * 1e-8, color='green')
 plt.ylabel('partial NLIN')
 plt.xlabel('DGD (ps/m)')
 plt.tight_layout()

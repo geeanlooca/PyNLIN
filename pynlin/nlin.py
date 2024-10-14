@@ -319,7 +319,13 @@ def m_th_time_integral_Gaussian(
           exponent = -((m + pulse.baud_rate * dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))
           return factor1 * factor2 * np.exp(exponent)
     else:
-      avg_l_d = 100_000_000
+      l_da = np.abs(pulse.T0**2 / \
+              (fiber.group_delay.evaluate_beta2(
+                  a_chan[0], wdm.frequency_grid()[a_chan[1]])))
+      l_db = np.abs(pulse.T0**2 / \
+              (fiber.group_delay.evaluate_beta2(
+                  b_chan[0], wdm.frequency_grid()[b_chan[1]])))
+      avg_l_d = (l_da * l_db) / (l_da + l_db) / 2
       factor1 = pulse.baud_rate / (np.sqrt(2 * np.pi))
       factor2 = 1 / np.sqrt(1 + (z / avg_l_d)**2)
       exponent = -((m + pulse.baud_rate * dgd * z)**2) / (2 * (1 + (z / avg_l_d)**2))
