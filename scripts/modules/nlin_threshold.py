@@ -94,15 +94,16 @@ pulse = pynlin.pulses.GaussianPulse(
     rolloff=0.0,
 )
 
-n_samples = 50
-partial_nlin = np.zeros(n_samples)
-dgd1 = 1e-12
+n_samples_analytic = 500
+n_samples_numeric = 10
+dgd1 = 1e-15
 dgd2 = 6e-12
 # 6e-9 for our fiber
-dgds =  np.linspace(dgd1, dgd2, n_samples)
-dgds2 = np.linspace(dgd1, dgd2, n_samples)
+dgds_numeric =  np.linspace(dgd1, dgd2, n_samples_numeric)
+dgds_analytic = np.linspace(dgd1, dgd2, n_samples_analytic)
+partial_nlin = np.zeros(n_samples_numeric)
 if True:
-  for id, dgd in enumerate(dgds):
+  for id, dgd in enumerate(dgds_numeric):
       # print(f"DGD: {dgd:10.3e}")
       z, I, m = compute_all_collisions_time_integrals(
           (-1, -1), (-1, -1), dummy_fiber, wdm, pulse, dgd)
@@ -118,18 +119,18 @@ T = 100e-12
 L = dummy_fiber.length
 print(partial_nlin)
 fig = plt.figure(figsize=(4, 3))  # Overall figure size
-# plt.plot(dgds2 * 1e9, L / (T * dgds2), color='red', label='approximation')
-plt.plot(dgds * 1e9, (partial_nlin), color='green', label='numerics')
+plt.plot(dgds_analytic * 1e9, L / (T * dgds_analytic), color='red', label='approximation')
+plt.scatter(dgds_numeric * 1e9, (partial_nlin), color='green', label='numerics')
 plt.legend()
 plt.ylabel('partial NLIN')
 plt.xlabel('DGD (ns/m)')
 plt.tight_layout()
 plt.savefig(f"media/dispersion/partial_NLIN.png", dpi=dpi)
 
-fig = plt.figure(figsize=(4, 3))  # Overall figure size
-plt.plot(dgds2 * 1e9, ((L / (T * dgds2))-partial_nlin)/partial_nlin, color='red')
-plt.legend()
-plt.ylabel('partial NLIN')
-plt.xlabel('DGD (ns/m)')
-plt.tight_layout()
-plt.savefig(f"media/dispersion/rel_error_of_mecozzi.png", dpi=dpi)
+# fig = plt.figure(figsize=(4, 3))  # Overall figure size
+# plt.plot(dgds_analytic * 1e9, ((L / (T * dgds2))-partial_nlin)/partial_nlin, color='red')
+# plt.legend()
+# plt.ylabel('partial NLIN')
+# plt.xlabel('DGD (ns/m)')
+# plt.tight_layout()
+# plt.savefig(f"media/dispersion/rel_error_of_mecozzi.png", dpi=dpi)
