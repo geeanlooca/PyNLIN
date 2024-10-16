@@ -147,7 +147,7 @@ def compute_all_collisions_time_integrals(
     fiber: Fiber,
     wdm: WDM,
     pulse: Pulse,
-    dgd, 
+    dgd = None, 
     points_per_collision: int = 10,
     use_multiprocessing: bool = True,
     partial_collisions_margin: int = 10,
@@ -174,17 +174,20 @@ def compute_all_collisions_time_integrals(
         b_chan,
         T,
         partial_collisions_margin,
+        dgd
     )[::-1]
     z_axis_list = []
-    z_walkoff = get_z_walkoff(fiber, wdm, a_chan, b_chan, pulse)
+    z_walkoff = get_z_walkoff(fiber, wdm, a_chan, b_chan, pulse, dgd=dgd)
     print("==============")
-    # print(
-        # f"a: {a_chan}, b: {b_chan}, a_freq:{f_grid[a_chan[1]]:.5e}, b_freq:{f_grid[b_chan[1]]:.5e}")
-    # print(f"dgd: {get_dgd(a_chan, b_chan, fiber, wdm):.3e}, z_w: {z_walkoff:.3e}, lenght/z_w:{fiber.length/z_walkoff:.5e}")
-    print(f"set dgd:{dgd:.2e}")
+    if dgd is None:
+      print(
+          f"a: {a_chan}, b: {b_chan}, a_freq:{f_grid[a_chan[1]]:.5e}, b_freq:{f_grid[b_chan[1]]:.5e}")
+      print(f"dgd: {get_dgd(a_chan, b_chan, fiber, wdm):.3e}, z_w: {z_walkoff:.3e}, lenght/z_w:{fiber.length/z_walkoff:.5e}")
+    else:
+      print(f"set dgd:{dgd:.2e}, z_walkoff/L = {z_walkoff/fiber.length}")
     print("==============")
 
-    n_rough_grid = 200
+    n_rough_grid = 50
     spacing = get_frequency_spacing(a_chan, b_chan, wdm)
 
     def i_func(m, z): return m_th_time_integral_Gaussian(
@@ -196,7 +199,7 @@ def compute_all_collisions_time_integrals(
         spacing,
         dgd,
         m,
-        z
+        z,
     )
     # Estimate the significant range of each collision:
     #   fill the z_axis_grid with good estimates of
@@ -208,47 +211,60 @@ def compute_all_collisions_time_integrals(
       print("\033[91m warn: \033[0m The pulse is Nyquist (long-tailed): overriding the number of points!")
       n_z_points = 5000
       margin = 100
+  
     for m in m_list:
-        # print(f"m={m}")
-        z_m = get_collision_location(m, fiber, wdm, a_chan, b_chan, pulse)
-        z_min = z_m - z_walkoff / 2 * margin
-        z_max = z_m + z_walkoff / 2 * margin
+        print("_"*40)
+        print(f"m={m}")
+        z_m = get_collision_location(m, fiber, wdm, a_chan, b_chan, pulse, dgd)
+        z_min = z_m - (z_walkoff / 2 * margin)
+        z_max = z_m + (z_walkoff / 2 * margin)
+        print(f"BEFORE: zmin/L = {z_min/fiber.length:.4e}, zmax/L = {z_max/fiber.length:.4e}")
         i_sample_z_m = i_func(m, z_m)
-        dz = fiber.length / n_rough_grid
+        dz = z_walkoff / n_rough_grid
         threshold = i_sample_z_m / 100
+        print(f"threshold = {threshold:.4e}")
         z = 0
         i_sample = i_func(m, z)
         i_sample = i_func(m, z_min)
+        # print(f"left sample = {i_sample:.4e}")
+        z = 0
         while i_sample > threshold and z_min > 0:
             z_min -= dz
             i_sample = i_func(m, z_min)
 
         i_sample = i_func(m, z_max)
+        # print(f"right sample = {i_sample:.4e}")
         while i_sample > threshold and z_max < fiber.length:
             z_max += dz
             i_sample = i_func(m, z_max)
         z_min = max(z_min, 0)
         z_max = min(z_max, fiber.length)
-        if z_min > z_max or not (dgd is None):
+        if z_min > z_max:
             # print(f"\033[91m warn: \033[0m delimitation of integral diverged at m = {m:10d}, z_m = {z_m: 5.4e}!")
-            z_axis_list.append(np.linspace(0, fiber.length, 1000))
+            print("Failure to set the pulse region")
+            z_axis_list.append(np.linspace(0, fiber.length, n_z_points))
         else:
+            print(f"zmin/L = {z_min/fiber.length:.4e}, zmax/L = {z_max/fiber.length:.4e}")
             z_axis_list.append(np.linspace(z_min, z_max, n_z_points))
-
     if pulse.num_symbols != n_z_points:
       print("\033[91m warn: \033[0m overriding the pulse number of samples!")
       pulse.num_symbols = n_z_points
 
+    # build a partial function otherwise multiprocessing
+    # complains about not being able to pickle stuff
+    partial_function = functools.partial(
+        m_th_time_integral, pulse, fiber, wdm, a_chan, b_chan, dgd
+    )
     if use_multiprocessing:
-        # build a partial function otherwise multiprocessing
-        # complains about not being able to pickle stuff
-        partial_function = functools.partial(
-            m_th_time_integral, pulse, fiber, wdm, a_chan, b_chan, dgd
-        )
         # def partial_function(m, z): return m_th_time_integral(pulse, fiber, wdm, a_chan, b_chan, m, z)
         integrals_list = process_map(
             partial_function, m_list, z_axis_list, leave=False, chunksize=1
         )
+    else:
+        integrals_list = process_map(
+            partial_function, m_list, z_axis_list, leave=False, chunksize=1, max_workers=1
+        )
+      
     # convert the list of arrays in a 2d array, since the shape is the same
     z_axis_list_2d = np.stack(z_axis_list)
     integrals_list_2d = np.stack(integrals_list)
@@ -272,7 +288,9 @@ def m_th_time_integral(
         raise NotImplementedError("no Nyquist Pulse yet")
     elif isinstance(pulse, GaussianPulse):
         # return m_th_time_integral_general(pulse, fiber, wdm, a_chan, b_chan, freq_spacing, m, z)
-        return m_th_time_integral_Gaussian(pulse, fiber, wdm, a_chan, b_chan, freq_spacing, dgd, m, z)
+        aaa = m_th_time_integral_Gaussian(pulse, fiber, wdm, a_chan, b_chan, freq_spacing, dgd, m, z)
+        # print("ciao", aaa)
+        return aaa
     else:
         return m_th_time_integral_general(pulse, fiber, wdm, a_chan, b_chan, freq_spacing, m, z)
 

@@ -32,6 +32,7 @@ def get_m_values(
     b_chan: Tuple[int, int],
     T: float,
     partial_collisions_start:int,
+    dgd = None
 ) -> np.ndarray:
     """Get values of the m indeces to compute the X0mm XPM coefficients for.
 
@@ -41,7 +42,8 @@ def get_m_values(
     `partial_collisions_start` and `partial_collisions_end` kwargs.
     """
     partial_collisions_end = partial_collisions_start
-    dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+    if dgd is None:
+      dgd = get_dgd(a_chan, b_chan, fiber, wdm)
     m_max = -(fiber.length * dgd) / T
     # print(m_max)
     # print(-m_max * T /dgd)
@@ -58,10 +60,12 @@ def get_collision_location(m,
                            wdm: WDM, 
                            a_chan:Tuple[int, int], 
                            b_chan: Tuple[int, int],
-                           pulse: Pulse) -> float:
+                           pulse: Pulse,
+                           dgd = None) -> float:
     """For the specified index m, compute the position of the corresponding
     complete collision."""
-    dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+    if dgd is None:
+      dgd = get_dgd(a_chan, b_chan, fiber, wdm)
     # print(f" DGD: {dgd}, a_chan: {a_chan}, b_chan: {b_chan}")
     return -m / (pulse.baud_rate *  dgd)
   
@@ -89,6 +93,9 @@ def get_z_walkoff(
   wdm: WDM, 
   a_chan: Tuple[int, int], 
   b_chan: Tuple[int, int], 
-  pulse: Pulse):
-  dgd = get_dgd(a_chan, b_chan, fiber, wdm)
-  return np.abs(1/ (pulse.baud_rate * dgd))
+  pulse: Pulse,
+  dgd = None):
+  if dgd is None:
+    dgd = get_dgd(a_chan, b_chan, fiber, wdm)
+  print(f"DGDDDDD : {dgd:.3e}")
+  return np.abs(1 / (pulse.baud_rate * dgd))

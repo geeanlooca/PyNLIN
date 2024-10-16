@@ -2,13 +2,16 @@
 script for finding the overall noise on a single channel 
 given a fiber link configuration consisting 
 """
+import pynlin.fiber
 from scripts.modules.space_integrals_general import *
 from scripts.modules.time_integrals import do_time_integrals
 from scripts.modules.load_fiber_values import *
 import matplotlib.pyplot as plt
 import scipy
-from pynlin import *
 import pynlin.fiber
+import pynlin.nlin
+import pynlin.wdm
+import pynlin.pulses
 from scripts.modules.load_fiber_values import load_group_delay
 
 with open("./scripts/sim_config.json") as f:
@@ -53,7 +56,6 @@ wdm = pynlin.wdm.WDM(
     num_channels=num_channels,
     center_frequency=center_frequency
 )
-
 
 fiber = pynlin.fiber.MMFiber(
       effective_area=80e-12,
@@ -102,6 +104,8 @@ avg = ((s_freq + l_freq) * 1e-12 / 2)
 # channel of interest is set to channel 0, and interferent channel index start from 0 for simplicity
 a_chan = (0, 0)
 print("@@@@@@@@ Time integrals  @@@@@@@@")
-do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=True)
+# do_time_integrals(a_chan, fiber, wdm, pulse, overwrite=True)
 print("@@@@@@@@ Space integrals @@@@@@@@")
-compare_interferent(a_chan, [(0, 1)], fiber, wdm, pulse)
+b_chan = (1, 99)
+print("dgd: ", pynlin.nlin.get_dgd(a_chan, b_chan, fiber, wdm))
+compare_interferent(a_chan, [b_chan], fiber, wdm, pulse)
