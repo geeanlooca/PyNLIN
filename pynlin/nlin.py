@@ -178,9 +178,10 @@ def compute_all_collisions_time_integrals(
     z_axis_list = []
     z_walkoff = get_z_walkoff(fiber, wdm, a_chan, b_chan, pulse)
     print("==============")
-    print(
-        f"a: {a_chan}, b: {b_chan}, a_freq:{f_grid[a_chan[1]]:.5e}, b_freq:{f_grid[b_chan[1]]:.5e}")
-    print(f"dgd: {get_dgd(a_chan, b_chan, fiber, wdm):.3e}, z_w: {z_walkoff:.3e}, lenght/z_w:{fiber.length/z_walkoff:.5e}")
+    # print(
+        # f"a: {a_chan}, b: {b_chan}, a_freq:{f_grid[a_chan[1]]:.5e}, b_freq:{f_grid[b_chan[1]]:.5e}")
+    # print(f"dgd: {get_dgd(a_chan, b_chan, fiber, wdm):.3e}, z_w: {z_walkoff:.3e}, lenght/z_w:{fiber.length/z_walkoff:.5e}")
+    print(f"set dgd:{dgd:.2e}")
     print("==============")
 
     n_rough_grid = 200
@@ -245,7 +246,6 @@ def compute_all_collisions_time_integrals(
             m_th_time_integral, pulse, fiber, wdm, a_chan, b_chan, dgd
         )
         # def partial_function(m, z): return m_th_time_integral(pulse, fiber, wdm, a_chan, b_chan, m, z)
-        print("shape of z_xis list", len(z_axis_list[1]))
         integrals_list = process_map(
             partial_function, m_list, z_axis_list, leave=False, chunksize=1
         )
@@ -388,21 +388,6 @@ def m_th_time_integral_general(
     return i_list
 
 
-# def X0mm_time_integral_multiprocessing_wrapper(
-#     pulse: Pulse, fiber: Fiber, z: np.ndarray, channel_spacing: float, m: int
-# ):
-#     """A wrapper for the `X0mm_time_integral` function to easily
-#     `functool.partial` and enable multiprocessing."""
-#     return X0mm_time_integral(pulse, fiber, z, channel_spacing, m)
-
-
-# def X0mm_time_integral_precomputed_multiprocessing_wrapper(
-#     pulse_matrix: np.ndarray, fiber: Fiber, z: np.ndarray, t: np.ndarray, channel_spacing: float, m: int, T: float
-# ):
-#     """A wrapper for the `X0mm_time_integral` function to easily
-#     `functool.partial` and enable multiprocessing."""
-#     return X0mm_time_integral_precomputed(pulse_matrix, fiber, z, t, channel_spacing, m, T)
-# Numerical or semianalytical methods for time integrals
 
 
 def m_th_time_integral_Nyquist(
@@ -414,117 +399,6 @@ def m_th_time_integral_Nyquist(
 ) -> np.ndarray:
     # apply the formula from Nakazawa
     pass
-
-
-# def X0mm_time_integral_precomputed(
-#     pulse_matrix: np.ndarray,
-#     fiber: Fiber,
-#     z: np.ndarray,
-#     t: np.ndarray,
-#     channel_spacing: float,
-#     m: int,
-#     T: float,
-# ) -> np.ndarray:
-#     """Compute the inner time integral of the expression for the XPM
-#     coefficients Xhkm for the specified channel spacing.
-#     Use a pulse matrix to exploit the precomputation of the propagation"""
-#     npoints_z = len(z)
-#     dt = t[1] - t[0]
-#     O = 2 * np.pi * channel_spacing
-#     beta2 = fiber.beta2
-#     time_integrals = np.zeros((npoints_z,), dtype=complex)
-#     for i, L in enumerate(z):
-#         g1 = pulse_matrix[:, i]
-#         delay = (- m * T - beta2 * O * L)
-#         shift = int(np.round((delay / dt)))
-#         g3 = np.roll(pulse_matrix[:, i], shift)
-#         integrand = np.conj(g1) * g1 * np.conj(g3) * g3
-#         time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
-#     return time_integrals
-
-
-####################################
-# Other methods, inefficient
-####################################
-# def X0mm_time_integral(
-#     pulse: Pulse,
-#     fiber: Fiber,
-#     z: np.ndarray,
-#     channel_spacing: float,
-#     m: int,
-# ) -> np.ndarray:
-#     """Compute the inner time integral of the expression for the XPM
-#     coefficients Xhkm for the specified channel spacing.
-#     Propagate all the pulses one by one"""
-#     npoints_z = len(z)
-#     g, t = pulse.data()
-#     dt = t[1] - t[0]
-#     nsamples = len(g)
-#     freq = np.fft.fftfreq(nsamples, d=dt)
-#     omega = 2 * np.pi * freq
-#     omega = np.fft.fftshift(omega)
-#     O = 2 * np.pi * channel_spacing
-#     T = pulse.T0
-#     beta2 = fiber.beta2
-#     time_integrals = np.zeros((npoints_z,), dtype=complex)
-#     gf = np.fft.fftshift(np.fft.fft(g))
-
-#     for i, L in enumerate(z):
-#         # for each point in space, calculate the corresponding time integral
-#         propagator = -1j * beta2 / 2 * omega**2 * L
-#         delay = np.exp(-1j * (m * T + beta2 * O * L) * omega)
-
-#         gf_propagated_1 = gf * np.exp(propagator)
-#         gf_propagated_3 = gf_propagated_1 * delay
-
-#         g1 = np.fft.ifft(np.fft.fftshift(gf_propagated_1))
-#         g3 = np.fft.ifft(np.fft.fftshift(gf_propagated_3))
-
-#         integrand = np.conj(g1) * g1 * np.conj(g3) * g3
-#         time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
-
-#     return time_integrals
-
-
-# def Xhkm_time_integral_multiprocessing_wrapper(
-#     pulse: Pulse, fiber: Fiber, z: np.ndarray, channel_spacing: float, m: int
-# ):
-#     """A wrapper for the `Xhkm_time_integral` function to easily
-#     `functool.partial` and enable multiprocessing."""
-#     return Xhkm_time_integral(pulse, fiber, z, channel_spacing, 0, m, m)
-
-
-# # Currently unused methods for nondegenerate FWM noise
-# def Xhkm_time_integral(
-#     pulse: Pulse,
-#     fiber: Fiber,
-#     z: np.ndarray,
-#     channel_spacing: float,
-#     h: int,
-#     k: int,
-#     m: int,
-# ) -> np.ndarray:
-#     """Compute the inner time integral of the expression for the XPM
-#     coefficients Xhkm for the specified channel spacing."""
-#     npoints_z = len(z)
-#     g, t = pulse.data()
-#     O = 2 * np.pi * channel_spacing
-#     T = pulse.T0
-#     beta2 = fiber.beta2
-#     time_integrals = np.zeros((npoints_z,), dtype=complex)
-
-#     for i, L in enumerate(z):
-#         # for each point in space, calculate the corresponding time integral
-#         g1 = apply_chromatic_dispersion(pulse, fiber, L, delay=0)
-#         g2 = apply_chromatic_dispersion(pulse, fiber, L, delay=h * T)
-#         g3 = apply_chromatic_dispersion(pulse, fiber, L, delay=k * T + beta2 * O * L)
-#         g4 = apply_chromatic_dispersion(pulse, fiber, L, delay=m * T + beta2 * O * L)
-
-#         integrand = np.conj(g1) * g2 * np.conj(g3) * g4
-#         time_integrals[i] = scipy.integrate.trapezoid(integrand, t)
-
-#     return time_integrals
-
 
 def X0mm_space_integral(
         z: np.ndarray, time_integrals, amplification_function: np.ndarray = None, axis=-1) -> np.ndarray:
@@ -543,32 +417,3 @@ def X0mm_space_integral(
             '\033[2;31;43m WARN \033[0;0m need to implement scaling of f(z) w.r.t. the given z axis.')
     X = scipy.integrate.trapezoid(time_integrals * amplification_function, z, axis=axis)
     return X
-
-
-# def Xhkm(
-#     pulse: Pulse,
-#     fiber: Fiber,
-#     amplification_function: np.ndarray,
-#     z: np.ndarray,
-#     channels_spacing: float,
-#     h: int,
-#     k: int,
-#     m: int,
-# ) -> np.ndarray:
-#     """Compute the Xhkm XPM coefficients."""
-#     time_integrals = Xhkm_time_integral(pulse, fiber, z, channels_spacing, h, k, m)
-
-#     # integrate in space
-#     X = scipy.integrate.trapezoid(time_integrals * amplification_function, z)
-#     return X
-
-
-# # we can design a single function that takes in input Delta beta1, beta2,
-# # check if the pulse is special, and call a specialized function or a standard
-# # one (with propagation).
-
-# # wdm + fiber ->
-# # (coi[freq, mode], interf[freq, mode]) channel couples ->
-# # {X0mm},  collision to be computed ITER ->
-# # two integrals to compute ->
-# # integrand evaluation: manual propagation or analytics

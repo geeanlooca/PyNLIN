@@ -10,7 +10,7 @@ from pynlin.utils import nu2lambda
 from scripts.modules.load_fiber_values import load_group_delay, load_dummy_group_delay
 from numpy import polyval
 from pynlin.fiber import *
-from pynlin.nlin import compute_all_collisions_time_integrals, get_dgd
+from pynlin.nlin import compute_all_collisions_time_integrals, get_dgd, X0mm_space_integral
 from matplotlib.gridspec import GridSpec
 import json
 rc('text', usetex=True)
@@ -53,7 +53,7 @@ def get_space_integrals(m, z, I):
       Read the time integral file and compute the space integrals 
     '''
     X0mm = np.zeros_like(m)
-    X0mm = pynlin.nlin.X0mm_space_integral(z, I, amplification_function=None)
+    X0mm = X0mm_space_integral(z, I, amplification_function=None)
     return X0mm
 
 
@@ -87,7 +87,7 @@ for i in modes:
 beta1 = np.array(beta1)
 beta2 = np.array(beta2)
 
-pulse = pynlin.pulses.GaussianPulse(
+pulse = pynlin.pulses.NyquistPulse(
     baud_rate=baud_rate,
     num_symbols=1e2,
     samples_per_symbol=2**5,
@@ -95,21 +95,21 @@ pulse = pynlin.pulses.GaussianPulse(
 )
 
 a_chan = (0, 0)
-n_samples = 20
+n_samples = 50
 partial_nlin = np.zeros(n_samples)
-dgd1 = 1e-18
-dgd2 = 1e-15
-dgds = np.linspace(dgd1, dgd2, n_samples)
-dgds2 = np.linspace(dgd1, dgd2, 200)
-if False:
+dgd1 = 1e-10
+dgd2 = 6e-9
+# 6e-9 for our fiber
+dgds =  np.linspace(dgd1, dgd2, n_samples)
+dgds2 = np.linspace(dgd1, dgd2, n_samples)
+if True:
   for id, dgd in enumerate(dgds):
-      print(f"DGD: {dgd:10.3e}")
+      # print(f"DGD: {dgd:10.3e}")
       z, I, m = compute_all_collisions_time_integrals(
           a_chan, (0, 0), dummy_fiber, wdm, pulse, dgd)
       # space integrals
       X0mm = get_space_integrals(m, z, I)
       partial_nlin[id] = np.sum(X0mm**2)
-      print(partial_nlin[id])
   np.save("results/partial_nlin.npy", partial_nlin)
   
 partial_nlin = np.load("results/partial_nlin.npy")
@@ -118,10 +118,11 @@ partial_nlin = np.load("results/partial_nlin.npy")
 T = 100e-12
 L = dummy_fiber.length
 print(partial_nlin)
-fig = plt.figure(figsize=(6, 3))  # Overall figure size
-plt.semilogy(dgds2 * 1e12, L / T / (dgds2 * 1e12), color='red')
-plt.semilogy(dgds * 1e12, (partial_nlin) * 1e-8, color='green')
+fig = plt.figure(figsize=(4, 3))  # Overall figure size
+plt.plot(dgds2 * 1e9, L / (T * dgds2), color='red', label='approximation')
+plt.plot(dgds * 1e9, (partial_nlin), color='green', label='numerics')
+plt.legend()
 plt.ylabel('partial NLIN')
-plt.xlabel('DGD (ps/m)')
+plt.xlabel('DGD (ns/m)')
 plt.tight_layout()
 plt.savefig(f"media/dispersion/partial_NLIN.png", dpi=dpi)
